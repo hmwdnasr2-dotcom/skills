@@ -15,11 +15,7 @@ const PORT = Number(process.env.PORT ?? 4000);
 
 // ─── Middleware ────────────────────────────────────────────────────────────────
 
-app.use(cors({
-  origin: 'http://188.245.242.236:5173',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type'],
-}));
+app.use(cors());          // Allow all origins — no exact-string matching
 app.use(express.json());
 
 // ─── Wire Gmail connector ─────────────────────────────────────────────────────
