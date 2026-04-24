@@ -1,15 +1,12 @@
-import OpenAI from 'openai';
+import Groq from 'groq-sdk';
 import type { BrainAdapter, ChatOptions, ChatResponse, Message } from './adapter.js';
 
 export class GroqBrain implements BrainAdapter {
-  private client: OpenAI;
+  private client: Groq;
   private model: string;
 
   constructor({ model = 'llama-3.3-70b-versatile' }: { model?: string } = {}) {
-    this.client = new OpenAI({
-      apiKey: process.env.GROQ_API_KEY,
-      baseURL: 'https://api.groq.com/openai/v1',
-    });
+    this.client = new Groq({ apiKey: process.env.GROQ_API_KEY });
     this.model = model;
   }
 
@@ -18,9 +15,9 @@ export class GroqBrain implements BrainAdapter {
       model: this.model,
       max_tokens: opts.maxTokens ?? 8096,
       messages: messages.map((m) => ({
-        role: m.role,
+        role: m.role as 'system' | 'user' | 'assistant',
         content: m.content,
-      })) as OpenAI.Chat.ChatCompletionMessageParam[],
+      })),
       tools: opts.tools?.map((t) => ({
         type: 'function' as const,
         function: { name: t.name, description: t.description, parameters: t.parameters },
@@ -49,9 +46,9 @@ export class GroqBrain implements BrainAdapter {
       model: this.model,
       max_tokens: opts.maxTokens ?? 8096,
       messages: messages.map((m) => ({
-        role: m.role,
+        role: m.role as 'system' | 'user' | 'assistant',
         content: m.content,
-      })) as OpenAI.Chat.ChatCompletionMessageParam[],
+      })),
       stream: true,
     });
 
