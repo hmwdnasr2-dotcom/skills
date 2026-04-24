@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1c1c1c">
+<title>ARIA</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1c1c1c;
+    color: #ececec;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 15px;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Header */
+  #header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    padding-top: max(14px, env(safe-area-inset-top));
+    background: #252525;
+    border-bottom: 1px solid #333;
+    flex-shrink: 0;
+  }
+  #dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #d97706;
+    box-shadow: 0 0 8px #d97706;
+  }
+  #title { font-size: 14px; font-weight: 600; }
+  #status { font-size: 12px; color: #888; margin-left: auto; }
+
+  /* Messages */
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .msg { display: flex; flex-direction: column; gap: 3px; }
+
+  .msg.you { align-items: flex-end; }
+  .msg.aria { align-items: flex-start; }
+
+  .label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: #888;
+    padding: 0 4px;
+  }
+  .msg.aria .label { color: #d97706; }
+
+  .bubble {
+    max-width: 80%;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .msg.you .bubble {
+    background: #2e2e2e;
+    border-radius: 16px 16px 4px 16px;
+    padding: 10px 14px;
+  }
+  .msg.aria .bubble { padding: 2px 4px; }
+
+  .cursor {
+    display: inline-block;
+    color: #d97706;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* Input */
+  #input-wrap {
+    background: #252525;
+    border-top: 1px solid #333;
+    padding: 10px 16px;
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+    flex-shrink: 0;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  #input {
+    flex: 1;
+    background: #1c1c1c;
+    border: 1px solid #3a3a3a;
+    border-radius: 12px;
+    padding: 11px 14px;
+    color: #ececec;
+    font-family: inherit;
+    font-size: 16px; /* 16px prevents iOS zoom */
+    outline: none;
+    min-height: 44px;
+    caret-color: #d97706;
+  }
+  #input::placeholder { color: #555; }
+  #input:focus { border-color: #555; }
+  #input:disabled { opacity: 0.4; }
+
+  #send {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    border: 1px solid #3a3a3a;
+    background: rgba(217,119,6,0.15);
+    color: #d97706;
+    font-size: 20px;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    touch-action: manipulation;
+    transition: background 0.15s;
+  }
+  #send:active { background: rgba(217,119,6,0.3); }
+  #send:disabled { opacity: 0.25; cursor: default; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="dot"></div>
+  <span id="title">ARIA</span>
+  <span id="status">ready</span>
+</div>
+
+<div id="messages"></div>
+
+<div id="input-wrap">
+  <input id="input" type="text" placeholder="Message ARIA…"
+    autocomplete="off" autocorrect="off" autocapitalize="sentences"
+    enterkeyhint="send">
+  <button id="send" aria-label="Send">↑</button>
+</div>
+
+<script>
+  const API = 'http://188.245.242.236:4000/api/aria/chat';
+  const USER = 'mobile-user';
+
+  const messagesEl = document.getElementById('messages');
+  const inputEl    = document.getElementById('input');
+  const sendBtn    = document.getElementById('send');
+  const statusEl   = document.getElementById('status');
+
+  function addMessage(who, text, id) {
+    const wrap   = document.createElement('div');
+    wrap.className = 'msg ' + who;
+    if (id) wrap.id = id;
+
+    const label  = document.createElement('div');
+    label.className = 'label';
+    label.textContent = who === 'you' ? 'You' : 'ARIA';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+
+    wrap.appendChild(label);
+    wrap.appendChild(bubble);
+    messagesEl.appendChild(wrap);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return wrap;
+  }
+
+  function addPending() {
+    const wrap   = document.createElement('div');
+    wrap.className = 'msg aria';
+
+    const label  = document.createElement('div');
+    label.className = 'label';
+    label.textContent = 'ARIA';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+
+    const cur = document.createElement('span');
+    cur.className = 'cursor';
+    cur.textContent = '▌';
+    bubble.appendChild(cur);
+
+    wrap.appendChild(label);
+    wrap.appendChild(bubble);
+    messagesEl.appendChild(wrap);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return { wrap, bubble, cur };
+  }
+
+  function setBusy(busy) {
+    inputEl.disabled = busy;
+    sendBtn.disabled = busy;
+    statusEl.textContent = busy ? 'thinking…' : 'ready';
+  }
+
+  async function send() {
+    const text = inputEl.value.trim();
+    if (!text) return;
+
+    inputEl.value = '';
+    setBusy(true);
+    addMessage('you', text);
+
+    const { wrap, bubble, cur } = addPending();
+
+    try {
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: USER, message: text }),
+      });
+
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+
+      const data = await res.json();
+      bubble.textContent = data.reply || '(no reply)';
+    } catch (err) {
+      bubble.textContent = 'Error: ' + err.message;
+      bubble.style.color = '#f87171';
+    } finally {
+      setBusy(false);
+      inputEl.focus();
+    }
+
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  sendBtn.addEventListener('click', send);
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+
+  // Initial greeting
+  addMessage('aria', 'How can I help you today?');
+</script>
+</body>
+</html>
