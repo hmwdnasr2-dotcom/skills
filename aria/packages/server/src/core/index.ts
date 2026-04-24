@@ -13,13 +13,13 @@ import {
 // ─── Bootstrap brain based on env ──────────────────────────────────────────────
 
 function buildBrain() {
-  const provider = process.env.ARIA_BRAIN ?? 'groq';
+  const provider = process.env.ARIA_BRAIN ?? 'gemini';
   const model    = process.env.ARIA_MODEL;
   switch (provider) {
     case 'openai': return new OpenAIBrain(model ? { model } : {});
-    case 'gemini': return new GeminiBrain(model ? { model } : {});
+    case 'groq':   return new GroqBrain(model ? { model } : {});
     case 'ollama': return new OllamaBrain(model ? { model } : {});
-    default:       return new GroqBrain({ model: model ?? 'llama-3.3-70b-versatile' });
+    default:       return new GeminiBrain({ model: model ?? 'gemini-2.0-flash' });
   }
 }
 

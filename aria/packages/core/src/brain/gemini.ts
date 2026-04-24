@@ -6,7 +6,7 @@ export class GeminiBrain implements BrainAdapter {
   private model: string;
 
   constructor({ model = 'gemini-1.5-pro' }: { model?: string } = {}) {
-    this.genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
+    this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY ?? '');
     this.model = model;
   }
 
