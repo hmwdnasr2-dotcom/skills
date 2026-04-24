@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './CommandLog.css';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 interface LogEntry {
   id: string;
   timestamp: Date;
@@ -13,23 +11,18 @@ interface LogEntry {
 
 interface CommandLogProps {
   userId: string;
-  /** Base URL for the ARIA server. Defaults to same origin via Vite proxy. */
   apiBase?: string;
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
-// ─── LogLine component ────────────────────────────────────────────────────────
-
 function LogLine({ entry }: { entry: LogEntry }) {
   return (
     <div className={`log-line log-line--${entry.speaker.toLowerCase()}`}>
       <span className="log-ts">[{formatTime(entry.timestamp)}]</span>
-      <span className="log-speaker">{entry.speaker.padEnd(6)}</span>
+      <span className="log-speaker">{entry.speaker}</span>
       <span className="log-content">
         {entry.content}
         {entry.isStreaming && <span className="cursor">▌</span>}
@@ -37,8 +30,6 @@ function LogLine({ entry }: { entry: LogEntry }) {
     </div>
   );
 }
-
-// ─── CommandLog component ─────────────────────────────────────────────────────
 
 export function CommandLog({ userId, apiBase = '' }: CommandLogProps) {
   const [entries, setEntries] = useState<LogEntry[]>([
@@ -54,38 +45,27 @@ export function CommandLog({ userId, apiBase = '' }: CommandLogProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll to bottom on new entries
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [entries]);
 
-  // Subscribe to proactive SSE push from server
+  // Proactive SSE push
   useEffect(() => {
     const url = `${apiBase}/api/aria/events?userId=${encodeURIComponent(userId)}`;
     const es = new EventSource(url);
-
     es.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data) as { content: string };
         if (data.content) appendEntry('ARIA', data.content);
-      } catch {
-        // ignore malformed messages
-      }
+      } catch { /* ignore */ }
     };
-
-    es.onerror = () => {
-      appendEntry('SYSTEM', 'Event stream disconnected. Reconnecting…');
-    };
-
+    es.onerror = () => appendEntry('SYSTEM', 'Event stream disconnected. Reconnecting…');
     return () => es.close();
   }, [userId, apiBase]);
 
   function appendEntry(speaker: LogEntry['speaker'], content: string): string {
     const id = crypto.randomUUID();
-    setEntries((prev) => [
-      ...prev,
-      { id, timestamp: new Date(), speaker, content },
-    ]);
+    setEntries((prev) => [...prev, { id, timestamp: new Date(), speaker, content }]);
     return id;
   }
 
@@ -102,17 +82,10 @@ export function CommandLog({ userId, apiBase = '' }: CommandLogProps) {
     setBusy(true);
     appendEntry('YOU', text);
 
-    // Show a streaming placeholder
     const streamingId = crypto.randomUUID();
     setEntries((prev) => [
       ...prev,
-      {
-        id: streamingId,
-        timestamp: new Date(),
-        speaker: 'ARIA',
-        content: '',
-        isStreaming: true,
-      },
+      { id: streamingId, timestamp: new Date(), speaker: 'ARIA', content: '', isStreaming: true },
     ]);
 
     try {
@@ -121,29 +94,19 @@ export function CommandLog({ userId, apiBase = '' }: CommandLogProps) {
         `?userId=${encodeURIComponent(userId)}` +
         `&message=${encodeURIComponent(text)}`;
       const es = new EventSource(url);
-
       let accumulated = '';
 
       await new Promise<void>((resolve, reject) => {
         es.onmessage = (ev) => {
-          if (ev.data === '[DONE]') {
-            es.close();
-            resolve();
-            return;
-          }
+          if (ev.data === '[DONE]') { es.close(); resolve(); return; }
           try {
-            const { token, error } = JSON.parse(ev.data) as {
-              token?: string;
-              error?: string;
-            };
+            const { token, error } = JSON.parse(ev.data) as { token?: string; error?: string };
             if (error) { es.close(); reject(new Error(error)); return; }
             if (token) {
               accumulated += token;
               updateEntry(streamingId, { content: accumulated });
             }
-          } catch {
-            // skip
-          }
+          } catch { /* skip */ }
         };
         es.onerror = () => { es.close(); reject(new Error('Stream error')); };
       });
@@ -162,6 +125,12 @@ export function CommandLog({ userId, apiBase = '' }: CommandLogProps) {
 
   return (
     <div className="log-root">
+      <header className="log-header">
+        <div className="log-header-dot" />
+        <span className="log-header-title">ARIA</span>
+        <span className="log-header-status">{busy ? 'thinking…' : 'ready'}</span>
+      </header>
+
       <div className="log-entries">
         {entries.map((entry) => (
           <LogLine key={entry.id} entry={entry} />
@@ -176,12 +145,22 @@ export function CommandLog({ userId, apiBase = '' }: CommandLogProps) {
           className="log-input"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="type a message…"
+          placeholder="message…"
           disabled={busy}
-          autoFocus
           autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
           spellCheck={false}
+          enterKeyHint="send"
         />
+        <button
+          type="submit"
+          className="log-send"
+          disabled={busy || !input.trim()}
+          aria-label="Send"
+        >
+          ↵
+        </button>
       </form>
     </div>
   );
