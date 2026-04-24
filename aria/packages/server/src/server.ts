@@ -15,9 +15,11 @@ const PORT = Number(process.env.PORT ?? 4000);
 // ─── Middleware ────────────────────────────────────────────────────────────────
 
 app.use(express.json());
-app.use((_req, res, next) => {
+app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   next();
 });
 
