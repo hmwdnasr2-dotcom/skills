@@ -7,6 +7,7 @@ import { AgentBridgeConnector } from '@aria/core';
 import { claw } from './core/index.js';
 import { GmailConnector, buildGmailAdapters } from './connectors/gmail.js';
 import { buildTaskAdapters } from './connectors/tasks.js';
+import { buildWorkspaceAdapters } from './connectors/workspace.js';
 import { startScheduler } from './proactive/scheduler.js';
 import { authRouter } from './routes/auth.js';
 import { chatRouter } from './routes/chat.js';
@@ -47,6 +48,13 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
   }
   claw.use(taskBridge);
   console.log('[server] Task tools registered (add_task, list_tasks, complete_task, create_project, list_projects)');
+
+  const workspaceBridge = new AgentBridgeConnector();
+  for (const adapter of buildWorkspaceAdapters()) {
+    workspaceBridge.register(adapter.name, adapter);
+  }
+  claw.use(workspaceBridge);
+  console.log('[server] Workspace tools registered (follow-ups, achievements, daily logs, reports)');
 } else {
   console.log('[server] Task tools skipped — SUPABASE_URL / SUPABASE_ANON_KEY not set');
 }
