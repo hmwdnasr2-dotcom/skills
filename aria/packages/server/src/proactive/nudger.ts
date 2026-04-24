@@ -14,8 +14,12 @@ export async function scheduleNudgeIfNeeded(userId: string, reply: string) {
       {
         role: 'user',
         content:
-          `Does this reply contain a commitment or action item that needs a follow-up reminder?\n` +
-          `Reply with JSON only, no prose: { "needed": boolean, "delayMs": number, "reminder": string }\n\n${reply}`,
+          `Analyse this assistant reply for any commitment, pending reply, deadline, or waiting-on situation.\n` +
+          `If a follow-up nudge would be useful, return JSON. Otherwise return {"needed":false}.\n` +
+          `JSON shape: { "needed": boolean, "delayMs": number, "reminder": string }\n` +
+          `delayMs examples: 1 hour = 3600000, 24 hours = 86400000, 48 hours = 172800000.\n` +
+          `reminder should be a single actionable sentence, e.g. "Chase Sarah re: proposal — no reply yet."\n\n` +
+          `Reply:\n${reply}`,
       },
     ],
   });
