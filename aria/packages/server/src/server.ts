@@ -1,6 +1,5 @@
-// Must be first — ESM evaluates imports in order, so this sets process.env
-// before core/index.ts constructs the brain.
-import 'dotenv/config';
+// Must be first — sets process.env before core/index.ts is evaluated.
+import './load-env.js';
 
 import express from 'express';
 import { AgentBridgeConnector } from '@aria/core';
