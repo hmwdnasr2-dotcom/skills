@@ -6,6 +6,7 @@ import express from 'express';
 import { AgentBridgeConnector } from '@aria/core';
 import { claw } from './core/index.js';
 import { GmailConnector, buildGmailAdapters } from './connectors/gmail.js';
+import { buildTaskAdapters } from './connectors/tasks.js';
 import { startScheduler } from './proactive/scheduler.js';
 import { chatRouter } from './routes/chat.js';
 import { eventsRouter } from './routes/events.js';
@@ -34,6 +35,19 @@ if (
   console.log('[server] Gmail connector registered (gmail_list, gmail_get, gmail_send)');
 } else {
   console.log('[server] Gmail connector skipped — GMAIL_* env vars not set');
+}
+
+// ─── Wire task tools ──────────────────────────────────────────────────────────
+
+if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+  const taskBridge = new AgentBridgeConnector();
+  for (const adapter of buildTaskAdapters()) {
+    taskBridge.register(adapter.name, adapter);
+  }
+  claw.use(taskBridge);
+  console.log('[server] Task tools registered (add_task, list_tasks, complete_task, create_project, list_projects)');
+} else {
+  console.log('[server] Task tools skipped — SUPABASE_URL / SUPABASE_ANON_KEY not set');
 }
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
