@@ -1,107 +1,155 @@
 :root {
-  --bg: #0d0d0d;
-  --surface: #111;
-  --border: #1e1e1e;
-  --text: #d4d4d4;
-  --muted: #555;
-  --aria: #7ec8e3;
-  --you: #c8e37e;
-  --font: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
+  --bg: #1c1c1c;
+  --surface: #252525;
+  --bubble-user: #2e2e2e;
+  --border: #333;
+  --text: #ececec;
+  --muted: #888;
+  --accent: #d97706;
+  --accent-dim: rgba(217,119,6,0.15);
+  --font: -apple-system, 'Inter', BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
 }
+
+/* ── Root ──────────────────────────────────────────────────────────────────── */
 
 .log-root {
   display: flex;
   flex-direction: column;
-  /* dvh keeps the layout inside the visible area on mobile Safari */
-  height: 100dvh;
-  height: 100vh; /* fallback */
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.65;
+  /* vh first as fallback; dvh shrinks when mobile keyboard opens */
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
-/* ── Header ──────────────────────────────────────────────────────────────── */
+/* ── Header ────────────────────────────────────────────────────────────────── */
 
 .log-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  padding-top: max(12px, env(safe-area-inset-top));
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 16px;
+  padding-top: max(14px, env(safe-area-inset-top));
   border-bottom: 1px solid var(--border);
   background: var(--surface);
   flex-shrink: 0;
+  position: relative;
 }
 
 .log-header-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--aria);
-  box-shadow: 0 0 6px var(--aria);
-  flex-shrink: 0;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
 }
 
 .log-header-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--aria);
-  letter-spacing: 0.12em;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.04em;
 }
 
 .log-header-status {
-  font-size: 11px;
+  position: absolute;
+  right: 16px;
+  font-size: 12px;
   color: var(--muted);
-  margin-left: auto;
 }
 
-/* ── Message log ─────────────────────────────────────────────────────────── */
+/* ── Message list ──────────────────────────────────────────────────────────── */
 
 .log-entries {
   flex: 1;
   overflow-y: auto;
-  /* momentum scrolling on iOS */
   -webkit-overflow-scrolling: touch;
-  padding: 12px 16px;
+  padding: 20px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   scroll-behavior: smooth;
 }
 
+/* Centre-constrain the message list on wider screens */
+@media (min-width: 700px) {
+  .log-entries { padding: 24px 0 16px; align-items: stretch; }
+  .log-entries > * { max-width: 720px; width: 100%; margin: 0 auto; }
+}
+
+/* ── Individual message rows ───────────────────────────────────────────────── */
+
 .log-line {
   display: flex;
-  gap: 10px;
-  padding: 3px 0;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 100%;
+}
+
+/* User messages — right-aligned bubble */
+.log-line--you {
+  align-items: flex-end;
+}
+
+.log-line--you .log-bubble {
+  background: var(--bubble-user);
+  border-radius: 18px 18px 4px 18px;
+  padding: 10px 14px;
+  max-width: 78%;
   word-break: break-word;
+  font-size: 15px;
+  line-height: 1.55;
 }
 
-.log-ts {
-  color: var(--muted);
-  font-size: 11px;
-  flex-shrink: 0;
-  user-select: none;
-  padding-top: 2px;
+/* ARIA messages — left-aligned, no bubble */
+.log-line--aria {
+  align-items: flex-start;
 }
 
-.log-speaker {
-  font-weight: 700;
+.log-line--aria .log-bubble {
+  max-width: 88%;
+  word-break: break-word;
+  font-size: 15px;
+  line-height: 1.65;
+  padding: 2px 0;
+}
+
+/* System messages — centered muted */
+.log-line--system {
+  align-items: center;
+}
+
+.log-line--system .log-bubble {
   font-size: 12px;
-  letter-spacing: 0.06em;
-  flex-shrink: 0;
-  min-width: 48px;
-  padding-top: 1px;
+  color: var(--muted);
+  font-style: italic;
 }
 
-.log-line--aria   .log-speaker { color: var(--aria); }
-.log-line--you    .log-speaker { color: var(--you); }
-.log-line--system .log-speaker { color: var(--muted); }
-.log-line--system              { opacity: 0.5; font-size: 12px; }
+/* Speaker label above each message */
+.log-speaker-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding: 0 2px;
+  margin-bottom: 2px;
+  user-select: none;
+}
 
-.log-content { flex: 1; white-space: pre-wrap; }
+.log-line--aria  .log-speaker-label { color: var(--accent); }
+.log-line--you   .log-speaker-label { color: #aaa; }
+.log-line--system .log-speaker-label { display: none; }
 
+/* Blinking cursor for streaming */
 .cursor {
   display: inline-block;
-  color: var(--aria);
+  color: var(--accent);
   animation: blink 1s step-end infinite;
 }
 @keyframes blink {
@@ -109,43 +157,48 @@
   50%       { opacity: 0; }
 }
 
-/* ── Input row ───────────────────────────────────────────────────────────── */
+/* ── Input wrap + row ──────────────────────────────────────────────────────── */
 
-.log-input-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 16px;
-  padding-bottom: max(14px, env(safe-area-inset-bottom));
-  padding-top: 10px;
+.log-input-wrap {
   border-top: 1px solid var(--border);
   background: var(--surface);
   flex-shrink: 0;
 }
 
-.log-prompt {
-  color: var(--aria);
-  font-weight: bold;
-  user-select: none;
-  font-size: 16px;
+.log-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+@media (min-width: 700px) {
+  .log-input-row {
+    max-width: 720px;
+    width: 100%;
+    margin: 0 auto;
+  }
 }
 
 .log-input {
   flex: 1;
-  background: transparent;
-  border: none;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 11px 14px;
   outline: none;
   color: var(--text);
   font-family: var(--font);
-  /* 16px prevents iOS Safari from zooming on focus */
-  font-size: 16px;
-  caret-color: var(--aria);
-  /* minimum tap target height */
+  font-size: 16px;   /* 16px prevents iOS Safari zoom on focus */
+  line-height: 1.4;
+  caret-color: var(--accent);
   min-height: 44px;
-  line-height: 44px;
+  transition: border-color 0.15s;
 }
 
-.log-input::placeholder { color: #333; }
+.log-input::placeholder { color: #555; }
+.log-input:focus        { border-color: #555; }
 .log-input:disabled     { opacity: 0.4; }
 
 .log-send {
@@ -154,28 +207,27 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  background: none;
+  background: var(--accent-dim);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--aria);
-  font-family: var(--font);
-  font-size: 18px;
+  border-radius: 12px;
+  color: var(--accent);
+  font-size: 20px;
   cursor: pointer;
   flex-shrink: 0;
   transition: background 0.15s, border-color 0.15s;
-  /* prevent double-tap zoom on iOS */
   touch-action: manipulation;
 }
 
-.log-send:active  { background: #1a2a2e; border-color: var(--aria); }
-.log-send:disabled { opacity: 0.3; cursor: default; }
+.log-send:active             { background: rgba(217,119,6,0.3); }
+.log-send:not(:disabled):hover { border-color: var(--accent); }
+.log-send:disabled           { opacity: 0.25; cursor: default; }
 
-/* ── Desktop refinements ─────────────────────────────────────────────────── */
+/* ── Desktop font tweak ────────────────────────────────────────────────────── */
 
 @media (min-width: 640px) {
-  .log-entries    { padding: 16px 24px; }
-  .log-input-row  { padding: 10px 24px 12px; }
-  .log-root       { font-size: 13px; }
-  .log-input      { font-size: 13px; min-height: unset; line-height: inherit; }
-  .log-send       { width: 36px; height: 36px; font-size: 16px; }
+  .log-root              { font-size: 14px; }
+  .log-line--you .log-bubble,
+  .log-line--aria .log-bubble { font-size: 14px; }
+  .log-input             { font-size: 14px; }
+  .log-send              { width: 38px; height: 38px; font-size: 17px; }
 }
