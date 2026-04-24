@@ -1,6 +1,7 @@
 // Must be first — sets process.env before core/index.ts is evaluated.
 import './load-env.js';
 
+import cors from 'cors';
 import express from 'express';
 import { AgentBridgeConnector } from '@aria/core';
 import { claw } from './core/index.js';
@@ -14,14 +15,12 @@ const PORT = Number(process.env.PORT ?? 4000);
 
 // ─── Middleware ────────────────────────────────────────────────────────────────
 
+app.use(cors({
+  origin: 'http://188.245.242.236:5173',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
+}));
 app.use(express.json());
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  if (req.method === 'OPTIONS') { res.status(204).end(); return; }
-  next();
-});
 
 // ─── Wire Gmail connector ─────────────────────────────────────────────────────
 
