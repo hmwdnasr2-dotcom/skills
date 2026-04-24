@@ -8,6 +8,7 @@ import { claw } from './core/index.js';
 import { GmailConnector, buildGmailAdapters } from './connectors/gmail.js';
 import { buildTaskAdapters } from './connectors/tasks.js';
 import { startScheduler } from './proactive/scheduler.js';
+import { authRouter } from './routes/auth.js';
 import { chatRouter } from './routes/chat.js';
 import { eventsRouter } from './routes/events.js';
 
@@ -54,6 +55,7 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
 
 app.use('/api/aria/chat', chatRouter);
 app.use('/api/aria/events', eventsRouter);
+app.use('/api/auth', authRouter);
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 

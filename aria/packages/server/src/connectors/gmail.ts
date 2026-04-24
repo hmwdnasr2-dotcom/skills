@@ -23,8 +23,12 @@ interface SendInput {
   body: string;
 }
 
-interface GetInput {
-  messageId: string;
+interface DraftInput {
+  to: string;
+  subject: string;
+  body: string;
+  thread_id?: string;
+  in_reply_to?: string;
 }
 
 // ─── OAuth2 client factory ────────────────────────────────────────────────────
@@ -64,14 +68,23 @@ function extractBody(payload: MessagePayload): string {
   return '';
 }
 
-function buildRfc2822(to: string, subject: string, body: string): string {
-  return [
-    `To: ${to}`,
-    `Subject: ${subject}`,
-    'Content-Type: text/plain; charset=utf-8',
-    '',
-    body,
-  ].join('\r\n');
+function buildRfc2822(
+  to: string,
+  subject: string,
+  body: string,
+  extra: Record<string, string> = {},
+): string {
+  const headers = [`To: ${to}`, `Subject: ${subject}`, 'Content-Type: text/plain; charset=utf-8'];
+  for (const [k, v] of Object.entries(extra)) headers.push(`${k}: ${v}`);
+  return [...headers, '', body].join('\r\n');
+}
+
+function encodeRaw(raw: string): string {
+  return Buffer.from(raw)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 }
 
 // ─── GmailConnector ───────────────────────────────────────────────────────────
@@ -135,18 +148,35 @@ export class GmailConnector {
   }
 
   async sendMessage(to: string, subject: string, body: string): Promise<string> {
-    const raw = Buffer.from(buildRfc2822(to, subject, body))
-      .toString('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '');
-
     const res = await this.gmail.users.messages.send({
       userId: 'me',
-      requestBody: { raw },
+      requestBody: { raw: encodeRaw(buildRfc2822(to, subject, body)) },
     });
-
     return res.data.id ?? 'sent';
+  }
+
+  async draftMessage(
+    to: string,
+    subject: string,
+    body: string,
+    opts: { threadId?: string; inReplyTo?: string } = {},
+  ): Promise<string> {
+    const extra: Record<string, string> = {};
+    if (opts.inReplyTo) {
+      extra['In-Reply-To'] = opts.inReplyTo;
+      extra['References'] = opts.inReplyTo;
+    }
+
+    const requestBody: Record<string, unknown> = {
+      raw: encodeRaw(buildRfc2822(to, subject, body, extra)),
+    };
+    if (opts.threadId) requestBody['threadId'] = opts.threadId;
+
+    const res = await this.gmail.users.drafts.create({
+      userId: 'me',
+      requestBody: { message: requestBody },
+    });
+    return res.data.id ?? 'draft-created';
   }
 }
 
@@ -204,22 +234,49 @@ export function buildGmailAdapters(connector: GmailConnector): BridgeAdapter[] {
 
     {
       name: 'gmail_send',
-      description: 'Send an email via Gmail.',
+      description: 'Send an email via Gmail. Only use when the user explicitly says to send.',
       inputSchema: {
         type: 'object',
         properties: {
-          to: { type: 'string', description: 'Recipient email address.' },
+          to:      { type: 'string', description: 'Recipient email address.' },
           subject: { type: 'string', description: 'Email subject line.' },
-          body: { type: 'string', description: 'Plain-text email body.' },
+          body:    { type: 'string', description: 'Plain-text email body.' },
         },
         required: ['to', 'subject', 'body'],
       },
       async call(input: Record<string, unknown>): Promise<string> {
-        const to = input['to'] as string;
-        const subject = input['subject'] as string;
-        const body = input['body'] as string;
-        const id = await connector.sendMessage(to, subject, body);
+        const id = await connector.sendMessage(
+          input['to'] as string,
+          input['subject'] as string,
+          input['body'] as string,
+        );
         return `Email sent. Message ID: ${id}`;
+      },
+    },
+
+    {
+      name: 'gmail_draft',
+      description:
+        'Save a draft reply or new email in Gmail WITHOUT sending it. ' +
+        'Use when the user says "draft a reply", "compose but don\'t send", or "prepare a response".',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          to:         { type: 'string', description: 'Recipient email address.' },
+          subject:    { type: 'string', description: 'Email subject.' },
+          body:       { type: 'string', description: 'Plain-text email body.' },
+          thread_id:  { type: 'string', description: 'Thread ID from gmail_list (for replies).' },
+          in_reply_to: { type: 'string', description: 'Message-ID header of the email being replied to.' },
+        },
+        required: ['to', 'subject', 'body'],
+      },
+      async call(input: Record<string, unknown>): Promise<string> {
+        const { to, subject, body, thread_id, in_reply_to } = input as unknown as DraftInput;
+        const id = await connector.draftMessage(to, subject, body, {
+          threadId: thread_id,
+          inReplyTo: in_reply_to,
+        });
+        return `Draft saved (ID: ${id}). Open Gmail to review and send.`;
       },
     },
   ];
