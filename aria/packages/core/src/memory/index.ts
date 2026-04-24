@@ -20,33 +20,43 @@ export interface MemoryStack {
 }
 
 export function buildMemoryStack(): MemoryStack {
-  const supabase = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const hasSupabase = Boolean(url && key);
+
+  if (!hasSupabase) {
+    console.warn('[memory] SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set — running with working memory only (no persistence)');
+  }
+
+  const supabase = hasSupabase
+    ? createClient(url!, key!)
+    : null;
 
   const working = new WorkingMemory({ maxMessages: 20 });
-  const shortTerm = new ShortTermMemory({ supabase, maxRows: 50 });
-  const longTerm = new LongTermMemory({ supabase });
+  const shortTerm = supabase ? new ShortTermMemory({ supabase, maxRows: 50 }) : null;
+  const longTerm  = supabase ? new LongTermMemory({ supabase }) : null;
 
   return {
     working,
-    shortTerm,
-    longTerm,
+    shortTerm: shortTerm as unknown as ShortTermMemory,
+    longTerm:  longTerm  as unknown as LongTermMemory,
 
     async load(userId: string) {
+      if (!shortTerm) return;
       const recent = await shortTerm.load(userId);
       working.seed(recent);
     },
 
     async save(userId: string, messages: Message[], reply: ChatResponse) {
+      if (!shortTerm) return;
       await shortTerm.save(userId, messages, reply.content);
-      if (reply.content.length > 200) {
+      if (longTerm && reply.content.length > 200) {
         await longTerm.upsert(userId, reply.content);
       }
     },
 
     async recall(userId: string, query: string, topK = 5) {
+      if (!longTerm) return [];
       return longTerm.search(userId, query, topK);
     },
   };
