@@ -18,6 +18,7 @@ export type {
 
 export { ClaudeBrain } from './brain/claude.js';
 export { GeminiBrain } from './brain/gemini.js';
+export { GroqBrain } from './brain/groq.js';
 export { OllamaBrain } from './brain/ollama.js';
 export { OpenAIBrain } from './brain/openai.js';
 

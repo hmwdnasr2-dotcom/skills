@@ -1,24 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-// Load .env before any other imports touch process.env
-const __dir = dirname(fileURLToPath(import.meta.url));
-try {
-  const envPath = resolve(__dir, '../../.env');
-  const lines = readFileSync(envPath, 'utf-8').split('\n');
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eq = trimmed.indexOf('=');
-    if (eq === -1) continue;
-    const k = trimmed.slice(0, eq).trim();
-    const v = trimmed.slice(eq + 1).trim();
-    if (k && !(k in process.env)) process.env[k] = v;
-  }
-} catch {
-  // no .env file — rely on real env vars
-}
+// Must be first — ESM evaluates imports in order, so this sets process.env
+// before core/index.ts constructs the brain.
+import 'dotenv/config';
 
 import express from 'express';
 import { AgentBridgeConnector } from '@aria/core';
@@ -69,5 +51,6 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 
 app.listen(PORT, () => {
   console.log(`[server] ARIA server listening on http://localhost:${PORT}`);
+  console.log(`[server] Brain: ${process.env.ARIA_BRAIN ?? 'claude'} / ${process.env.ARIA_MODEL ?? 'default'}`);
   startScheduler();
 });

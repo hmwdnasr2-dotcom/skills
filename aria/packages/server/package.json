@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@aria/core": "*",
+    "dotenv": "^17.4.2",
     "express": "^4.19.2",
     "googleapis": "^140.0.0",
     "node-cron": "^3.0.3"

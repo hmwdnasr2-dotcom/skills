@@ -1,7 +1,7 @@
 import {
   AgentBridgeConnector,
-  ClaudeBrain,
   GeminiBrain,
+  GroqBrain,
   N8nAdapter,
   OllamaBrain,
   OpenAIBrain,
@@ -13,12 +13,13 @@ import {
 // ─── Bootstrap brain based on env ──────────────────────────────────────────────
 
 function buildBrain() {
-  const provider = process.env.ARIA_BRAIN ?? 'claude';
+  const provider = process.env.ARIA_BRAIN ?? 'groq';
+  const model    = process.env.ARIA_MODEL;
   switch (provider) {
-    case 'openai': return new OpenAIBrain();
-    case 'gemini': return new GeminiBrain();
-    case 'ollama': return new OllamaBrain();
-    default:       return new ClaudeBrain({ model: 'claude-sonnet-4-6' });
+    case 'openai': return new OpenAIBrain(model ? { model } : {});
+    case 'gemini': return new GeminiBrain(model ? { model } : {});
+    case 'ollama': return new OllamaBrain(model ? { model } : {});
+    default:       return new GroqBrain({ model: model ?? 'llama-3.3-70b-versatile' });
   }
 }
 
