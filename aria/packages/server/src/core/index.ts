@@ -145,14 +145,14 @@ Keep briefings under 200 words. No padding.
 
 
 claw.pipeline('chat', async (ctx) => {
-  await ctx.memory.load(ctx.userId);
+  try { await ctx.memory.load(ctx.userId); } catch { /* no persistence — continue without history */ }
   const history = ctx.memory.working.get();
 
   const system = { role: 'system' as const, content: ARIA_SYSTEM(ctx.userId) };
 
   const allMessages = [system, ...history, ...ctx.messages];
   const reply = await ctx.brain.chat(allMessages);
-  await ctx.memory.save(ctx.userId, ctx.messages, reply);
+  try { await ctx.memory.save(ctx.userId, ctx.messages, reply); } catch { /* best-effort save */ }
   return reply.content;
 });
 

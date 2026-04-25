@@ -228,7 +228,7 @@ export function buildWorkspaceAdapters(): BridgeAdapter[] {
             .gte('created_at', startIso),
 
           sb.from('aria_projects')
-            .select('name, goal, deadline, status, created_at')
+            .select('name, goal, end_date, status, created_at')
             .eq('user_id', user_id),
 
           sb.from('aria_achievements')
@@ -255,8 +255,8 @@ export function buildWorkspaceAdapters(): BridgeAdapter[] {
         if (followUps.error)    throw new Error(followUps.error.message);
 
         const allTasks       = tasks.data ?? [];
-        const completedTasks = allTasks.filter((t) => t.status === 'done');
-        const openTasks      = allTasks.filter((t) => t.status === 'todo');
+        const completedTasks = allTasks.filter((t) => t.status === 'completed');
+        const openTasks      = allTasks.filter((t) => t.status === 'todo' || t.status === 'in_progress');
         const overdueTasks   = openTasks.filter((t) => t.due_date && new Date(t.due_date) < now);
 
         const allFollowUps  = followUps.data ?? [];
@@ -291,7 +291,7 @@ export function buildWorkspaceAdapters(): BridgeAdapter[] {
             active:           activeProjects.length,
             completed:        completedProjects.length,
             active_list:      activeProjects.map((p) => ({
-              name: p.name, goal: p.goal, deadline: p.deadline,
+              name: p.name, goal: p.goal, end_date: p.end_date,
             })),
             completed_list:   completedProjects.map((p) => p.name),
           },
