@@ -67,6 +67,7 @@ app.use('/api/aria/events', eventsRouter);
 app.use('/api/aria/memory', memoryRouter);
 app.use('/api/auth', authRouter);
 
+app.get('/', (_req, res) => res.json({ service: 'ARIA', status: 'ok' }));
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
 // ─── Start ────────────────────────────────────────────────────────────────────
