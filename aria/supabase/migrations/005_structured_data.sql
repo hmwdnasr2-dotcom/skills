@@ -1,18 +1,10 @@
 -- 005_structured_data.sql
--- Full rebuild: drop legacy tables and recreate with complete schema.
--- Cascade handles FK dependency (aria_tasks → aria_projects).
-
-drop table if exists aria_reports      cascade;
-drop table if exists aria_contacts     cascade;
-drop table if exists aria_daily_logs   cascade;
-drop table if exists aria_achievements cascade;
-drop table if exists aria_follow_ups   cascade;
-drop table if exists aria_tasks        cascade;
-drop table if exists aria_projects     cascade;
+-- Safe: uses CREATE TABLE IF NOT EXISTS throughout.
+-- Re-runnable without data loss.
 
 -- ─── Projects ─────────────────────────────────────────────────────────────────
 
-create table aria_projects (
+create table if not exists aria_projects (
   id          uuid        primary key default gen_random_uuid(),
   user_id     text        not null,
   name        text        not null,
@@ -29,13 +21,24 @@ create table aria_projects (
   updated_at  timestamptz not null default now()
 );
 
-create index aria_projects_user_id on aria_projects(user_id);
-create index aria_projects_status  on aria_projects(user_id, status);
+create index if not exists aria_projects_user_id on aria_projects(user_id);
+create index if not exists aria_projects_status  on aria_projects(user_id, status);
 alter table aria_projects disable row level security;
+
+-- Backfill columns added after initial creation
+alter table aria_projects
+  add column if not exists description text,
+  add column if not exists status      text not null default 'active',
+  add column if not exists priority    text not null default 'medium',
+  add column if not exists start_date  date,
+  add column if not exists end_date    date,
+  add column if not exists goal        text,
+  add column if not exists outcome     text,
+  add column if not exists updated_at  timestamptz not null default now();
 
 -- ─── Tasks ────────────────────────────────────────────────────────────────────
 
-create table aria_tasks (
+create table if not exists aria_tasks (
   id           uuid        primary key default gen_random_uuid(),
   user_id      text        not null,
   title        text        not null,
@@ -51,15 +54,27 @@ create table aria_tasks (
   updated_at   timestamptz not null default now()
 );
 
-create index aria_tasks_user_id on aria_tasks(user_id);
-create index aria_tasks_status  on aria_tasks(user_id, status);
-create index aria_tasks_project on aria_tasks(project_id);
-create index aria_tasks_due     on aria_tasks(user_id, due_date) where due_date is not null;
+create index if not exists aria_tasks_user_id on aria_tasks(user_id);
+create index if not exists aria_tasks_status  on aria_tasks(user_id, status);
+create index if not exists aria_tasks_project on aria_tasks(project_id);
+create index if not exists aria_tasks_due     on aria_tasks(user_id, due_date) where due_date is not null;
 alter table aria_tasks disable row level security;
+
+alter table aria_tasks
+  add column if not exists description  text,
+  add column if not exists priority     text not null default 'medium',
+  add column if not exists due_date     date,
+  add column if not exists completed_at timestamptz,
+  add column if not exists updated_at   timestamptz not null default now();
+
+-- Widen status check to include in_progress / cancelled
+alter table aria_tasks drop constraint if exists aria_tasks_status_check;
+alter table aria_tasks add  constraint aria_tasks_status_check
+  check (status in ('todo', 'in_progress', 'completed', 'cancelled'));
 
 -- ─── Follow-ups ───────────────────────────────────────────────────────────────
 
-create table aria_follow_ups (
+create table if not exists aria_follow_ups (
   id            uuid        primary key default gen_random_uuid(),
   user_id       text        not null,
   contact_name  text        not null,
@@ -72,13 +87,19 @@ create table aria_follow_ups (
   created_at    timestamptz not null default now()
 );
 
-create index aria_follow_ups_user_id on aria_follow_ups(user_id);
-create index aria_follow_ups_status  on aria_follow_ups(user_id, status);
+create index if not exists aria_follow_ups_user_id on aria_follow_ups(user_id);
+create index if not exists aria_follow_ups_status  on aria_follow_ups(user_id, status);
 alter table aria_follow_ups disable row level security;
+
+alter table aria_follow_ups
+  add column if not exists contact_name  text,
+  add column if not exists contact_email text,
+  add column if not exists context       text,
+  add column if not exists resolved_at   timestamptz;
 
 -- ─── Achievements ─────────────────────────────────────────────────────────────
 
-create table aria_achievements (
+create table if not exists aria_achievements (
   id            uuid        primary key default gen_random_uuid(),
   user_id       text        not null,
   title         text        not null,
@@ -91,13 +112,25 @@ create table aria_achievements (
   created_at    timestamptz not null default now()
 );
 
-create index aria_achievements_user_id on aria_achievements(user_id);
-create index aria_achievements_project on aria_achievements(project_id) where project_id is not null;
+create index if not exists aria_achievements_user_id on aria_achievements(user_id);
+create index if not exists aria_achievements_project
+  on aria_achievements(project_id) where project_id is not null;
 alter table aria_achievements disable row level security;
+
+alter table aria_achievements
+  add column if not exists description   text,
+  add column if not exists impact        text,
+  add column if not exists project_id    uuid references aria_projects(id) on delete set null,
+  add column if not exists date_achieved date not null default current_date;
+
+-- Widen category check
+alter table aria_achievements drop constraint if exists aria_achievements_category_check;
+alter table aria_achievements add  constraint aria_achievements_category_check
+  check (category in ('personal', 'professional', 'financial', 'health'));
 
 -- ─── Daily logs ───────────────────────────────────────────────────────────────
 
-create table aria_daily_logs (
+create table if not exists aria_daily_logs (
   id                  uuid        primary key default gen_random_uuid(),
   user_id             text        not null,
   date                date        not null default current_date,
@@ -109,12 +142,17 @@ create table aria_daily_logs (
   unique (user_id, date)
 );
 
-create index aria_daily_logs_user_id on aria_daily_logs(user_id);
+create index if not exists aria_daily_logs_user_id on aria_daily_logs(user_id);
 alter table aria_daily_logs disable row level security;
 
--- ─── Contacts ─────────────────────────────────────────────────────────────────
+alter table aria_daily_logs
+  add column if not exists tasks_completed     int not null default 0,
+  add column if not exists follow_ups_resolved int not null default 0,
+  add column if not exists notes               text;
 
-create table aria_contacts (
+-- ─── Contacts (new table) ─────────────────────────────────────────────────────
+
+create table if not exists aria_contacts (
   id           uuid        primary key default gen_random_uuid(),
   user_id      text        not null,
   name         text        not null,
@@ -127,12 +165,12 @@ create table aria_contacts (
   created_at   timestamptz not null default now()
 );
 
-create index aria_contacts_user_id on aria_contacts(user_id);
+create index if not exists aria_contacts_user_id on aria_contacts(user_id);
 alter table aria_contacts disable row level security;
 
--- ─── Reports ──────────────────────────────────────────────────────────────────
+-- ─── Reports (new table) ─────────────────────────────────────────────────────
 
-create table aria_reports (
+create table if not exists aria_reports (
   id           uuid        primary key default gen_random_uuid(),
   user_id      text        not null,
   type         text        not null
@@ -143,5 +181,5 @@ create table aria_reports (
   generated_at timestamptz not null default now()
 );
 
-create index aria_reports_user_id on aria_reports(user_id);
+create index if not exists aria_reports_user_id on aria_reports(user_id);
 alter table aria_reports disable row level security;
