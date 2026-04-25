@@ -6,7 +6,7 @@ import express from 'express';
 import { AgentBridgeConnector } from '@aria/core';
 import { claw } from './core/index.js';
 import { GmailConnector, buildGmailAdapters } from './connectors/gmail.js';
-import { buildTaskAdapters } from './connectors/tasks.js';
+import { buildProjectAdapters } from './connectors/tasks.js';
 import { buildWorkspaceAdapters } from './connectors/workspace.js';
 import { startScheduler } from './proactive/scheduler.js';
 import { authRouter } from './routes/auth.js';
@@ -44,7 +44,7 @@ if (
 
 if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
   const taskBridge = new AgentBridgeConnector();
-  for (const adapter of buildTaskAdapters()) {
+  for (const adapter of buildProjectAdapters()) {
     taskBridge.register(adapter.name, adapter);
   }
   claw.use(taskBridge);
