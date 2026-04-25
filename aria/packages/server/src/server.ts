@@ -12,6 +12,7 @@ import { startScheduler } from './proactive/scheduler.js';
 import { authRouter } from './routes/auth.js';
 import { chatRouter } from './routes/chat.js';
 import { eventsRouter } from './routes/events.js';
+import { memoryRouter } from './routes/memory.js';
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 4000);
@@ -63,6 +64,7 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
 
 app.use('/api/aria/chat', chatRouter);
 app.use('/api/aria/events', eventsRouter);
+app.use('/api/aria/memory', memoryRouter);
 app.use('/api/auth', authRouter);
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
