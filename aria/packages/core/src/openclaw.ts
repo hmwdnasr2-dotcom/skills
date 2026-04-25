@@ -261,7 +261,7 @@ export class OpenClaw {
 
           currentMessages = [
             ...currentMessages,
-            { role: 'assistant', content: response.content },
+            { role: 'assistant', content: response.content, _rawContent: response._rawContent },
             ...toolResults,
           ];
           iterations++;

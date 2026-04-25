@@ -2,6 +2,8 @@ export interface Message {
   role: 'system' | 'user' | 'assistant' | 'tool';
   content: string;
   toolCallId?: string;
+  /** Raw provider content blocks — preserved for multi-turn tool-call continuations. */
+  _rawContent?: unknown[];
 }
 
 export interface ToolDefinition {
@@ -24,6 +26,8 @@ export interface ChatResponse {
     name: string;
     input: Record<string, unknown>;
   }>;
+  /** Raw provider content blocks — used to reconstruct assistant messages for multi-turn tool calls. */
+  _rawContent?: unknown[];
   usage?: { inputTokens: number; outputTokens: number };
 }
 
