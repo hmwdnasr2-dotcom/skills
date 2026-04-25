@@ -271,14 +271,18 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
     setThinkSteps(initial);
 
     if (steps.length >= 2) {
-      schedule(() => setThinkSteps((prev) =>
-        prev.map((s, i) => ({ ...s, state: (i === 0 ? 'done' : i === 1 ? 'running' : s.state) as StepState }))
-      , 800);
+      schedule(() => {
+        setThinkSteps((prev) =>
+          prev.map((s, i) => ({ ...s, state: (i === 0 ? 'done' : i === 1 ? 'running' : s.state) as StepState }))
+        );
+      }, 800);
     }
     if (steps.length >= 3) {
-      schedule(() => setThinkSteps((prev) =>
-        prev.map((s, i) => ({ ...s, state: (i <= 1 ? 'done' : i === 2 ? 'running' : s.state) as StepState }))
-      , 1600);
+      schedule(() => {
+        setThinkSteps((prev) =>
+          prev.map((s, i) => ({ ...s, state: (i <= 1 ? 'done' : i === 2 ? 'running' : s.state) as StepState }))
+        );
+      }, 1600);
     }
   }
 

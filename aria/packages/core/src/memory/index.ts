@@ -32,9 +32,15 @@ export function buildMemoryStack(): MemoryStack {
     ? createClient(url!, key!)
     : null;
 
+  const hasOpenAI = Boolean(process.env.OPENAI_API_KEY);
+
   const working = new WorkingMemory({ maxMessages: 20 });
   const shortTerm = supabase ? new ShortTermMemory({ supabase, maxRows: 50 }) : null;
-  const longTerm  = supabase ? new LongTermMemory({ supabase }) : null;
+  const longTerm  = supabase && hasOpenAI ? new LongTermMemory({ supabase }) : null;
+
+  if (supabase && !hasOpenAI) {
+    console.warn('[memory] OPENAI_API_KEY not set — long-term vector memory disabled');
+  }
 
   return {
     working,
