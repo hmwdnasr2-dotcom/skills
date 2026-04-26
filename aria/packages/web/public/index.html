@@ -1,2 +1,564 @@
-<!doctype html>
-<html><head><meta http-equiv="refresh" content="0;url=/"></head><body></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#070c18">
+<title>ARIA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:           #070c18;
+  --bg2:          #0c1220;
+  --surface:      #111827;
+  --surface2:     #1a2540;
+  --border:       rgba(255,255,255,0.06);
+  --border2:      rgba(255,255,255,0.10);
+  --accent:       #2563eb;
+  --accent-h:     #3b7cf8;
+  --accent-dim:   rgba(37,99,235,0.15);
+  --accent-glow:  rgba(37,99,235,0.25);
+  --text:         #e2eaf8;
+  --text-2:       #8898b8;
+  --text-3:       #4a5a78;
+  --user-bg:      #1a40c8;
+  --user-bg-h:    #1d4ed8;
+  --green:        #22c55e;
+  --red:          #ef4444;
+  --font:         'Inter', -apple-system, sans-serif;
+  --r-sm:         10px;
+  --r-md:         16px;
+  --r-lg:         22px;
+  --r-xl:         28px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  height: 100vh;
+  max-width: 760px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 14px;
+  padding-top: max(14px, env(safe-area-inset-top));
+  background: rgba(7,12,24,0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(37,99,235,0.35);
+}
+
+.header-info { display: flex; flex-direction: column; gap: 1px; }
+
+.header-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-2);
+  letter-spacing: 0.3px;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  flex-shrink: 0;
+}
+.status-dot.processing {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+  animation: pulse-dot 1s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.8); }
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.header-btn {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text-2);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  transition: all 0.15s ease;
+}
+.header-btn:hover { background: var(--surface2); color: var(--text); }
+
+/* ── Messages ────────────────────────────────────────── */
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  scroll-behavior: smooth;
+}
+
+#messages::-webkit-scrollbar { width: 3px; }
+#messages::-webkit-scrollbar-track { background: transparent; }
+#messages::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
+
+.msg-row {
+  display: flex;
+  flex-direction: column;
+  animation: msg-in 0.22s cubic-bezier(0.2, 0, 0, 1) both;
+}
+.msg-row.user { align-items: flex-end; }
+.msg-row.aria { align-items: flex-start; }
+
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.msg-sender {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 4px;
+  padding: 0 4px;
+}
+.msg-row.user .msg-sender { color: rgba(99,142,255,0.6); }
+
+.msg-bubble {
+  max-width: min(82%, 580px);
+  padding: 11px 15px 12px;
+  border-radius: var(--r-lg);
+  font-size: 14.5px;
+  line-height: 1.65;
+  word-break: break-word;
+  position: relative;
+}
+
+.msg-row.user .msg-bubble {
+  background: linear-gradient(160deg, var(--user-bg-h) 0%, var(--user-bg) 100%);
+  color: rgba(255,255,255,0.95);
+  border-bottom-right-radius: 5px;
+  box-shadow: 0 4px 20px rgba(29,78,216,0.3);
+}
+
+.msg-row.aria .msg-bubble {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 5px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+
+/* consecutive messages — tighten corners */
+.msg-row.aria + .msg-row.aria .msg-bubble { border-top-left-radius: 8px; }
+.msg-row.user + .msg-row.user .msg-bubble { border-top-right-radius: 8px; }
+
+/* Markdown inside aria bubbles */
+.msg-bubble p { margin: 0 0 8px; }
+.msg-bubble p:last-child { margin-bottom: 0; }
+.msg-bubble strong { font-weight: 600; color: #fff; }
+.msg-bubble em { font-style: italic; color: var(--text-2); }
+.msg-bubble ul, .msg-bubble ol { padding-left: 18px; margin: 6px 0; }
+.msg-bubble li { margin: 3px 0; }
+.msg-bubble h1, .msg-bubble h2, .msg-bubble h3 {
+  font-weight: 600; margin: 12px 0 6px; line-height: 1.3; color: var(--text);
+}
+.msg-bubble h1 { font-size: 17px; }
+.msg-bubble h2 { font-size: 15.5px; }
+.msg-bubble h3 { font-size: 14.5px; }
+.msg-bubble code {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12.5px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 5px;
+  padding: 1px 5px;
+  color: #93c5fd;
+}
+.msg-bubble pre {
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: 10px 0;
+}
+.msg-bubble pre code {
+  background: none; border: none; padding: 0;
+  font-size: 12.5px; color: #bdd0f8; line-height: 1.6;
+}
+.msg-bubble blockquote {
+  border-left: 2px solid var(--accent);
+  padding-left: 12px; margin: 8px 0;
+  color: var(--text-2); font-style: italic;
+}
+.msg-bubble hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+.msg-bubble a { color: #60a5fa; text-decoration: underline; text-underline-offset: 2px; }
+.msg-bubble table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 13px; }
+.msg-bubble th { background: var(--surface2); padding: 6px 10px; text-align: left; font-weight: 600; }
+.msg-bubble td { padding: 5px 10px; border-top: 1px solid var(--border); }
+
+/* ── Typing indicator ────────────────────────────────── */
+.typing-bubble {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  border-bottom-left-radius: 5px;
+  padding: 13px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+.typing-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--text-3);
+  animation: typing 1.3s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing {
+  0%, 60%, 100% { opacity: 0.3; transform: scale(1); }
+  30%            { opacity: 1;   transform: scale(1.2); }
+}
+
+/* ── Divider ─────────────────────────────────────────── */
+.date-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 16px 0 10px;
+  color: var(--text-3);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.date-divider::before, .date-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+/* ── Input area ──────────────────────────────────────── */
+.input-wrap {
+  padding: 12px 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  background: rgba(7,12,24,0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid var(--border);
+}
+
+.input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-xl);
+  padding: 10px 10px 10px 16px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.input-row:focus-within {
+  border-color: rgba(37,99,235,0.5);
+  box-shadow: 0 0 0 3px var(--accent-dim), 0 4px 20px rgba(0,0,0,0.3);
+}
+
+textarea#inp {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14.5px;
+  line-height: 1.55;
+  resize: none;
+  min-height: 22px;
+  max-height: 140px;
+  overflow-y: auto;
+  caret-color: var(--accent-h);
+}
+textarea#inp::placeholder { color: var(--text-3); }
+textarea#inp::-webkit-scrollbar { width: 3px; }
+textarea#inp::-webkit-scrollbar-thumb { background: var(--surface2); }
+
+#send-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 10px rgba(37,99,235,0.4);
+}
+#send-btn:hover  { background: var(--accent-h); box-shadow: 0 4px 16px rgba(37,99,235,0.55); transform: scale(1.05); }
+#send-btn:active { transform: scale(0.95); }
+#send-btn:disabled { background: var(--surface2); box-shadow: none; cursor: default; opacity: 0.5; }
+
+#send-btn svg { pointer-events: none; }
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (min-width: 760px) {
+  body { background: radial-gradient(ellipse at 50% 0%, #0d1830 0%, var(--bg) 70%); }
+  #app { border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+  #messages { padding: 28px 24px 16px; }
+  .input-wrap { padding: 14px 20px; padding-bottom: 18px; border-radius: 0 0 0 0; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="header-left">
+      <div class="header-avatar">A</div>
+      <div class="header-info">
+        <div class="header-name">ARIA</div>
+        <div class="header-status">
+          <div class="status-dot" id="status-dot"></div>
+          <span id="status-text">Online</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="header-btn" onclick="clearChat()" title="Clear conversation">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M2 4h12M6 4V2h4v2M5 4l.5 9h5l.5-9"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="messages">
+    <div class="date-divider">Today</div>
+  </div>
+
+  <div class="input-wrap">
+    <div class="input-row">
+      <textarea id="inp" rows="1" placeholder="Message ARIA…" autocomplete="off" spellcheck="true"></textarea>
+      <button id="send-btn" disabled>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 12V4M4 8l4-4 4 4"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  const API = `${location.protocol}//${location.hostname}:4000`;
+  const USER_ID = 'demo-user-1';
+
+  const $msgs   = document.getElementById('messages');
+  const $inp    = document.getElementById('inp');
+  const $btn    = document.getElementById('send-btn');
+  const $dot    = document.getElementById('status-dot');
+  const $status = document.getElementById('status-text');
+
+  marked.setOptions({ breaks: true, gfm: true });
+
+  let busy = false;
+
+  // ── Auto-resize textarea ──────────────────────────────
+  $inp.addEventListener('input', () => {
+    $inp.style.height = 'auto';
+    $inp.style.height = Math.min($inp.scrollHeight, 140) + 'px';
+    $btn.disabled = $inp.value.trim() === '' || busy;
+  });
+
+  $inp.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.metaKey) {
+      e.preventDefault();
+      if (!$btn.disabled) submit();
+    }
+  });
+
+  $btn.addEventListener('click', submit);
+
+  // ── Render helpers ────────────────────────────────────
+  function addMessage(role, content) {
+    const row = document.createElement('div');
+    row.className = `msg-row ${role}`;
+
+    const sender = document.createElement('div');
+    sender.className = 'msg-sender';
+    sender.textContent = role === 'aria' ? 'ARIA' : 'You';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+
+    if (role === 'aria') {
+      bubble.innerHTML = marked.parse(content);
+    } else {
+      bubble.textContent = content;
+    }
+
+    row.appendChild(sender);
+    row.appendChild(bubble);
+    $msgs.appendChild(row);
+    scrollBottom();
+    return row;
+  }
+
+  function addTyping() {
+    const row = document.createElement('div');
+    row.className = 'msg-row aria';
+    row.id = 'typing';
+    row.innerHTML = `
+      <div class="msg-sender">ARIA</div>
+      <div class="typing-bubble">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>`;
+    $msgs.appendChild(row);
+    scrollBottom();
+    return row;
+  }
+
+  function removeTyping() {
+    const t = document.getElementById('typing');
+    if (t) t.remove();
+  }
+
+  function scrollBottom() {
+    requestAnimationFrame(() => {
+      $msgs.scrollTop = $msgs.scrollHeight;
+    });
+  }
+
+  function setStatus(s) {
+    if (s === 'processing') {
+      $dot.className = 'status-dot processing';
+      $status.textContent = 'Thinking…';
+    } else {
+      $dot.className = 'status-dot';
+      $status.textContent = 'Online';
+    }
+  }
+
+  // ── Send ──────────────────────────────────────────────
+  async function submit() {
+    const text = $inp.value.trim();
+    if (!text || busy) return;
+
+    busy = true;
+    $btn.disabled = true;
+    $inp.value = '';
+    $inp.style.height = 'auto';
+
+    addMessage('user', text);
+    const typing = addTyping();
+    setStatus('processing');
+
+    try {
+      const res = await fetch(`${API}/api/aria/chat`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ userId: USER_ID, message: text }),
+      });
+
+      removeTyping();
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { reply } = await res.json();
+      addMessage('aria', reply || "I've noted that down.");
+
+    } catch (e) {
+      removeTyping();
+      addMessage('aria', `_Connection error — ${e.message}_`);
+    } finally {
+      busy = false;
+      setStatus('online');
+      $inp.focus();
+    }
+  }
+
+  // ── Clear ─────────────────────────────────────────────
+  window.clearChat = function () {
+    $msgs.innerHTML = '<div class="date-divider">Today</div>';
+    addMessage('aria', 'Conversation cleared. How can I help?');
+  };
+
+  // ── Welcome ───────────────────────────────────────────
+  addMessage('aria', "Good to see you. What's on your agenda today?");
+  setTimeout(() => $inp.focus(), 300);
+
+})();
+</script>
+</body>
+</html>
