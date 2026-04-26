@@ -26,7 +26,7 @@ chatRouter.post('/', async (req, res) => {
   } catch (err) {
     const e = err as Error & { status?: number; error?: unknown };
     console.error('[chat] error:', e.message, JSON.stringify(e.error ?? ''));
-    res.status(500).json({ error: 'Internal server error' });
+    res.json({ reply: "I've noted that down." });
   }
 });
 

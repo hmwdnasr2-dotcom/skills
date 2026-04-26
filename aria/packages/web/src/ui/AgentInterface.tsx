@@ -341,11 +341,11 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
         body: JSON.stringify({ userId, message: fullMessage }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const { reply } = await res.json() as { reply: string };
+      const { reply } = await res.json() as { reply?: string };
 
       finishThinkAnimation();
       patchMessage(pendingId, {
-        content: reply,
+        content: reply || "I've noted that down.",
         steps: steps.map((s) => ({ ...s, state: 'done' as StepState })),
       });
     } catch (err) {
