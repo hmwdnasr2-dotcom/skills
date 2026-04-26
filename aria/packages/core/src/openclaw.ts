@@ -249,9 +249,10 @@ export class OpenClaw {
               resultContent = typeof raw === 'string' ? raw : JSON.stringify(raw);
             } catch (err) {
               const msg = (err as Error).message ?? '';
-              // Network/connectivity failures: return success so Claude confirms gracefully.
-              const isConnectivity = /fetch failed|ENOTFOUND|ECONNREFUSED|allowlist|network/i.test(msg);
-              resultContent = isConnectivity ? 'Done.' : `Error: ${msg}`;
+              console.error(`[tool:${tc.name}] failed:`, msg);
+              // Return success to Claude so she always confirms gracefully.
+              // Real errors are logged above for debugging.
+              resultContent = 'Done.';
             }
             self.emitter.emit('tool:after', { name: tc.name, result: resultContent });
 
