@@ -4,509 +4,265 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#000000">
-<title>ARIA — Terminal</title>
+<title>ARIA Terminal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
 
 :root {
-  --bg:      #000;
-  --bg2:     #0a0a0a;
-  --panel:   #0d0d0d;
-  --border:  #1a1a1a;
-  --border2: #252525;
-  --green:   #00e676;
-  --green-d: #00c853;
-  --green-g: rgba(0,230,118,0.08);
-  --green-s: rgba(0,230,118,0.18);
-  --amber:   #ffab00;
-  --text:    #d4f0d4;
-  --text-2:  #5a8a5a;
-  --text-3:  #2a4a2a;
-  --cursor:  #00e676;
-  --font:    'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --bg:    #000;
+  --bg2:   #0a0a0a;
+  --panel: #0d0d0d;
+  --b:     #1e1e1e;
+  --b2:    #2a2a2a;
+  --gr:    #00ff41;
+  --gr2:   #00c832;
+  --gr3:   #007a1f;
+  --am:    #ffb300;
+  --tx:    #c8e8c8;
+  --tx2:   #4a7a4a;
+  --tx3:   #2a4a2a;
+  --f:     'JetBrains Mono','Fira Code','Cascadia Code',monospace;
 }
 
 html, body {
-  height: 100%;
-  background: var(--bg);
-  color: var(--green);
-  font-family: var(--font);
-  font-size: 13px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  overflow: hidden;
+  height:100%; overflow:hidden; background:var(--bg);
+  color:var(--gr); font-family:var(--f); font-size:13px;
+  line-height:1.5; -webkit-font-smoothing:antialiased;
 }
 
-/* Scanline overlay */
+/* CRT scanlines */
 body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 100;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0,0,0,0.03) 2px,
-    rgba(0,0,0,0.03) 4px
-  );
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);
 }
-
-/* Subtle CRT glow on body */
+/* vignette */
 body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 99;
-  background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.4) 100%);
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:998;
+  background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%);
 }
 
-#app {
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
-  height: 100vh;
-  max-width: 800px;
-  margin: 0 auto;
-  position: relative;
-  z-index: 1;
-}
+#app { display:flex; flex-direction:column; height:100dvh; max-width:820px; margin:0 auto; position:relative; z-index:1; }
 
-/* ── Titlebar ────────────────────────────────────────── */
-.titlebar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 38px;
-  padding: 0 16px;
-  padding-top: env(safe-area-inset-top);
-  background: var(--panel);
-  border-bottom: 1px solid var(--border2);
-  flex-shrink: 0;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
+/* ── Title bar ── */
+.tbar {
+  flex-shrink:0; display:flex; align-items:center; justify-content:space-between;
+  height:36px; padding:0 16px; padding-top:env(safe-area-inset-top);
+  background:var(--panel); border-bottom:1px solid var(--b2);
+  font-size:11px;
 }
+.tbar-traffic { display:flex; gap:7px; align-items:center; }
+.traf { width:11px; height:11px; border-radius:50%; }
+.tbar-title { color:var(--tx2); letter-spacing:.5px; }
+.tbar-right { display:flex; align-items:center; gap:12px; color:var(--tx3); }
+.led-wrap { display:flex; align-items:center; gap:5px; }
+.led { width:7px; height:7px; border-radius:50%; background:var(--gr); box-shadow:0 0 7px var(--gr); }
+.led.blink { animation:lb .5s step-start infinite; }
+@keyframes lb { 0%,100%{opacity:1}50%{opacity:0} }
+.tbar-clr { background:none; border:none; font:500 10px/1 var(--f); color:var(--tx3); cursor:pointer; letter-spacing:.3px; transition:color .1s; }
+.tbar-clr:hover { color:var(--gr); }
 
-.titlebar-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-2);
+/* ── Output ── */
+#out {
+  flex:1; overflow-y:auto; overflow-x:hidden;
+  padding:14px 16px 8px; display:flex; flex-direction:column; gap:0;
+  scroll-behavior:smooth;
 }
+#out::-webkit-scrollbar { width:2px; }
+#out::-webkit-scrollbar-thumb { background:var(--b2); }
 
-.tb-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1px solid var(--border2);
-}
+/* No bubbles — pure terminal lines */
+.block { margin:1px 0; animation:lf .1s ease both; }
+@keyframes lf { from{opacity:0} to{opacity:1} }
 
-.tb-prompt {
-  color: var(--green-d);
-  font-size: 11px;
+.prompt-row {
+  display:flex; align-items:baseline; gap:6px;
+  font-size:12px; margin-bottom:2px;
 }
+.ps-host { color:var(--gr2); }
+.ps-sep  { color:var(--tx3); }
+.ps-path { color:var(--tx2); }
+.ps-gt   { color:var(--am); font-weight:600; }
+.ps-gt.aria-gt { color:var(--gr); }
 
-.titlebar-center {
-  color: var(--text-2);
-  letter-spacing: 1px;
-  font-size: 11px;
+.out-line {
+  padding:0 0 6px 0;
+  font-size:12.5px; line-height:1.6;
+  color:var(--tx); word-break:break-word;
 }
+.out-line.user-line { color:#d4f8d4; padding-left:0; }
 
-.titlebar-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--text-3);
-  font-size: 10px;
-  letter-spacing: 0.5px;
-}
+/* no line wrapper for ARIA — just content */
+.out-line.aria-out { padding-left:0; border-left:none; }
 
-.tb-status {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.tb-led {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 6px var(--green);
-}
-.tb-led.blink {
-  animation: led-blink 0.5s ease-in-out infinite;
-}
-@keyframes led-blink { 0%,100%{opacity:1} 50%{opacity:0.1} }
+/* markdown stripped-down terminal style */
+.out-line p{margin:0 0 3px} .out-line p:last-child{margin:0}
+.out-line strong{color:var(--gr);font-weight:600}
+.out-line em{color:var(--tx2);font-style:normal;text-decoration:underline;text-decoration-style:dotted}
+.out-line ul,.out-line ol{padding-left:18px;margin:3px 0}
+.out-line li{margin:1px 0;color:var(--tx)}
+.out-line li::marker{color:var(--gr2)}
+.out-line h1,.out-line h2,.out-line h3{font-size:12.5px;font-weight:600;color:var(--gr);margin:6px 0 3px}
+.out-line h1::before{content:'[#] '} .out-line h2::before{content:'[##] '} .out-line h3::before{content:'[###] '}
+.out-line code{font-family:var(--f);font-size:12px;background:rgba(0,255,65,.08);border:1px solid rgba(0,255,65,.15);border-radius:2px;padding:0 4px;color:var(--gr)}
+.out-line pre{background:#060606;border:1px solid var(--b2);border-left:2px solid var(--gr3);border-radius:0;padding:8px 12px;overflow-x:auto;margin:5px 0}
+.out-line pre code{background:none;border:none;padding:0;color:#a8e6a8;font-size:11.5px}
+.out-line blockquote{border-left:2px solid var(--gr3);padding-left:10px;margin:4px 0;color:var(--tx2)}
+.out-line a{color:var(--gr);text-underline-offset:2px}
+.out-line hr{border:none;display:block;border-top:1px solid var(--b2);margin:6px 0}
+.out-line table{border-collapse:collapse;font-size:12px;margin:5px 0;width:100%}
+.out-line th{color:var(--gr);border-bottom:1px solid var(--b2);padding:3px 10px;text-align:left;font-weight:600}
+.out-line td{padding:2px 10px;border-bottom:1px solid var(--b);color:var(--tx)}
 
-.tb-btn {
-  background: none;
-  border: none;
-  color: var(--text-3);
-  font-family: var(--font);
-  font-size: 10px;
-  cursor: pointer;
-  padding: 2px 4px;
-  letter-spacing: 0.5px;
-  transition: color 0.1s;
-}
-.tb-btn:hover { color: var(--green); }
+/* system lines */
+.sys-line { color:var(--tx3); font-size:11px; padding:4px 0; letter-spacing:.2px; }
+.sys-line::before { content:'# '; }
 
-/* ── Messages ────────────────────────────────────────── */
-#messages {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 16px 16px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  scroll-behavior: smooth;
-  background: var(--bg);
-}
-#messages::-webkit-scrollbar { width: 2px; }
-#messages::-webkit-scrollbar-thumb { background: var(--border2); }
+/* typing */
+.cursor-line { display:flex; align-items:center; gap:4px; padding:1px 0; }
+.cur { display:inline-block; width:8px; height:14px; background:var(--gr); border-radius:1px; animation:cur .9s step-end infinite; }
+@keyframes cur { 0%,100%{opacity:.9}50%{opacity:0} }
 
-.msg-block {
-  padding: 6px 0;
-  animation: line-in 0.12s ease both;
+/* ── Input ── */
+.inp-zone {
+  flex-shrink:0;
+  border-top:1px solid var(--b2);
+  background:var(--bg);
+  padding:10px 16px;
+  padding-bottom:max(12px,env(safe-area-inset-bottom));
 }
-@keyframes line-in { from { opacity: 0; } to { opacity: 1; } }
+.inp-row {
+  display:flex; align-items:flex-end; gap:8px;
+}
+.inp-ps {
+  flex-shrink:0; padding-bottom:3px;
+  font-size:12px; white-space:nowrap; user-select:none;
+}
+.inp-ps .ig { color:var(--tx2); }
+.inp-ps .ia { color:var(--am); font-weight:600; }
+textarea {
+  flex:1; background:transparent; border:none; outline:none;
+  color:var(--gr); font:12.5px/1.5 var(--f);
+  resize:none; min-height:20px; max-height:110px; overflow-y:auto;
+  caret-color:var(--gr); padding-bottom:2px;
+}
+textarea::placeholder { color:var(--tx3); font-style:italic; }
+#sb {
+  flex-shrink:0; height:24px; padding:0 10px;
+  border:1px solid var(--gr3); border-radius:2px;
+  background:transparent; color:var(--gr2);
+  font:500 11px/1 var(--f); cursor:pointer; letter-spacing:.3px;
+  transition:.1s; margin-bottom:2px;
+}
+#sb:hover { background:rgba(0,255,65,.07); border-color:var(--gr); color:var(--gr); }
+#sb:active { background:rgba(0,255,65,.14); }
+#sb:disabled { opacity:.2; cursor:default; }
 
-.msg-prompt {
-  font-size: 11px;
-  color: var(--text-3);
-  margin-bottom: 3px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.prompt-path { color: var(--green-d); }
-.prompt-sym  { color: var(--amber); font-weight: 600; }
-.prompt-sym.aria-sym { color: var(--green); }
-
-.msg-line {
-  font-size: 12.5px;
-  line-height: 1.65;
-  word-break: break-word;
-  color: var(--text);
-  padding-left: 2px;
-}
-
-.msg-block.user .msg-line {
-  color: #e8f5e8;
-}
-
-/* ── markdown in terminal style ─────────────────────── */
-.msg-line p { margin: 0 0 4px; }
-.msg-line p:last-child { margin: 0; }
-.msg-line strong { color: var(--green); font-weight: 600; }
-.msg-line em { color: var(--text-2); font-style: normal; text-decoration: underline; text-decoration-style: dotted; }
-.msg-line ul, .msg-line ol { padding-left: 20px; margin: 4px 0; }
-.msg-line li::marker { color: var(--green-d); }
-.msg-line li { margin: 2px 0; color: var(--text); }
-.msg-line h1,.msg-line h2,.msg-line h3 {
-  font-weight: 600;
-  margin: 8px 0 4px;
-  color: var(--green);
-  font-size: 13px;
-}
-.msg-line h1::before { content: '# '; color: var(--green-d); }
-.msg-line h2::before { content: '## '; color: var(--green-d); }
-.msg-line h3::before { content: '### '; color: var(--green-d); }
-.msg-line code {
-  font-family: var(--font);
-  font-size: 12px;
-  background: var(--green-g);
-  border: 1px solid rgba(0,230,118,0.15);
-  border-radius: 3px;
-  padding: 0 4px;
-  color: var(--green);
-}
-.msg-line pre {
-  background: #060606;
-  border: 1px solid var(--border2);
-  border-left: 2px solid var(--green-d);
-  border-radius: 0 4px 4px 0;
-  padding: 10px 12px;
-  overflow-x: auto;
-  margin: 6px 0;
-}
-.msg-line pre code { background:none; border:none; padding:0; color: #a5d6a7; }
-.msg-line blockquote { border-left: 2px solid var(--green-d); padding-left: 10px; margin: 5px 0; color: var(--text-2); }
-.msg-line a { color: var(--green); text-underline-offset: 2px; }
-.msg-line hr { border:none; content:''; display:block; height:1px; background:var(--border2); margin: 8px 0; }
-.msg-line table { border-collapse: collapse; font-size: 12px; margin: 6px 0; width: 100%; }
-.msg-line th { color: var(--green); border-bottom: 1px solid var(--border2); padding: 4px 10px; text-align: left; }
-.msg-line td { padding: 3px 10px; border-bottom: 1px solid var(--border); color: var(--text); }
-
-/* ── Separator ───────────────────────────────────────── */
-.term-sep {
-  color: var(--text-3);
-  font-size: 10.5px;
-  padding: 8px 0 4px;
-  letter-spacing: 0.5px;
-  user-select: none;
-}
-.term-sep::before { content: '─── '; }
-.term-sep::after  { content: ' ───────────────────────────────────────'; opacity: 0.3; }
-
-/* ── Typing indicator ────────────────────────────────── */
-.typing-line {
-  font-size: 12.5px;
-  color: var(--green);
-  padding: 0 2px;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-.cursor-blink {
-  display: inline-block;
-  width: 8px;
-  height: 14px;
-  background: var(--green);
-  margin-left: 2px;
-  border-radius: 1px;
-  animation: cursor 0.9s step-end infinite;
-  opacity: 0.9;
-}
-@keyframes cursor { 0%,100%{opacity:0.9} 50%{opacity:0} }
-
-/* ── Input ───────────────────────────────────────────── */
-.input-zone {
-  flex-shrink: 0;
-  padding: 0 16px 12px;
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
-  background: var(--bg);
-  border-top: 1px solid var(--border);
-}
-
-.input-prompt-line {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  padding-top: 10px;
-}
-
-.ps1 {
-  font-size: 12px;
-  color: var(--green-d);
-  flex-shrink: 0;
-  padding-bottom: 2px;
-  white-space: nowrap;
-  user-select: none;
-}
-.ps1 .ps-path { color: var(--text-2); }
-.ps1 .ps-gt   { color: var(--green); font-weight: 600; }
-
-textarea#inp {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--green);
-  font-family: var(--font);
-  font-size: 12.5px;
-  line-height: 1.55;
-  resize: none;
-  min-height: 20px;
-  max-height: 120px;
-  overflow-y: auto;
-  caret-color: var(--cursor);
-  caret-shape: block;
-}
-textarea#inp::placeholder { color: var(--text-3); font-style: italic; }
-
-#send {
-  flex-shrink: 0;
-  height: 26px;
-  padding: 0 12px;
-  border-radius: 3px;
-  border: 1px solid var(--green-d);
-  background: transparent;
-  color: var(--green-d);
-  font-family: var(--font);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  transition: all 0.1s;
-  margin-bottom: 2px;
-}
-#send:hover { background: var(--green-g); color: var(--green); border-color: var(--green); }
-#send:active { background: var(--green-s); }
-#send:disabled { opacity: 0.2; cursor: default; }
-
-/* ── Bootup animation ────────────────────────────────── */
-@keyframes boot-flash { 0%{opacity:0.1}50%{opacity:1}100%{opacity:1} }
-.boot { animation: boot-flash 0.3s ease both; }
-
-@media (min-width: 800px) {
-  #app { border-left: 1px solid var(--border2); border-right: 1px solid var(--border2); }
-  #messages { padding: 18px 22px 12px; }
-  .input-zone { padding: 0 22px 16px; }
-  .titlebar { padding: 0 22px; }
+@media(min-width:820px){
+  #app{border-left:1px solid var(--b2);border-right:1px solid var(--b2)}
+  #out{padding:16px 22px 10px}
+  .inp-zone{padding:10px 22px;padding-bottom:16px}
+  .tbar{padding:0 22px}
 }
 </style>
 </head>
 <body>
 <div id="app">
-
-  <div class="titlebar">
-    <div class="titlebar-left">
-      <div class="tb-dot" style="background:#ff5f57;border-color:#e0443e"></div>
-      <div class="tb-dot" style="background:#ffbd2e;border-color:#dea123"></div>
-      <div class="tb-dot" style="background:#28c840;border-color:#1aab29"></div>
-      <span class="tb-prompt">aria@ai</span>
+  <div class="tbar">
+    <div class="tbar-traffic">
+      <div class="traf" style="background:#ff5f57"></div>
+      <div class="traf" style="background:#febc2e"></div>
+      <div class="traf" style="background:#28c840"></div>
     </div>
-    <div class="titlebar-center">ARIA — TERMINAL</div>
-    <div class="titlebar-right">
-      <div class="tb-status">
-        <div class="tb-led" id="led"></div>
-        <span id="ledtxt">ONLINE</span>
-      </div>
-      <button class="tb-btn" onclick="clearChat()">[clear]</button>
+    <span class="tbar-title">aria — bash — 80×24</span>
+    <div class="tbar-right">
+      <div class="led-wrap"><div class="led" id="led"></div><span id="ltxt">LIVE</span></div>
+      <button class="tbar-clr" onclick="clearChat()">[clear]</button>
     </div>
   </div>
 
-  <div id="messages">
-    <div class="term-sep" id="sep">session started</div>
-  </div>
+  <div id="out"></div>
 
-  <div class="input-zone">
-    <div class="input-prompt-line">
-      <span class="ps1"><span class="ps-path">~/aria</span> <span class="ps-gt">❯</span></span>
-      <textarea id="inp" rows="1" placeholder="enter command..." autocomplete="off" spellcheck="false"></textarea>
-      <button id="send" disabled>SEND ↵</button>
+  <div class="inp-zone">
+    <div class="inp-row">
+      <span class="inp-ps"><span class="ig">you@aria</span><span class="ia"> ❯ </span></span>
+      <textarea id="inp" rows="1" placeholder="type here and press enter…" autocomplete="off" spellcheck="false"></textarea>
+      <button id="sb" disabled>RUN ↵</button>
     </div>
   </div>
-
 </div>
-
 <script>
-(function () {
-  const API     = 'http://188.245.242.236:4000';
-  const USER_ID = 'demo-user-1';
+(function(){
+  const API='http://188.245.242.236:4000', UID='demo-user-1';
+  const $out=document.getElementById('out'), $i=document.getElementById('inp'),
+        $b=document.getElementById('sb'), $led=document.getElementById('led'),
+        $lt=document.getElementById('ltxt');
+  marked.setOptions({breaks:true,gfm:true});
+  let busy=false;
 
-  const $msgs = document.getElementById('messages');
-  const $inp  = document.getElementById('inp');
-  const $btn  = document.getElementById('send');
-  const $led  = document.getElementById('led');
-  const $ltxt = document.getElementById('ledtxt');
+  $i.addEventListener('input',()=>{ $i.style.height='auto'; $i.style.height=Math.min($i.scrollHeight,110)+'px'; $b.disabled=!$i.value.trim()||busy; });
+  $i.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!$b.disabled)go();} });
+  $b.addEventListener('click',go);
 
-  marked.setOptions({ breaks: true, gfm: true });
-  let busy = false;
+  function sysLine(txt){ const d=document.createElement('div'); d.className='sys-line'; d.textContent=txt; $out.appendChild(d); tick(); }
 
-  $inp.addEventListener('input', () => {
-    $inp.style.height = 'auto';
-    $inp.style.height = Math.min($inp.scrollHeight, 120) + 'px';
-    $btn.disabled = !$inp.value.trim() || busy;
-  });
+  function addBlock(role, content){
+    const block=document.createElement('div'); block.className='block';
 
-  $inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!$btn.disabled) send(); }
-  });
-
-  $btn.addEventListener('click', send);
-
-  function addBlock(role, content) {
-    const block = document.createElement('div');
-    block.className = `msg-block ${role}`;
-
-    const prompt = document.createElement('div');
-    prompt.className = 'msg-prompt';
-
-    if (role === 'user') {
-      prompt.innerHTML = `<span class="prompt-path">you@client</span><span class="prompt-sym">❯</span>`;
+    const pr=document.createElement('div'); pr.className='prompt-row';
+    if(role==='user'){
+      pr.innerHTML=`<span class="ps-host">you@client</span><span class="ps-sep">:</span><span class="ps-path">~</span><span class="ps-gt"> ❯</span>`;
     } else {
-      prompt.innerHTML = `<span class="prompt-path">aria@ai</span><span class="prompt-sym aria-sym">→</span>`;
+      pr.innerHTML=`<span class="ps-host">aria@system</span><span class="ps-sep">:</span><span class="ps-path">~</span><span class="ps-gt aria-gt"> →</span>`;
     }
 
-    const line = document.createElement('div');
-    line.className = 'msg-line';
-    if (role === 'aria') line.innerHTML = marked.parse(content);
-    else line.textContent = content;
+    const ln=document.createElement('div');
+    ln.className='out-line '+(role==='user'?'user-line':'aria-out');
+    if(role==='aria') ln.innerHTML=marked.parse(content);
+    else ln.textContent=content;
 
-    block.append(prompt, line);
-    $msgs.appendChild(block);
-    scroll();
-    return block;
+    block.append(pr,ln); $out.appendChild(block); tick();
   }
 
-  function addTyping() {
-    const block = document.createElement('div');
-    block.className = 'msg-block aria';
-    block.id = 'typing';
-
-    const prompt = document.createElement('div');
-    prompt.className = 'msg-prompt';
-    prompt.innerHTML = `<span class="prompt-path">aria@ai</span><span class="prompt-sym aria-sym">→</span>`;
-
-    const line = document.createElement('div');
-    line.className = 'typing-line';
-    line.innerHTML = `<span>processing</span><span class="cursor-blink"></span>`;
-
-    block.append(prompt, line);
-    $msgs.appendChild(block);
-    scroll();
+  function addTyping(){
+    const block=document.createElement('div'); block.className='block'; block.id='ty';
+    const pr=document.createElement('div'); pr.className='prompt-row';
+    pr.innerHTML=`<span class="ps-host">aria@system</span><span class="ps-sep">:</span><span class="ps-path">~</span><span class="ps-gt aria-gt"> →</span>`;
+    const ln=document.createElement('div'); ln.className='cursor-line';
+    ln.innerHTML='<span style="color:var(--tx2);font-size:12px">processing</span><span class="cur"></span>';
+    block.append(pr,ln); $out.appendChild(block); tick();
   }
 
-  function removeTyping() { document.getElementById('typing')?.remove(); }
-  function scroll() { requestAnimationFrame(() => { $msgs.scrollTop = $msgs.scrollHeight; }); }
+  function removeTyping(){ document.getElementById('ty')?.remove(); }
+  function tick(){ requestAnimationFrame(()=>{ $out.scrollTop=$out.scrollHeight; }); }
 
-  function setStatus(thinking) {
-    if (thinking) {
-      $led.className = 'tb-led blink';
-      $ltxt.textContent = 'BUSY';
-    } else {
-      $led.className = 'tb-led';
-      $ltxt.textContent = 'ONLINE';
-    }
+  function setStatus(on){
+    $led.className='led'+(on?' blink':'');
+    $lt.textContent=on?'BUSY':'LIVE';
   }
 
-  async function send() {
-    const txt = $inp.value.trim();
-    if (!txt || busy) return;
-    busy = true; $btn.disabled = true;
-    $inp.value = ''; $inp.style.height = 'auto';
-
-    addBlock('user', txt);
-    addTyping();
-    setStatus(true);
-
-    try {
-      const r = await fetch(`${API}/api/aria/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: USER_ID, message: txt }),
-      });
+  async function go(){
+    const txt=$i.value.trim(); if(!txt||busy)return;
+    busy=true; $b.disabled=true; $i.value=''; $i.style.height='auto';
+    addBlock('user',txt); addTyping(); setStatus(true);
+    try{
+      const r=await fetch(`${API}/api/aria/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:UID,message:txt})});
       removeTyping();
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const { reply } = await r.json();
-      addBlock('aria', reply || "I've noted that down.");
-    } catch (e) {
-      removeTyping();
-      addBlock('aria', `ERR: ${e.message}`);
-    } finally {
-      busy = false; setStatus(false); $inp.focus();
-    }
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      const{reply}=await r.json();
+      addBlock('aria',reply||"I've noted that down.");
+    }catch(e){ removeTyping(); sysLine('ERR: '+e.message); }
+    finally{ busy=false; setStatus(false); $i.focus(); }
   }
 
-  window.clearChat = () => {
-    $msgs.innerHTML = '<div class="term-sep" id="sep">session cleared</div>';
-    addBlock('aria', 'Buffer cleared. Awaiting input.');
-  };
+  window.clearChat=()=>{ $out.innerHTML=''; sysLine('session cleared — '+new Date().toLocaleTimeString()); addBlock('aria','Buffer cleared. Awaiting input.'); };
 
-  // boot sequence
-  addBlock('aria', `ARIA v1.0 — Adaptive Reasoning Intelligence Agent\nType your request to begin.`);
-  setTimeout(() => $inp.focus(), 300);
+  sysLine('ARIA terminal v1.0 — session started '+new Date().toLocaleTimeString());
+  addBlock('aria',"System ready. What's on your agenda today?");
+  setTimeout(()=>$i.focus(),300);
 })();
 </script>
 </body>
