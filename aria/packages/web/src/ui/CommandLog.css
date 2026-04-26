@@ -1,0 +1,233 @@
+:root {
+  --bg: #1c1c1c;
+  --surface: #252525;
+  --bubble-user: #2e2e2e;
+  --border: #333;
+  --text: #ececec;
+  --muted: #888;
+  --accent: #d97706;
+  --accent-dim: rgba(217,119,6,0.15);
+  --font: -apple-system, 'Inter', BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+}
+
+/* ── Root ──────────────────────────────────────────────────────────────────── */
+
+.log-root {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.65;
+  /* vh first as fallback; dvh shrinks when mobile keyboard opens */
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* ── Header ────────────────────────────────────────────────────────────────── */
+
+.log-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 16px;
+  padding-top: max(14px, env(safe-area-inset-top));
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.log-header-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.log-header-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.04em;
+}
+
+.log-header-status {
+  position: absolute;
+  right: 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ── Message list ──────────────────────────────────────────────────────────── */
+
+.log-entries {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  scroll-behavior: smooth;
+}
+
+/* Centre-constrain the message list on wider screens */
+@media (min-width: 700px) {
+  .log-entries { padding: 24px 0 16px; align-items: stretch; }
+  .log-entries > * { max-width: 720px; width: 100%; margin: 0 auto; }
+}
+
+/* ── Individual message rows ───────────────────────────────────────────────── */
+
+.log-line {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 100%;
+}
+
+/* User messages — right-aligned bubble */
+.log-line--you {
+  align-items: flex-end;
+}
+
+.log-line--you .log-bubble {
+  background: var(--bubble-user);
+  border-radius: 18px 18px 4px 18px;
+  padding: 10px 14px;
+  max-width: 78%;
+  word-break: break-word;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+/* ARIA messages — left-aligned, no bubble */
+.log-line--aria {
+  align-items: flex-start;
+}
+
+.log-line--aria .log-bubble {
+  max-width: 88%;
+  word-break: break-word;
+  font-size: 15px;
+  line-height: 1.65;
+  padding: 2px 0;
+}
+
+/* System messages — centered muted */
+.log-line--system {
+  align-items: center;
+}
+
+.log-line--system .log-bubble {
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Speaker label above each message */
+.log-speaker-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding: 0 2px;
+  margin-bottom: 2px;
+  user-select: none;
+}
+
+.log-line--aria  .log-speaker-label { color: var(--accent); }
+.log-line--you   .log-speaker-label { color: #aaa; }
+.log-line--system .log-speaker-label { display: none; }
+
+/* Blinking cursor for streaming */
+.cursor {
+  display: inline-block;
+  color: var(--accent);
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ── Input wrap + row ──────────────────────────────────────────────────────── */
+
+.log-input-wrap {
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.log-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+@media (min-width: 700px) {
+  .log-input-row {
+    max-width: 720px;
+    width: 100%;
+    margin: 0 auto;
+  }
+}
+
+.log-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 11px 14px;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;   /* 16px prevents iOS Safari zoom on focus */
+  line-height: 1.4;
+  caret-color: var(--accent);
+  min-height: 44px;
+  transition: border-color 0.15s;
+}
+
+.log-input::placeholder { color: #555; }
+.log-input:focus        { border-color: #555; }
+.log-input:disabled     { opacity: 0.4; }
+
+.log-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: var(--accent-dim);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--accent);
+  font-size: 20px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+  touch-action: manipulation;
+}
+
+.log-send:active             { background: rgba(217,119,6,0.3); }
+.log-send:not(:disabled):hover { border-color: var(--accent); }
+.log-send:disabled           { opacity: 0.25; cursor: default; }
+
+/* ── Desktop font tweak ────────────────────────────────────────────────────── */
+
+@media (min-width: 640px) {
+  .log-root              { font-size: 14px; }
+  .log-line--you .log-bubble,
+  .log-line--aria .log-bubble { font-size: 14px; }
+  .log-input             { font-size: 14px; }
+  .log-send              { width: 38px; height: 38px; font-size: 17px; }
+}

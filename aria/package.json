@@ -1,0 +1,20 @@
+{
+  "name": "aria-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w @aria/server\" \"npm run dev -w @aria/web\"",
+    "build": "npm run build -w @aria/core && npm run build -w @aria/server && npm run build -w @aria/web",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "pg": "^8.20.0",
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
