@@ -5,7 +5,7 @@ export class ClaudeBrain implements BrainAdapter {
   private client: Anthropic;
   private model: string;
 
-  constructor({ model = 'claude-sonnet-4-6' }: { model?: string } = {}) {
+  constructor({ model = 'claude-haiku-4-5-20251001' }: { model?: string } = {}) {
     this.client = new Anthropic();
     this.model = model;
   }
