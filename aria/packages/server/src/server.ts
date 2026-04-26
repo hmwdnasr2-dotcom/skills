@@ -3,9 +3,6 @@ import './load-env.js';
 
 import cors from 'cors';
 import express from 'express';
-import { existsSync } from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { AgentBridgeConnector } from '@aria/core';
 import { claw } from './core/index.js';
 import { GmailConnector, buildGmailAdapters } from './connectors/gmail.js';
@@ -19,8 +16,6 @@ import { memoryRouter } from './routes/memory.js';
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 4000);
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const WEB_ROOT = path.resolve(__dirname, '../../web');
 
 // ─── Middleware ────────────────────────────────────────────────────────────────
 
@@ -72,14 +67,8 @@ app.use('/api/aria/events', eventsRouter);
 app.use('/api/aria/memory', memoryRouter);
 app.use('/api/auth', authRouter);
 
+app.get('/', (_req, res) => res.json({ service: 'ARIA', status: 'ok' }));
 app.get('/health', (_req, res) => res.json({ ok: true }));
-
-// Serve frontend — tries packages/web/index.html next to this server package
-app.get('/', (_req, res) => {
-  const html = path.join(WEB_ROOT, 'index.html');
-  if (existsSync(html)) { res.sendFile(html); }
-  else { res.json({ service: 'ARIA', status: 'ok' }); }
-});
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 
