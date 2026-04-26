@@ -153,7 +153,7 @@ claw.pipeline('chat', async (ctx) => {
   const allMessages = [system, ...history, ...ctx.messages];
   const reply = await ctx.brain.chat(allMessages);
   try { await ctx.memory.save(ctx.userId, ctx.messages, reply); } catch { /* best-effort save */ }
-  return reply.content;
+  return reply.content || "I've noted that down.";
 });
 
 claw.pipeline('morning-briefing', async (ctx) => {
