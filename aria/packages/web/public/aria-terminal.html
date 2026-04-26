@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<title>ARIA — Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #000;
+  --bg2:     #0a0a0a;
+  --panel:   #0d0d0d;
+  --border:  #1a1a1a;
+  --border2: #252525;
+  --green:   #00e676;
+  --green-d: #00c853;
+  --green-g: rgba(0,230,118,0.08);
+  --green-s: rgba(0,230,118,0.18);
+  --amber:   #ffab00;
+  --text:    #d4f0d4;
+  --text-2:  #5a8a5a;
+  --text-3:  #2a4a2a;
+  --cursor:  #00e676;
+  --font:    'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--green);
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* Scanline overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+}
+
+/* Subtle CRT glow on body */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.4) 100%);
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  height: 100vh;
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Titlebar ────────────────────────────────────────── */
+.titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 38px;
+  padding: 0 16px;
+  padding-top: env(safe-area-inset-top);
+  background: var(--panel);
+  border-bottom: 1px solid var(--border2);
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.titlebar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-2);
+}
+
+.tb-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+}
+
+.tb-prompt {
+  color: var(--green-d);
+  font-size: 11px;
+}
+
+.titlebar-center {
+  color: var(--text-2);
+  letter-spacing: 1px;
+  font-size: 11px;
+}
+
+.titlebar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-3);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+
+.tb-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.tb-led {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+}
+.tb-led.blink {
+  animation: led-blink 0.5s ease-in-out infinite;
+}
+@keyframes led-blink { 0%,100%{opacity:1} 50%{opacity:0.1} }
+
+.tb-btn {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-family: var(--font);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 2px 4px;
+  letter-spacing: 0.5px;
+  transition: color 0.1s;
+}
+.tb-btn:hover { color: var(--green); }
+
+/* ── Messages ────────────────────────────────────────── */
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  scroll-behavior: smooth;
+  background: var(--bg);
+}
+#messages::-webkit-scrollbar { width: 2px; }
+#messages::-webkit-scrollbar-thumb { background: var(--border2); }
+
+.msg-block {
+  padding: 6px 0;
+  animation: line-in 0.12s ease both;
+}
+@keyframes line-in { from { opacity: 0; } to { opacity: 1; } }
+
+.msg-prompt {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.prompt-path { color: var(--green-d); }
+.prompt-sym  { color: var(--amber); font-weight: 600; }
+.prompt-sym.aria-sym { color: var(--green); }
+
+.msg-line {
+  font-size: 12.5px;
+  line-height: 1.65;
+  word-break: break-word;
+  color: var(--text);
+  padding-left: 2px;
+}
+
+.msg-block.user .msg-line {
+  color: #e8f5e8;
+}
+
+/* ── markdown in terminal style ─────────────────────── */
+.msg-line p { margin: 0 0 4px; }
+.msg-line p:last-child { margin: 0; }
+.msg-line strong { color: var(--green); font-weight: 600; }
+.msg-line em { color: var(--text-2); font-style: normal; text-decoration: underline; text-decoration-style: dotted; }
+.msg-line ul, .msg-line ol { padding-left: 20px; margin: 4px 0; }
+.msg-line li::marker { color: var(--green-d); }
+.msg-line li { margin: 2px 0; color: var(--text); }
+.msg-line h1,.msg-line h2,.msg-line h3 {
+  font-weight: 600;
+  margin: 8px 0 4px;
+  color: var(--green);
+  font-size: 13px;
+}
+.msg-line h1::before { content: '# '; color: var(--green-d); }
+.msg-line h2::before { content: '## '; color: var(--green-d); }
+.msg-line h3::before { content: '### '; color: var(--green-d); }
+.msg-line code {
+  font-family: var(--font);
+  font-size: 12px;
+  background: var(--green-g);
+  border: 1px solid rgba(0,230,118,0.15);
+  border-radius: 3px;
+  padding: 0 4px;
+  color: var(--green);
+}
+.msg-line pre {
+  background: #060606;
+  border: 1px solid var(--border2);
+  border-left: 2px solid var(--green-d);
+  border-radius: 0 4px 4px 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+  margin: 6px 0;
+}
+.msg-line pre code { background:none; border:none; padding:0; color: #a5d6a7; }
+.msg-line blockquote { border-left: 2px solid var(--green-d); padding-left: 10px; margin: 5px 0; color: var(--text-2); }
+.msg-line a { color: var(--green); text-underline-offset: 2px; }
+.msg-line hr { border:none; content:''; display:block; height:1px; background:var(--border2); margin: 8px 0; }
+.msg-line table { border-collapse: collapse; font-size: 12px; margin: 6px 0; width: 100%; }
+.msg-line th { color: var(--green); border-bottom: 1px solid var(--border2); padding: 4px 10px; text-align: left; }
+.msg-line td { padding: 3px 10px; border-bottom: 1px solid var(--border); color: var(--text); }
+
+/* ── Separator ───────────────────────────────────────── */
+.term-sep {
+  color: var(--text-3);
+  font-size: 10.5px;
+  padding: 8px 0 4px;
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+.term-sep::before { content: '─── '; }
+.term-sep::after  { content: ' ───────────────────────────────────────'; opacity: 0.3; }
+
+/* ── Typing indicator ────────────────────────────────── */
+.typing-line {
+  font-size: 12.5px;
+  color: var(--green);
+  padding: 0 2px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.cursor-blink {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background: var(--green);
+  margin-left: 2px;
+  border-radius: 1px;
+  animation: cursor 0.9s step-end infinite;
+  opacity: 0.9;
+}
+@keyframes cursor { 0%,100%{opacity:0.9} 50%{opacity:0} }
+
+/* ── Input ───────────────────────────────────────────── */
+.input-zone {
+  flex-shrink: 0;
+  padding: 0 16px 12px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+
+.input-prompt-line {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding-top: 10px;
+}
+
+.ps1 {
+  font-size: 12px;
+  color: var(--green-d);
+  flex-shrink: 0;
+  padding-bottom: 2px;
+  white-space: nowrap;
+  user-select: none;
+}
+.ps1 .ps-path { color: var(--text-2); }
+.ps1 .ps-gt   { color: var(--green); font-weight: 600; }
+
+textarea#inp {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--green);
+  font-family: var(--font);
+  font-size: 12.5px;
+  line-height: 1.55;
+  resize: none;
+  min-height: 20px;
+  max-height: 120px;
+  overflow-y: auto;
+  caret-color: var(--cursor);
+  caret-shape: block;
+}
+textarea#inp::placeholder { color: var(--text-3); font-style: italic; }
+
+#send {
+  flex-shrink: 0;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 3px;
+  border: 1px solid var(--green-d);
+  background: transparent;
+  color: var(--green-d);
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.1s;
+  margin-bottom: 2px;
+}
+#send:hover { background: var(--green-g); color: var(--green); border-color: var(--green); }
+#send:active { background: var(--green-s); }
+#send:disabled { opacity: 0.2; cursor: default; }
+
+/* ── Bootup animation ────────────────────────────────── */
+@keyframes boot-flash { 0%{opacity:0.1}50%{opacity:1}100%{opacity:1} }
+.boot { animation: boot-flash 0.3s ease both; }
+
+@media (min-width: 800px) {
+  #app { border-left: 1px solid var(--border2); border-right: 1px solid var(--border2); }
+  #messages { padding: 18px 22px 12px; }
+  .input-zone { padding: 0 22px 16px; }
+  .titlebar { padding: 0 22px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="titlebar">
+    <div class="titlebar-left">
+      <div class="tb-dot" style="background:#ff5f57;border-color:#e0443e"></div>
+      <div class="tb-dot" style="background:#ffbd2e;border-color:#dea123"></div>
+      <div class="tb-dot" style="background:#28c840;border-color:#1aab29"></div>
+      <span class="tb-prompt">aria@ai</span>
+    </div>
+    <div class="titlebar-center">ARIA — TERMINAL</div>
+    <div class="titlebar-right">
+      <div class="tb-status">
+        <div class="tb-led" id="led"></div>
+        <span id="ledtxt">ONLINE</span>
+      </div>
+      <button class="tb-btn" onclick="clearChat()">[clear]</button>
+    </div>
+  </div>
+
+  <div id="messages">
+    <div class="term-sep" id="sep">session started</div>
+  </div>
+
+  <div class="input-zone">
+    <div class="input-prompt-line">
+      <span class="ps1"><span class="ps-path">~/aria</span> <span class="ps-gt">❯</span></span>
+      <textarea id="inp" rows="1" placeholder="enter command..." autocomplete="off" spellcheck="false"></textarea>
+      <button id="send" disabled>SEND ↵</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  const API     = 'http://188.245.242.236:4000';
+  const USER_ID = 'demo-user-1';
+
+  const $msgs = document.getElementById('messages');
+  const $inp  = document.getElementById('inp');
+  const $btn  = document.getElementById('send');
+  const $led  = document.getElementById('led');
+  const $ltxt = document.getElementById('ledtxt');
+
+  marked.setOptions({ breaks: true, gfm: true });
+  let busy = false;
+
+  $inp.addEventListener('input', () => {
+    $inp.style.height = 'auto';
+    $inp.style.height = Math.min($inp.scrollHeight, 120) + 'px';
+    $btn.disabled = !$inp.value.trim() || busy;
+  });
+
+  $inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!$btn.disabled) send(); }
+  });
+
+  $btn.addEventListener('click', send);
+
+  function addBlock(role, content) {
+    const block = document.createElement('div');
+    block.className = `msg-block ${role}`;
+
+    const prompt = document.createElement('div');
+    prompt.className = 'msg-prompt';
+
+    if (role === 'user') {
+      prompt.innerHTML = `<span class="prompt-path">you@client</span><span class="prompt-sym">❯</span>`;
+    } else {
+      prompt.innerHTML = `<span class="prompt-path">aria@ai</span><span class="prompt-sym aria-sym">→</span>`;
+    }
+
+    const line = document.createElement('div');
+    line.className = 'msg-line';
+    if (role === 'aria') line.innerHTML = marked.parse(content);
+    else line.textContent = content;
+
+    block.append(prompt, line);
+    $msgs.appendChild(block);
+    scroll();
+    return block;
+  }
+
+  function addTyping() {
+    const block = document.createElement('div');
+    block.className = 'msg-block aria';
+    block.id = 'typing';
+
+    const prompt = document.createElement('div');
+    prompt.className = 'msg-prompt';
+    prompt.innerHTML = `<span class="prompt-path">aria@ai</span><span class="prompt-sym aria-sym">→</span>`;
+
+    const line = document.createElement('div');
+    line.className = 'typing-line';
+    line.innerHTML = `<span>processing</span><span class="cursor-blink"></span>`;
+
+    block.append(prompt, line);
+    $msgs.appendChild(block);
+    scroll();
+  }
+
+  function removeTyping() { document.getElementById('typing')?.remove(); }
+  function scroll() { requestAnimationFrame(() => { $msgs.scrollTop = $msgs.scrollHeight; }); }
+
+  function setStatus(thinking) {
+    if (thinking) {
+      $led.className = 'tb-led blink';
+      $ltxt.textContent = 'BUSY';
+    } else {
+      $led.className = 'tb-led';
+      $ltxt.textContent = 'ONLINE';
+    }
+  }
+
+  async function send() {
+    const txt = $inp.value.trim();
+    if (!txt || busy) return;
+    busy = true; $btn.disabled = true;
+    $inp.value = ''; $inp.style.height = 'auto';
+
+    addBlock('user', txt);
+    addTyping();
+    setStatus(true);
+
+    try {
+      const r = await fetch(`${API}/api/aria/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: USER_ID, message: txt }),
+      });
+      removeTyping();
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const { reply } = await r.json();
+      addBlock('aria', reply || "I've noted that down.");
+    } catch (e) {
+      removeTyping();
+      addBlock('aria', `ERR: ${e.message}`);
+    } finally {
+      busy = false; setStatus(false); $inp.focus();
+    }
+  }
+
+  window.clearChat = () => {
+    $msgs.innerHTML = '<div class="term-sep" id="sep">session cleared</div>';
+    addBlock('aria', 'Buffer cleared. Awaiting input.');
+  };
+
+  // boot sequence
+  addBlock('aria', `ARIA v1.0 — Adaptive Reasoning Intelligence Agent\nType your request to begin.`);
+  setTimeout(() => $inp.focus(), 300);
+})();
+</script>
+</body>
+</html>

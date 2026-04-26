@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#060a12">
+<title>ARIA — Dark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #060a12;
+  --bg2:      #090e1a;
+  --surface:  #0d1424;
+  --surface2: #111b30;
+  --border:   rgba(255,255,255,0.055);
+  --border2:  rgba(255,255,255,0.09);
+  --accent:   #2563eb;
+  --accent-h: #3b7cf8;
+  --text:     #dce6f7;
+  --text-2:   #7a8faf;
+  --text-3:   #3a4d6a;
+  --user-bg:  #1a3fcc;
+  --green:    #22c55e;
+  --font:     'Inter', -apple-system, sans-serif;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  height: 100vh;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  padding: 0 20px;
+  padding-top: env(safe-area-inset-top);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  flex-shrink: 0;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.3px;
+}
+
+.logo-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.5px;
+}
+
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-3);
+  font-weight: 500;
+}
+
+.status-pip {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.status-pip.thinking {
+  background: var(--accent);
+  animation: pip-blink 0.9s ease-in-out infinite;
+}
+@keyframes pip-blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.hdr-actions { display: flex; gap: 4px; }
+.hdr-btn {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text-3);
+  font-family: var(--font);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.hdr-btn:hover { background: var(--surface2); color: var(--text-2); }
+
+/* ── Messages ────────────────────────────────────────── */
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 28px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  scroll-behavior: smooth;
+}
+#messages::-webkit-scrollbar { width: 2px; }
+#messages::-webkit-scrollbar-thumb { background: var(--surface2); }
+
+.msg-row {
+  display: flex;
+  flex-direction: column;
+  animation: msg-fade 0.2s ease both;
+}
+.msg-row.user { align-items: flex-end; }
+.msg-row.aria { align-items: flex-start; }
+
+@keyframes msg-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.msg-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 5px;
+  padding: 0 3px;
+}
+.msg-row.user .msg-label { color: rgba(100,140,255,0.45); }
+
+.msg-bubble {
+  max-width: min(80%, 560px);
+  padding: 10px 14px 11px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  word-break: break-word;
+  border-radius: 14px;
+}
+
+.msg-row.user .msg-bubble {
+  background: var(--user-bg);
+  color: rgba(255,255,255,0.93);
+  border-bottom-right-radius: 3px;
+}
+
+.msg-row.aria .msg-bubble {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 3px;
+}
+
+.msg-row.aria + .msg-row.aria .msg-bubble { border-top-left-radius: 6px; }
+.msg-row.user + .msg-row.user .msg-bubble { border-top-right-radius: 6px; }
+
+/* markdown */
+.msg-bubble p { margin: 0 0 7px; }
+.msg-bubble p:last-child { margin-bottom: 0; }
+.msg-bubble strong { font-weight: 600; color: #f0f4ff; }
+.msg-bubble em { color: var(--text-2); font-style: italic; }
+.msg-bubble ul, .msg-bubble ol { padding-left: 18px; margin: 5px 0; }
+.msg-bubble li { margin: 2px 0; }
+.msg-bubble h1,.msg-bubble h2,.msg-bubble h3 { font-weight: 600; margin: 10px 0 5px; line-height: 1.3; }
+.msg-bubble h1 { font-size: 16px; }
+.msg-bubble h2 { font-size: 14.5px; }
+.msg-bubble h3 { font-size: 13.5px; }
+.msg-bubble code { font-family: 'SF Mono',monospace; font-size: 12px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.07); border-radius: 4px; padding: 1px 5px; color: #93c5fd; }
+.msg-bubble pre { background: rgba(0,0,0,0.4); border: 1px solid var(--border2); border-radius: 8px; padding: 11px 13px; overflow-x: auto; margin: 8px 0; }
+.msg-bubble pre code { background:none; border:none; padding:0; color:#bdd0f8; }
+.msg-bubble blockquote { border-left: 2px solid var(--accent); padding-left: 11px; margin: 7px 0; color: var(--text-2); font-style: italic; }
+.msg-bubble a { color: #60a5fa; text-underline-offset: 2px; }
+.msg-bubble hr { border:none; border-top:1px solid var(--border); margin:10px 0; }
+
+/* ── Typing ───────────────────────────────────────────── */
+.typing-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  border-bottom-left-radius: 3px;
+  padding: 12px 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.td {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--text-3);
+  animation: td-pulse 1.2s ease-in-out infinite;
+}
+.td:nth-child(2) { animation-delay: 0.14s; }
+.td:nth-child(3) { animation-delay: 0.28s; }
+@keyframes td-pulse { 0%,60%,100%{opacity:0.25;transform:scale(1)} 30%{opacity:1;transform:scale(1.3)} }
+
+/* ── Separator ───────────────────────────────────────── */
+.sep {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--text-3); font-size: 10.5px;
+  font-weight: 500; letter-spacing: 0.5px;
+  text-transform: uppercase; margin: 14px 0 8px;
+}
+.sep::before,.sep::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ── Input ───────────────────────────────────────────── */
+.input-area {
+  flex-shrink: 0;
+  padding: 12px 20px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.input-shell {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 9px 9px 9px 14px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input-shell:focus-within {
+  border-color: rgba(37,99,235,0.45);
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
+}
+
+textarea#inp {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13.5px;
+  line-height: 1.55;
+  resize: none;
+  min-height: 21px;
+  max-height: 130px;
+  overflow-y: auto;
+  caret-color: var(--accent-h);
+}
+textarea#inp::placeholder { color: var(--text-3); }
+
+#send {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.12s;
+}
+#send:hover { background: var(--accent-h); }
+#send:active { transform: scale(0.94); }
+#send:disabled { background: var(--surface2); opacity: 0.4; cursor: default; }
+
+@media (min-width: 720px) {
+  body { background: #040810; }
+  #app { border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+  #messages { padding: 32px 28px 16px; }
+  .input-area { padding: 14px 28px; padding-bottom: 18px; }
+  header { padding: 0 28px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="logo">
+      <div class="logo-mark">A</div>
+      <span class="logo-name">ARIA</span>
+    </div>
+    <div class="header-meta">
+      <div class="status-pip" id="pip"></div>
+      <span id="status-txt">Online</span>
+    </div>
+    <div class="hdr-actions">
+      <button class="hdr-btn" onclick="clearChat()">Clear</button>
+    </div>
+  </header>
+
+  <div id="messages">
+    <div class="sep">Today</div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-shell">
+      <textarea id="inp" rows="1" placeholder="Ask ARIA anything…" autocomplete="off" spellcheck="true"></textarea>
+      <button id="send" disabled>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 13V3M3 8l5-5 5 5"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  const API     = 'http://188.245.242.236:4000';
+  const USER_ID = 'demo-user-1';
+
+  const $msgs   = document.getElementById('messages');
+  const $inp    = document.getElementById('inp');
+  const $btn    = document.getElementById('send');
+  const $pip    = document.getElementById('pip');
+  const $stxt   = document.getElementById('status-txt');
+
+  marked.setOptions({ breaks: true, gfm: true });
+  let busy = false;
+
+  $inp.addEventListener('input', () => {
+    $inp.style.height = 'auto';
+    $inp.style.height = Math.min($inp.scrollHeight, 130) + 'px';
+    $btn.disabled = !$inp.value.trim() || busy;
+  });
+
+  $inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!$btn.disabled) send(); }
+  });
+
+  $btn.addEventListener('click', send);
+
+  function addMsg(role, html) {
+    const row = document.createElement('div');
+    row.className = `msg-row ${role}`;
+
+    const lbl = document.createElement('div');
+    lbl.className = 'msg-label';
+    lbl.textContent = role === 'aria' ? 'ARIA' : 'You';
+
+    const bub = document.createElement('div');
+    bub.className = 'msg-bubble';
+    if (role === 'aria') bub.innerHTML = marked.parse(html);
+    else bub.textContent = html;
+
+    row.append(lbl, bub);
+    $msgs.appendChild(row);
+    scroll();
+    return row;
+  }
+
+  function addTyping() {
+    const row = document.createElement('div');
+    row.className = 'msg-row aria';
+    row.id = 'typing';
+    row.innerHTML = `<div class="msg-label">ARIA</div>
+      <div class="typing-wrap">
+        <div class="td"></div><div class="td"></div><div class="td"></div>
+      </div>`;
+    $msgs.appendChild(row);
+    scroll();
+  }
+
+  function removeTyping() { document.getElementById('typing')?.remove(); }
+
+  function scroll() { requestAnimationFrame(() => { $msgs.scrollTop = $msgs.scrollHeight; }); }
+
+  function setStatus(s) {
+    if (s === 'thinking') {
+      $pip.className = 'status-pip thinking';
+      $stxt.textContent = 'Thinking…';
+    } else {
+      $pip.className = 'status-pip';
+      $stxt.textContent = 'Online';
+    }
+  }
+
+  async function send() {
+    const txt = $inp.value.trim();
+    if (!txt || busy) return;
+    busy = true; $btn.disabled = true;
+    $inp.value = ''; $inp.style.height = 'auto';
+
+    addMsg('user', txt);
+    addTyping();
+    setStatus('thinking');
+
+    try {
+      const r = await fetch(`${API}/api/aria/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: USER_ID, message: txt }),
+      });
+      removeTyping();
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const { reply } = await r.json();
+      addMsg('aria', reply || "I've noted that down.");
+    } catch (e) {
+      removeTyping();
+      addMsg('aria', `_Connection error — ${e.message}_`);
+    } finally {
+      busy = false; setStatus('online'); $inp.focus();
+    }
+  }
+
+  window.clearChat = () => {
+    $msgs.innerHTML = '<div class="sep">Today</div>';
+    addMsg('aria', 'Cleared. What would you like to work on?');
+  };
+
+  addMsg('aria', "Good to see you. What's on your agenda today?");
+  setTimeout(() => $inp.focus(), 300);
+})();
+</script>
+</body>
+</html>

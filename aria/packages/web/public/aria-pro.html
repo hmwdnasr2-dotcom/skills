@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0612">
+<title>ARIA — Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-a:     #070412;
+  --bg-b:     #0e0820;
+  --glass:    rgba(255,255,255,0.04);
+  --glass-h:  rgba(255,255,255,0.07);
+  --border:   rgba(255,255,255,0.07);
+  --border-h: rgba(255,255,255,0.12);
+  --accent:   #7c3aed;
+  --accent-h: #8b5cf6;
+  --accent-g: rgba(124,58,237,0.18);
+  --accent-s: rgba(124,58,237,0.35);
+  --user-a:   #5b21b6;
+  --user-b:   #7c3aed;
+  --text:     #e8e0f8;
+  --text-2:   #8b80aa;
+  --text-3:   #3d3560;
+  --green:    #10b981;
+  --font:     'Inter', -apple-system, sans-serif;
+}
+
+html, body {
+  height: 100%;
+  background: radial-gradient(ellipse 120% 80% at 20% -10%, #1a0640 0%, var(--bg-a) 50%),
+              radial-gradient(ellipse 80% 60% at 80% 110%, #0d1040 0%, transparent 60%);
+  background-color: var(--bg-a);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  height: 100vh;
+  max-width: 740px;
+  margin: 0 auto;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 58px;
+  padding: 0 22px;
+  padding-top: env(safe-area-inset-top);
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-icon {
+  position: relative;
+  width: 32px;
+  height: 32px;
+}
+
+.brand-icon-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--user-a), var(--accent-h));
+  opacity: 0.9;
+}
+
+.brand-icon-blur {
+  position: absolute;
+  inset: -3px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--user-a), var(--accent-h));
+  filter: blur(8px);
+  opacity: 0.35;
+  z-index: -1;
+}
+
+.brand-letter {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.brand-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.3px;
+}
+
+.brand-badge {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--accent-h);
+  background: var(--accent-g);
+  border: 1px solid rgba(139,92,246,0.25);
+  border-radius: 5px;
+  padding: 2px 6px;
+  margin-left: 4px;
+}
+
+.hdr-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.online-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.2);
+  font-size: 11px;
+  font-weight: 500;
+  color: #34d399;
+}
+.online-pip {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 5px #10b981;
+}
+.online-pip.busy {
+  background: var(--accent-h);
+  box-shadow: 0 0 5px var(--accent-h);
+  animation: blink 0.8s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+.clear-btn {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border-h);
+  background: var(--glass);
+  color: var(--text-3);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  transition: all 0.15s;
+}
+.clear-btn:hover { background: var(--glass-h); color: var(--text-2); }
+
+/* ── Messages ────────────────────────────────────────── */
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 26px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  scroll-behavior: smooth;
+}
+#messages::-webkit-scrollbar { width: 2px; }
+#messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+.msg-row {
+  display: flex;
+  flex-direction: column;
+  animation: pop-in 0.22s cubic-bezier(0.18,1.2,0.4,1) both;
+}
+.msg-row.user { align-items: flex-end; }
+.msg-row.aria { align-items: flex-start; }
+
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.msg-meta {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 5px;
+  padding: 0 4px;
+}
+.msg-row.user .msg-meta { color: rgba(167,139,250,0.4); }
+
+.msg-bubble {
+  max-width: min(82%, 560px);
+  padding: 11px 15px 12px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  word-break: break-word;
+  border-radius: 18px;
+  position: relative;
+}
+
+.msg-row.user .msg-bubble {
+  background: linear-gradient(145deg, var(--user-b), var(--user-a));
+  color: rgba(255,255,255,0.95);
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 24px rgba(124,58,237,0.28), 0 0 0 1px rgba(139,92,246,0.15);
+}
+
+.msg-row.aria .msg-bubble {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-h);
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.msg-row.aria + .msg-row.aria .msg-bubble { border-top-left-radius: 8px; }
+.msg-row.user + .msg-row.user .msg-bubble { border-top-right-radius: 8px; }
+
+/* markdown */
+.msg-bubble p { margin: 0 0 7px; }
+.msg-bubble p:last-child { margin-bottom: 0; }
+.msg-bubble strong { font-weight: 600; color: #fff; }
+.msg-bubble em { color: var(--text-2); font-style: italic; }
+.msg-bubble ul, .msg-bubble ol { padding-left: 18px; margin: 5px 0; }
+.msg-bubble li { margin: 2px 0; }
+.msg-bubble h1,.msg-bubble h2,.msg-bubble h3 { font-weight: 600; margin: 10px 0 5px; }
+.msg-bubble h1 { font-size: 16px; }
+.msg-bubble h2 { font-size: 14.5px; }
+.msg-bubble h3 { font-size: 13.5px; }
+.msg-bubble code { font-family: 'SF Mono',monospace; font-size: 11.5px; background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.2); border-radius: 5px; padding: 1px 5px; color: #c4b5fd; }
+.msg-bubble pre { background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 14px; overflow-x: auto; margin: 8px 0; }
+.msg-bubble pre code { background:none; border:none; padding:0; color:#ddd6fe; }
+.msg-bubble blockquote { border-left: 2px solid var(--accent-h); padding-left: 11px; margin: 7px 0; color: var(--text-2); font-style: italic; }
+.msg-bubble a { color: #a78bfa; text-underline-offset: 2px; }
+.msg-bubble hr { border:none; border-top:1px solid var(--border); margin:10px 0; }
+
+/* ── Typing ───────────────────────────────────────────── */
+.typing-shell {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-h);
+  border-radius: 18px;
+  border-bottom-left-radius: 4px;
+  padding: 13px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+}
+.td {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent-h);
+  opacity: 0.4;
+  animation: td 1.3s ease-in-out infinite;
+}
+.td:nth-child(2) { animation-delay: 0.16s; }
+.td:nth-child(3) { animation-delay: 0.32s; }
+@keyframes td { 0%,60%,100%{opacity:0.2;transform:scale(1)} 30%{opacity:1;transform:scale(1.4)} }
+
+/* ── Divider ─────────────────────────────────────────── */
+.divider {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--text-3); font-size: 10px; font-weight: 500;
+  letter-spacing: 0.6px; text-transform: uppercase;
+  margin: 12px 0 8px;
+}
+.divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ── Input ───────────────────────────────────────────── */
+.input-zone {
+  flex-shrink: 0;
+  padding: 12px 18px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  background: rgba(255,255,255,0.025);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+}
+
+.input-frame {
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border-h);
+  border-radius: 16px;
+  padding: 10px 10px 10px 16px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input-frame:focus-within {
+  border-color: rgba(139,92,246,0.45);
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.12), 0 4px 24px rgba(0,0,0,0.2);
+}
+
+textarea#inp {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13.5px;
+  line-height: 1.55;
+  resize: none;
+  min-height: 22px;
+  max-height: 130px;
+  overflow-y: auto;
+  caret-color: var(--accent-h);
+}
+textarea#inp::placeholder { color: var(--text-3); }
+
+#send {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(145deg, var(--accent-h), var(--accent));
+  color: #fff;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  box-shadow: 0 2px 12px rgba(124,58,237,0.45);
+}
+#send:hover { box-shadow: 0 4px 20px rgba(124,58,237,0.6); transform: scale(1.05); }
+#send:active { transform: scale(0.93); }
+#send:disabled { background: rgba(255,255,255,0.07); box-shadow: none; opacity: 0.35; cursor: default; }
+
+@media (min-width: 740px) {
+  #app { border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+  #messages { padding: 30px 26px 16px; }
+  .input-zone { padding: 14px 24px; padding-bottom: 18px; }
+  header { padding: 0 26px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">
+        <div class="brand-icon-blur"></div>
+        <div class="brand-icon-bg"></div>
+        <div class="brand-letter">A</div>
+      </div>
+      <span class="brand-name">ARIA</span>
+      <span class="brand-badge">Pro</span>
+    </div>
+    <div class="hdr-right">
+      <div class="online-pill">
+        <div class="online-pip" id="pip"></div>
+        <span id="stxt">Online</span>
+      </div>
+      <button class="clear-btn" onclick="clearChat()" title="Clear">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M2 4h12M6 4V2h4v2M5 4l.5 9h5l.5-9"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="messages">
+    <div class="divider">Today</div>
+  </div>
+
+  <div class="input-zone">
+    <div class="input-frame">
+      <textarea id="inp" rows="1" placeholder="Message ARIA…" autocomplete="off" spellcheck="true"></textarea>
+      <button id="send" disabled>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 13V3M3 8l5-5 5 5"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  const API     = 'http://188.245.242.236:4000';
+  const USER_ID = 'demo-user-1';
+
+  const $msgs = document.getElementById('messages');
+  const $inp  = document.getElementById('inp');
+  const $btn  = document.getElementById('send');
+  const $pip  = document.getElementById('pip');
+  const $stxt = document.getElementById('stxt');
+
+  marked.setOptions({ breaks: true, gfm: true });
+  let busy = false;
+
+  $inp.addEventListener('input', () => {
+    $inp.style.height = 'auto';
+    $inp.style.height = Math.min($inp.scrollHeight, 130) + 'px';
+    $btn.disabled = !$inp.value.trim() || busy;
+  });
+
+  $inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!$btn.disabled) send(); }
+  });
+
+  $btn.addEventListener('click', send);
+
+  function addMsg(role, content) {
+    const row = document.createElement('div');
+    row.className = `msg-row ${role}`;
+
+    const meta = document.createElement('div');
+    meta.className = 'msg-meta';
+    meta.textContent = role === 'aria' ? 'ARIA' : 'You';
+
+    const bub = document.createElement('div');
+    bub.className = 'msg-bubble';
+    if (role === 'aria') bub.innerHTML = marked.parse(content);
+    else bub.textContent = content;
+
+    row.append(meta, bub);
+    $msgs.appendChild(row);
+    scroll();
+  }
+
+  function addTyping() {
+    const row = document.createElement('div');
+    row.className = 'msg-row aria';
+    row.id = 'typing';
+    row.innerHTML = `<div class="msg-meta">ARIA</div>
+      <div class="typing-shell">
+        <div class="td"></div><div class="td"></div><div class="td"></div>
+      </div>`;
+    $msgs.appendChild(row);
+    scroll();
+  }
+
+  function removeTyping() { document.getElementById('typing')?.remove(); }
+  function scroll() { requestAnimationFrame(() => { $msgs.scrollTop = $msgs.scrollHeight; }); }
+
+  function setStatus(busy) {
+    $pip.className = busy ? 'online-pip busy' : 'online-pip';
+    $stxt.textContent = busy ? 'Thinking…' : 'Online';
+  }
+
+  async function send() {
+    const txt = $inp.value.trim();
+    if (!txt || busy) return;
+    busy = true; $btn.disabled = true;
+    $inp.value = ''; $inp.style.height = 'auto';
+
+    addMsg('user', txt);
+    addTyping();
+    setStatus(true);
+
+    try {
+      const r = await fetch(`${API}/api/aria/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: USER_ID, message: txt }),
+      });
+      removeTyping();
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const { reply } = await r.json();
+      addMsg('aria', reply || "I've noted that down.");
+    } catch (e) {
+      removeTyping();
+      addMsg('aria', `_Connection error — ${e.message}_`);
+    } finally {
+      busy = false; setStatus(false); $inp.focus();
+    }
+  }
+
+  window.clearChat = () => {
+    $msgs.innerHTML = '<div class="divider">Today</div>';
+    addMsg('aria', 'Fresh start. What are we working on?');
+  };
+
+  addMsg('aria', "Good to see you. What's on your agenda today?");
+  setTimeout(() => $inp.focus(), 300);
+})();
+</script>
+</body>
+</html>
