@@ -228,8 +228,8 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
   const timerRefs  = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, thinkSteps]);
+    bottomRef.current?.scrollIntoView({ behavior: 'instant' });
+  }, [messages.length, thinkSteps.length]);
 
   // Proactive SSE push (briefings, nudges)
   useEffect(() => {
