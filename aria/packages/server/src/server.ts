@@ -94,6 +94,11 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 // ─── Start ────────────────────────────────────────────────────────────────────
 
 app.listen(PORT, () => {
+  const key = process.env.ANTHROPIC_API_KEY ?? '';
+  const keyInfo = key
+    ? `set (${key.length} chars, starts: ${key.slice(0, 14)}...)`
+    : 'NOT SET';
+  console.log(`[server] ANTHROPIC_API_KEY: ${keyInfo}`);
   console.log(`[server] ARIA server listening on http://localhost:${PORT}`);
   console.log(`[server] Brain: ${process.env.ARIA_BRAIN ?? 'claude'} / ${process.env.ARIA_MODEL ?? 'default'}`);
   startScheduler();
