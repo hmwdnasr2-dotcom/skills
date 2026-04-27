@@ -627,6 +627,11 @@ body {
 
 .attach-remove:hover { color: var(--red); }
 
+.attach-chip--error {
+  border-color: var(--red);
+  opacity: 0.8;
+}
+
 /* Slash command dropdown */
 .slash-menu {
   position: absolute;

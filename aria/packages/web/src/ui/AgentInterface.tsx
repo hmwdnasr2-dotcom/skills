@@ -18,9 +18,12 @@ interface Attachment {
   id: string;
   name: string;
   size: number;
-  kind: 'text' | 'image' | 'other';
+  kind: 'text' | 'image' | 'binary' | 'other';
   content?: string;
   preview?: string;
+  fileId?: string;
+  uploading?: boolean;
+  uploadError?: string;
 }
 
 interface AriaMessage {
@@ -105,15 +108,32 @@ function readAsDataURL(file: File): Promise<string> {
   });
 }
 
+const BINARY_EXTS = new Set(['.xlsx', '.xls', '.pdf', '.docx']);
+
+function fileIcon(att: Attachment): string {
+  if (att.uploading)    return '⏳';
+  if (att.uploadError)  return '❌';
+  if (att.kind === 'image') return '🖼️';
+  if (att.kind === 'text')  return '📄';
+  const ext = att.name.toLowerCase().split('.').pop();
+  if (ext === 'pdf')              return '📑';
+  if (ext === 'xlsx' || ext === 'xls') return '📊';
+  if (ext === 'docx')             return '📝';
+  return '📎';
+}
+
 function needsTools(text: string) {
   return /task|project|follow.?up|achiev|report|contact|email|inbox|memory/i.test(text);
 }
 
-function buildSteps(text: string): ThinkStep[] {
+function buildSteps(text: string, hasFiles = false): ThinkStep[] {
   const steps: ThinkStep[] = [
     { id: 'think',  icon: '🧠', label: 'Thinking',        state: 'waiting' },
-    { id: 'memory', icon: '📂', label: 'Checking memory', state: 'waiting' },
   ];
+  if (hasFiles) {
+    steps.push({ id: 'parse', icon: '📄', label: 'Reading document', state: 'waiting' });
+  }
+  steps.push({ id: 'memory', icon: '📂', label: 'Checking memory', state: 'waiting' });
   if (needsTools(text)) {
     steps.push({ id: 'tool', icon: '⚙️', label: 'Running tools', state: 'waiting' });
   }
@@ -324,6 +344,7 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
       .join('');
 
     const fullMessage = MODE_PREFIXES[mode] + sendContent + fileContext;
+    const fileIds = attachments.filter((a) => a.fileId).map((a) => a.fileId!);
 
     addMessage({
       role: 'user',
@@ -333,7 +354,7 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
     setAttachments([]);
     setBusy(true);
 
-    const steps = buildSteps(fullMessage);
+    const steps = buildSteps(fullMessage, fileIds.length > 0);
     startThinkAnimation(steps);
 
     const pendingId = uid();
@@ -343,7 +364,7 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
       const res = await fetch(`${apiBase}/api/aria/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, message: fullMessage }),
+        body: JSON.stringify({ userId, message: fullMessage, ...(fileIds.length > 0 && { fileIds }) }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const { reply } = await res.json() as { reply?: string };
@@ -416,12 +437,39 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
 
   // ── File upload ───────────────────────────────────────────────────────────────
 
+  async function uploadBinaryFile(file: File, attId: string) {
+    const form = new FormData();
+    form.append('files', file);
+    form.append('sessionId', userId);
+    try {
+      const res = await fetch(`${apiBase}/api/aria/upload`, { method: 'POST', body: form });
+      if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+      const data = await res.json() as { files?: Array<{ fileId: string }> };
+      const fileId = data.files?.[0]?.fileId;
+      if (!fileId) throw new Error('No fileId returned');
+      setAttachments((prev) => prev.map((a) => a.id === attId ? { ...a, uploading: false, fileId } : a));
+    } catch (err) {
+      setAttachments((prev) => prev.map((a) =>
+        a.id === attId ? { ...a, uploading: false, uploadError: (err as Error).message } : a
+      ));
+    }
+  }
+
   async function handleFileAttach(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     if (fileRef.current) fileRef.current.value = '';
 
     for (const file of files) {
+      const ext = (file.name.match(/\.[^.]+$/)?.[0] ?? '').toLowerCase();
       const att: Attachment = { id: uid(), name: file.name, size: file.size, kind: 'other' };
+
+      if (BINARY_EXTS.has(ext)) {
+        att.kind = 'binary';
+        att.uploading = true;
+        setAttachments((prev) => [...prev, att]);
+        uploadBinaryFile(file, att.id);
+        continue;
+      }
 
       if (file.type.startsWith('image/')) {
         att.kind = 'image';
@@ -635,13 +683,15 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
           {attachments.length > 0 && (
             <div className="attach-previews">
               {attachments.map((a) => (
-                <div key={a.id} className="attach-chip">
+                <div key={a.id} className={`attach-chip${a.uploadError ? ' attach-chip--error' : ''}`}>
                   {a.kind === 'image' && a.preview
                     ? <img src={a.preview} alt={a.name} className="attach-img-thumb" />
-                    : <span className="attach-icon">{a.kind === 'text' ? '📄' : '📎'}</span>
+                    : <span className="attach-icon">{fileIcon(a)}</span>
                   }
                   <span className="attach-name">{a.name}</span>
-                  <span className="attach-size">{formatSize(a.size)}</span>
+                  <span className="attach-size">
+                    {a.uploading ? 'uploading…' : a.uploadError ? 'failed' : formatSize(a.size)}
+                  </span>
                   <button
                     className="attach-remove"
                     onClick={() => setAttachments((prev) => prev.filter((x) => x.id !== a.id))}
@@ -706,7 +756,7 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
             <button
               type="submit"
               className="input-send"
-              disabled={busy || (!input.trim() && attachments.length === 0)}
+              disabled={busy || (!input.trim() && attachments.length === 0) || attachments.some((a) => a.uploading)}
               aria-label="Send"
             >
               ↑
@@ -717,7 +767,7 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
             ref={fileRef}
             type="file"
             multiple
-            accept="image/*,.txt,.md,.csv,.json,.ts,.tsx,.js,.jsx,.py,.sh,.sql"
+            accept="image/*,.xlsx,.xls,.pdf,.docx,.txt,.md,.csv,.json,.ts,.tsx,.js,.jsx,.py,.sh,.sql"
             className="input-file-hidden"
             onChange={handleFileAttach}
           />
