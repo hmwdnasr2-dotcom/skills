@@ -435,6 +435,18 @@ textarea#inp::placeholder { color: var(--tx-stone); }
     document.querySelectorAll('.date-sep').forEach(el=>el.remove());
     $welcome.style.display='';
   };
+
+  function connectSSE(){
+    const es=new EventSource(`${API}/api/aria/events?userId=${UID}`);
+    es.onmessage=async e=>{
+      try{
+        const{content}=JSON.parse(e.data);
+        if(content){const body=addAria();await typeReply(body,content);}
+      }catch(_){}
+    };
+    es.onerror=()=>{es.close();setTimeout(connectSSE,6000);};
+  }
+  connectSSE();
   setTimeout(()=>$inp.focus(),150);
 })();
 </script>
