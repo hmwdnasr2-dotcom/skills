@@ -119,8 +119,8 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
     try {
       updateEnvKey('ANTHROPIC_API_KEY', newKey);
       await sendTelegram(chatId, `✅ Key saved (${newKey.length} chars). Restarting server now — I'll be back in ~5 seconds.`);
-      // Let PM2 restart us automatically when we exit with code 0
-      setTimeout(() => process.exit(0), 800);
+      // Exit with code 1 so PM2 treats it as a crash and auto-restarts
+      setTimeout(() => process.exit(1), 800);
     } catch (err) {
       await sendTelegram(chatId, `❌ Failed to save key: ${(err as Error).message}`);
     }
