@@ -135,20 +135,24 @@ async function downloadTelegramFile(fileId: string): Promise<{ buffer: Buffer; f
   }
 }
 
-async function uploadToAria(buffer: Buffer, fileName: string, ext: string): Promise<string | null> {
+async function uploadToAria(buffer: Buffer, fileName: string): Promise<string | null> {
   try {
     const form = new FormData();
-    form.append('file', new Blob([buffer]), fileName);
+    form.append('files', new Blob([buffer]), fileName);   // field name must be 'files'
 
     const port = process.env.PORT ?? '4000';
     const res  = await fetch(`http://localhost:${port}/api/aria/upload`, {
       method: 'POST',
       body:   form,
     });
-    if (!res.ok) return null;
-    const data = await res.json() as { fileId?: string };
-    return data.fileId ?? null;
-  } catch {
+    if (!res.ok) {
+      console.warn('[telegram] upload failed:', res.status, await res.text());
+      return null;
+    }
+    const data = await res.json() as { files?: Array<{ fileId: string }> };
+    return data.files?.[0]?.fileId ?? null;
+  } catch (err) {
+    console.warn('[telegram] uploadToAria error:', (err as Error).message);
     return null;
   }
 }
@@ -174,7 +178,7 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
       return;
     }
 
-    const fileId = await uploadToAria(downloaded.buffer, downloaded.fileName, downloaded.ext);
+    const fileId = await uploadToAria(downloaded.buffer, downloaded.fileName);
     if (!fileId) {
       await sendTelegram(chatId, '❌ Could not process the file. Make sure it is Excel, PDF, Word, or CSV.');
       return;
