@@ -112,7 +112,7 @@
       "position": [1180, 300],
       "parameters": {
         "method": "POST",
-        "url": "http://188.245.242.236:4000/api/aria/chat",
+        "url": "http://localhost:4000/api/aria/chat",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [{ "name": "Content-Type", "value": "application/json" }]
