@@ -204,6 +204,56 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
     return;
   }
 
+  if (text === '/debug') {
+    const brain = process.env.ARIA_BRAIN ?? 'claude';
+    const model = process.env.ARIA_MODEL ?? 'default';
+    const dsKey = process.env.DEEPSEEK_API_KEY ?? '';
+    const anKey = process.env.ANTHROPIC_API_KEY ?? '';
+    const keyInfo = brain === 'deepseek'
+      ? (dsKey ? `DeepSeek key: ${dsKey.length} chars` : 'DeepSeek key: MISSING')
+      : (anKey ? `Anthropic key: ${anKey.length} chars` : 'Anthropic key: MISSING');
+
+    await sendTelegram(chatId, `🔍 Debug starting...\nBrain: ${brain}\nModel: ${model}\n${keyInfo}`);
+
+    // Step 1: direct API call
+    try {
+      if (brain === 'deepseek') {
+        const res = await fetch('https://api.deepseek.com/chat/completions', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${dsKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'deepseek-chat', max_tokens: 30, messages: [{ role: 'user', content: 'say hi' }] }),
+        });
+        const data = await res.json() as { choices?: Array<{ message?: { content?: string } }>; error?: { message?: string } };
+        if (res.ok) {
+          await sendTelegram(chatId, `✅ Direct API: "${data.choices?.[0]?.message?.content ?? '(empty)'}"`);
+        } else {
+          await sendTelegram(chatId, `❌ Direct API error ${res.status}: ${data.error?.message}`);
+          return;
+        }
+      } else {
+        await sendTelegram(chatId, `ℹ️ Run /testkey for Anthropic key check`);
+      }
+    } catch (err) {
+      await sendTelegram(chatId, `❌ Direct API network error: ${(err as Error).message}`);
+      return;
+    }
+
+    // Step 2: through claw pipeline (NO tools context — minimal)
+    await sendTelegram(chatId, `⏳ Testing claw pipeline...`);
+    try {
+      const reply = await claw.run('chat', {
+        userId: USER_ID(),
+        messages: [{ role: 'user', content: 'just say hello in one word' }],
+      });
+      await sendTelegram(chatId, `Pipeline replied: "${String(reply).slice(0, 200)}"`);
+    } catch (err) {
+      const e = err as Error & { cause?: Error };
+      const root = e.cause?.message ?? e.message;
+      await sendTelegram(chatId, `❌ Pipeline error: ${root}`);
+    }
+    return;
+  }
+
   if (text.startsWith('/')) return;
 
   const userId = USER_ID();
@@ -214,8 +264,10 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
     });
     await sendTelegram(chatId, String(reply ?? "I've noted that down."));
   } catch (err) {
-    console.error('[telegram] chat error:', (err as Error).message);
-    await sendTelegram(chatId, "Sorry, I hit an error. Please try again.");
+    const e = err as Error & { cause?: Error };
+    const root = e.cause?.message ?? e.message;
+    console.error('[telegram] chat error:', e.message, '| cause:', e.cause?.message);
+    await sendTelegram(chatId, `❌ Error: ${root}`);
   }
 }
 
