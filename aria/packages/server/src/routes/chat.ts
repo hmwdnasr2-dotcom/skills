@@ -82,10 +82,12 @@ chatRouter.post('/', async (req, res) => {
       downloads: downloads.length > 0 ? downloads : undefined,
     });
   } catch (err) {
-    const e = err as Error & { status?: number; error?: unknown };
-    console.error('[chat] error:', e.message);
-    console.error('[chat] error detail:', JSON.stringify(e.error ?? ''));
-    console.error('[chat] stack:', e.stack);
+    const e = err as Error & { cause?: unknown; status?: number };
+    const cause = e.cause as Error & { status?: number; error?: unknown } | undefined;
+    console.error('[chat] pipeline error:', e.message);
+    console.error('[chat] root cause:', cause?.message ?? cause);
+    console.error('[chat] cause detail:', JSON.stringify(cause?.error ?? ''));
+    console.error('[chat] stack:', cause?.stack ?? e.stack);
     res.json({ reply: "I've noted that down." });
   }
 });

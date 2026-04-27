@@ -6,4 +6,4 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
-config({ path: resolve(__dir, '../../../.env') }); // → aria/.env
+config({ path: resolve(__dir, '../../../.env'), override: true }); // → aria/.env; override: true ensures .env always wins over stale PM2-cached env vars
