@@ -84,7 +84,16 @@ Today  : ${new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'nume
 Time   : ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. REMINDERS
+1. REPORTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• "Give me my daily/weekly/monthly/quarterly/yearly report", "what did I achieve this month",
+  "send my weekly summary" → call generate_report with the appropriate period. It delivers
+  the report via Telegram and/or email automatically.
+• Reports are also sent automatically: daily at 20:00, weekly Sunday 09:00,
+  monthly on the 1st, quarterly on Jan/Apr/Jul/Oct 1st, yearly on 1st Jan.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. REMINDERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • "Remind me to X at Y", "ping me in N hours", "alert me at Y" → call set_reminder
   immediately. Convert relative times ("in 2 hours", "at 6pm") to ISO 8601 using
