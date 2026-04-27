@@ -25,8 +25,8 @@
         "returnAll": true,
         "filters": {
           "conditions": [
-            { "keyName": "status", "condition": "neq", "keyValue": "done" },
-            { "keyName": "deadline", "condition": "lte", "keyValue": "={{ new Date(new Date().setHours(23,59,59,999)).toISOString() }}" }
+            { "keyName": "status", "condition": "neq", "keyValue": "completed" },
+            { "keyName": "due_date", "condition": "lte", "keyValue": "={{ new Date().toISOString().split('T')[0] }}" }
           ]
         }
       },
@@ -50,7 +50,7 @@
         "filters": {
           "conditions": [
             { "keyName": "status", "condition": "neq", "keyValue": "done" },
-            { "keyName": "follow_up_date", "condition": "lte", "keyValue": "={{ new Date().toISOString().split('T')[0] }}" }
+            { "keyName": "due_date", "condition": "lte", "keyValue": "={{ new Date().toISOString().split('T')[0] }}" }
           ]
         }
       },

@@ -35,7 +35,7 @@
         "returnAll": true,
         "filters": {
           "conditions": [
-            { "keyName": "status", "condition": "eq", "keyValue": "done" },
+            { "keyName": "status", "condition": "eq", "keyValue": "completed" },
             { "keyName": "updated_at", "condition": "gte", "keyValue": "={{ $('Set Week Range').item.json.weekStart }}" }
           ]
         }
@@ -82,7 +82,7 @@
         "returnAll": true,
         "filters": {
           "conditions": [
-            { "keyName": "created_at", "condition": "gte", "keyValue": "={{ $('Set Week Range').item.json.weekStart }}" }
+            { "keyName": "logged_at", "condition": "gte", "keyValue": "={{ $('Set Week Range').item.json.weekStart }}" }
           ]
         }
       },

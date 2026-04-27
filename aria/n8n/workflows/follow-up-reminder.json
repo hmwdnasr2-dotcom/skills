@@ -26,7 +26,7 @@
         "filters": {
           "conditions": [
             { "keyName": "status", "condition": "neq", "keyValue": "done" },
-            { "keyName": "follow_up_date", "condition": "lt", "keyValue": "={{ new Date().toISOString() }}" }
+            { "keyName": "due_date", "condition": "lt", "keyValue": "={{ new Date().toISOString().split('T')[0] }}" }
           ]
         }
       },
@@ -65,7 +65,7 @@
       "position": [900, 220],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const followUps = items.map(i => i.json);\n\nconst list = followUps.map((f, i) => {\n  const due = new Date(f.follow_up_date);\n  const hoursOverdue = Math.floor((Date.now() - due.getTime()) / 3600000);\n  return `${i + 1}. ${f.subject}\\n   With: ${f.with_person || 'unspecified'}\\n   Overdue by: ${hoursOverdue}h`;\n}).join('\\n\\n');\n\nconst message = `Hourly follow-up check: You have ${followUps.length} overdue follow-up(s) that need attention:\\n\\n${list}\\n\\nPlease acknowledge these overdue follow-ups and suggest how to handle the most urgent one.`;\n\nreturn [{ json: { message, count: followUps.length } }];"
+        "jsCode": "const followUps = items.map(i => i.json);\n\nconst list = followUps.map((f, i) => {\n  const due = new Date(f.due_date);\n  const hoursOverdue = Math.floor((Date.now() - due.getTime()) / 3600000);\n  return `${i + 1}. ${f.subject}\\n   With: ${f.with_person || 'unspecified'}\\n   Overdue by: ${hoursOverdue}h`;\n}).join('\\n\\n');\n\nconst message = `Hourly follow-up check: You have ${followUps.length} overdue follow-up(s) that need attention:\\n\\n${list}\\n\\nPlease acknowledge these overdue follow-ups and suggest how to handle the most urgent one.`;\n\nreturn [{ json: { message, count: followUps.length } }];"
       }
     },
     {
