@@ -13,6 +13,8 @@ import { authRouter } from './routes/auth.js';
 import { chatRouter } from './routes/chat.js';
 import { eventsRouter } from './routes/events.js';
 import { memoryRouter } from './routes/memory.js';
+import { uploadRouter } from './routes/upload.js';
+import { downloadRouter } from './routes/download.js';
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 4000);
@@ -20,7 +22,7 @@ const PORT = Number(process.env.PORT ?? 4000);
 // ─── Middleware ────────────────────────────────────────────────────────────────
 
 app.use(cors());          // Allow all origins — no exact-string matching
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // ─── Wire Gmail connector ─────────────────────────────────────────────────────
 
@@ -65,6 +67,8 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
 app.use('/api/aria/chat', chatRouter);
 app.use('/api/aria/events', eventsRouter);
 app.use('/api/aria/memory', memoryRouter);
+app.use('/api/aria/upload', uploadRouter);
+app.use('/api/aria/download', downloadRouter);
 app.use('/api/auth', authRouter);
 
 app.get('/', (_req, res) => res.json({ service: 'ARIA', status: 'ok' }));
