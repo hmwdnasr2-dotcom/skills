@@ -76,6 +76,15 @@ if (process.env.BRAVE_SEARCH_API_KEY) {
 export const claw = new OpenClaw({ brain, memory });
 claw.use(bridge);
 
+// ─── Hot-register web_search (called from Telegram /setbrave) ────────────────
+
+export function activateBraveSearch(): void {
+  if (bridge.has('web_search')) return; // key updated in process.env — adapter reads it lazily
+  bridge.register('web_search', new BraveSearchAdapter());
+  claw.use(bridge); // dedup guard skips already-registered tools; only web_search is new
+  console.log('[core] web_search: Brave Search (hot-registered)');
+}
+
 // ─── Agent mode store — per userId, survives message turns ───────────────────
 
 const agentModes = new Map<string, string>();

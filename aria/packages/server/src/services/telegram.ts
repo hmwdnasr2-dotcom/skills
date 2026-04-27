@@ -1,4 +1,4 @@
-import { claw, setAgentMode } from '../core/index.js';
+import { claw, setAgentMode, activateBraveSearch } from '../core/index.js';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -107,7 +107,7 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
 
   if (text.startsWith('/start')) {
     const brain = process.env.ARIA_BRAIN ?? 'claude';
-    await sendTelegram(chatId, `Hello${msg.from?.first_name ? ` ${msg.from.first_name}` : ''}! I'm ARIA — your full personal AI.\n\nAgent modes:\n/aria — Chief of Staff (default)\n/researcher — search + synthesize\n/strategist — frameworks + decisions\n/developer — code + architecture\n/coach — clarity + accountability\n\nSystem:\n/setkey sk-ant-... — set Anthropic key\n/setdeepseek sk-... — switch to DeepSeek\n/testkey — verify API key\n/status — server info\n/debug — full diagnostic`);
+    await sendTelegram(chatId, `Hello${msg.from?.first_name ? ` ${msg.from.first_name}` : ''}! I'm ARIA — your full personal AI.\n\nAgent modes:\n/aria — Chief of Staff (default)\n/researcher — search + synthesize\n/strategist — frameworks + decisions\n/developer — code + architecture\n/coach — clarity + accountability\n\nSystem:\n/setkey sk-ant-... — set Anthropic key\n/setdeepseek sk-... — switch to DeepSeek\n/setbrave BSA... — enable web search (Brave)\n/testkey — verify API key\n/status — server info\n/debug — full diagnostic`);
     return;
   }
 
@@ -145,6 +145,23 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
       process.env.ARIA_BRAIN = 'deepseek';
       process.env.ARIA_MODEL = 'deepseek-chat';
       await sendTelegram(chatId, `✅ Switched to DeepSeek! Key saved (${newKey.length} chars). Run /testkey to verify.`);
+    } catch (err) {
+      await sendTelegram(chatId, `❌ Failed: ${(err as Error).message}`);
+    }
+    return;
+  }
+
+  if (text.startsWith('/setbrave ')) {
+    const newKey = text.slice(10).trim().replace(/[\n\r\s]/g, '');
+    if (newKey.length < 20) {
+      await sendTelegram(chatId, '❌ Invalid Brave Search key. Get one at brave.com/search/api/');
+      return;
+    }
+    try {
+      updateEnvKey('BRAVE_SEARCH_API_KEY', newKey);
+      process.env.BRAVE_SEARCH_API_KEY = newKey;
+      activateBraveSearch();
+      await sendTelegram(chatId, `✅ Brave Search key saved (${newKey.length} chars). web_search is now active — no restart needed.`);
     } catch (err) {
       await sendTelegram(chatId, `❌ Failed: ${(err as Error).message}`);
     }
@@ -214,11 +231,13 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
   }
 
   if (text === '/status') {
-    const brain   = process.env.ARIA_BRAIN ?? 'claude';
-    const model   = process.env.ARIA_MODEL ?? (brain === 'deepseek' ? 'deepseek-chat' : 'claude-haiku-4-5-20251001');
-    const key     = brain === 'deepseek' ? process.env.DEEPSEEK_API_KEY : process.env.ANTHROPIC_API_KEY;
-    const keyInfo = key ? `✅ set (${key.length} chars)` : '❌ missing';
-    await sendTelegram(chatId, `ARIA Status\n\nBrain: ${brain}\nModel: ${model}\nAPI key: ${keyInfo}\nTelegram: ✅ connected`);
+    const brain     = process.env.ARIA_BRAIN ?? 'claude';
+    const model     = process.env.ARIA_MODEL ?? (brain === 'deepseek' ? 'deepseek-chat' : 'claude-haiku-4-5-20251001');
+    const key       = brain === 'deepseek' ? process.env.DEEPSEEK_API_KEY : process.env.ANTHROPIC_API_KEY;
+    const keyInfo   = key ? `✅ set (${key.length} chars)` : '❌ missing';
+    const searchKey = process.env.BRAVE_SEARCH_API_KEY;
+    const searchInfo = searchKey ? `✅ Brave Search (${searchKey.length} chars)` : '❌ not set — send /setbrave <key>';
+    await sendTelegram(chatId, `ARIA Status\n\nBrain: ${brain}\nModel: ${model}\nAPI key: ${keyInfo}\nWeb search: ${searchInfo}\nTelegram: ✅ connected`);
     return;
   }
 
