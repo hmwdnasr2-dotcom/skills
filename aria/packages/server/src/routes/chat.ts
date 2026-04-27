@@ -1,11 +1,7 @@
 import { Router } from 'express';
-import { claw } from '../core/index.js';
-import type { Message } from '@aria/core';
 import { scheduleNudgeIfNeeded } from '../proactive/nudger.js';
+import { runWorkflow } from '../core/workflow.js';
 import { fileRegistry } from './upload.js';
-import { parseFile } from '../services/fileParser.js';
-import { route } from '../core/router.js';
-import { buildContext } from '../core/contextBuilder.js';
 import {
   detectReportIntent,
   extractReportData,
@@ -16,89 +12,69 @@ import {
   generatePPTX,
 } from '../services/reportGenerator.js';
 import type { ReportResult } from '../services/reportGenerator.js';
-import type { ParsedDocument } from '../services/fileParser.js';
+import { processFiles } from '../core/fileHandler.js';
 
 export const chatRouter = Router();
 
-// POST /api/aria/chat — non-streaming reply
+// POST /api/aria/chat
 chatRouter.post('/', async (req, res) => {
   const {
     userId,
     message,
     fileIds,
-  } = req.body as { userId?: string; message?: string; fileIds?: string[] };
+    autoSave,
+  } = req.body as {
+    userId?:   string;
+    message?:  string;
+    fileIds?:  string[];
+    autoSave?: boolean;
+  };
 
   if (!userId || !message) {
     res.status(400).json({ error: 'userId and message are required' });
     return;
   }
 
-  // ── Route: classify intent and decide tools ──────────────────────────────────
-  const plan = route(message, fileIds);
-  console.log(`[chat] intent=${plan.intent} search=${plan.useSearch} files=${plan.useFiles}`);
-
-  // ── Parse any attached files ─────────────────────────────────────────────────
-  const parsedDocs: ParsedDocument[] = [];
-  if (plan.useFiles && fileIds) {
-    for (const fileId of fileIds) {
-      const record = fileRegistry.get(fileId);
-      if (!record) continue;
-      try {
-        const doc = await parseFile(record.storedPath, record.ext, record.originalName);
-        parsedDocs.push(doc);
-      } catch (err) {
-        console.warn(`[chat] failed to parse ${record.originalName}:`, (err as Error).message);
-      }
-    }
-  }
-
-  // ── Build context (intent-aware, with file injection) ────────────────────────
-  const brainMessages = buildContext(message, plan, parsedDocs);
-  const clawMessages = brainMessages as unknown as Message[];
-
   try {
-    const reply = await claw.run('chat', {
-      userId,
-      messages: clawMessages,
-    });
+    // ── Run full workflow (route → pre-fetch → context → claw → memory) ────────
+    const { answer, intent, saved } = await runWorkflow(userId, message, fileIds, autoSave);
 
-    // ── Detect report intent and generate downloadable output ────────────────
+    // ── Generate downloadable report if requested ────────────────────────────
     const downloads: ReportResult[] = [];
     const reportIntent = detectReportIntent(message);
 
-    if (reportIntent && parsedDocs.length > 0) {
+    if (reportIntent && fileIds?.length) {
       try {
-        const reportData = extractReportData(reply as string, parsedDocs, message);
-        let result: ReportResult;
-        if (reportIntent === 'excel')     result = await generateExcel(reportData);
-        else if (reportIntent === 'pdf')  result = await generatePDF(reportData);
-        else                              result = await generatePPTX(reportData);
-        downloads.push(result);
+        const docs = await processFiles(fileIds);
+        if (docs.length > 0) {
+          const reportData = extractReportData(answer, docs, message);
+          let result: ReportResult;
+          if (reportIntent === 'excel')    result = await generateExcel(reportData);
+          else if (reportIntent === 'pdf') result = await generatePDF(reportData);
+          else                             result = await generatePPTX(reportData);
+          downloads.push(result);
+        }
       } catch (err) {
         console.warn('[chat] report generation failed:', (err as Error).message);
       }
     }
 
-    // Fire-and-forget nudge check
-    scheduleNudgeIfNeeded(userId, reply as string).catch(() => {});
+    scheduleNudgeIfNeeded(userId, answer).catch(() => {});
 
     res.json({
-      reply,
-      intent: plan.intent,
+      reply:     answer,
+      intent,
+      saved,
       downloads: downloads.length > 0 ? downloads : undefined,
     });
   } catch (err) {
-    const e = err as Error & { cause?: unknown; status?: number };
-    const cause = e.cause as Error & { status?: number; error?: unknown } | undefined;
-    console.error('[chat] pipeline error:', e.message);
-    console.error('[chat] root cause:', cause?.message ?? cause);
-    console.error('[chat] cause detail:', JSON.stringify(cause?.error ?? ''));
-    console.error('[chat] stack:', cause?.stack ?? e.stack);
+    const e = err as Error & { cause?: Error };
+    console.error('[chat] error:', e.message, '| cause:', e.cause?.message);
     res.json({ reply: "I've noted that down." });
   }
 });
 
-// GET /api/aria/chat/stream?userId=…&message=… — SSE streaming reply
+// GET /api/aria/chat/stream
 chatRouter.get('/stream', async (req, res) => {
   const userId  = req.query.userId  as string | undefined;
   const message = req.query.message as string | undefined;
@@ -115,6 +91,7 @@ chatRouter.get('/stream', async (req, res) => {
   res.flushHeaders();
 
   try {
+    const { claw } = await import('../core/index.js');
     for await (const token of claw.stream('chat', { userId, message })) {
       res.write(`data: ${JSON.stringify({ token })}\n\n`);
     }
