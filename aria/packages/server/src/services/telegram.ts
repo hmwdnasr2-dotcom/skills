@@ -1,4 +1,5 @@
 import { claw, setAgentMode, activateBraveSearch } from '../core/index.js';
+import { runWorkflow } from '../core/workflow.js';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -86,6 +87,13 @@ async function verifyBot(): Promise<boolean> {
 let pollingActive = false;
 let lastOffset    = 0;
 
+interface TelegramDocument {
+  file_id:   string;
+  file_name?: string;
+  mime_type?: string;
+  file_size?: number;
+}
+
 interface TelegramUpdate {
   update_id: number;
   message?: {
@@ -93,15 +101,100 @@ interface TelegramUpdate {
     chat: { id: number; type: string };
     from?: { first_name?: string };
     text?: string;
+    caption?: string;
+    document?: TelegramDocument;
+    photo?: Array<{ file_id: string; file_size?: number }>;
   };
+}
+
+const SUPPORTED_MIME: Record<string, string> = {
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+  'application/vnd.ms-excel':                                          '.xls',
+  'application/pdf':                                                    '.pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+  'text/csv':                                                           '.csv',
+  'text/plain':                                                         '.txt',
+};
+
+async function downloadTelegramFile(fileId: string): Promise<{ buffer: Buffer; fileName: string; ext: string } | null> {
+  try {
+    const infoRes  = await fetch(`${API()}/getFile?file_id=${fileId}`);
+    const infoBody = await infoRes.json() as { ok: boolean; result?: { file_path?: string } };
+    if (!infoBody.ok || !infoBody.result?.file_path) return null;
+
+    const filePath = infoBody.result.file_path;
+    const ext      = '.' + filePath.split('.').pop()!.toLowerCase();
+    const fileRes  = await fetch(`https://api.telegram.org/file/bot${TOKEN()}/${filePath}`);
+    if (!fileRes.ok) return null;
+
+    const buffer   = Buffer.from(await fileRes.arrayBuffer());
+    const fileName = filePath.split('/').pop() ?? `file${ext}`;
+    return { buffer, fileName, ext };
+  } catch {
+    return null;
+  }
+}
+
+async function uploadToAria(buffer: Buffer, fileName: string, ext: string): Promise<string | null> {
+  try {
+    const form = new FormData();
+    form.append('file', new Blob([buffer]), fileName);
+
+    const port = process.env.PORT ?? '4000';
+    const res  = await fetch(`http://localhost:${port}/api/aria/upload`, {
+      method: 'POST',
+      body:   form,
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as { fileId?: string };
+    return data.fileId ?? null;
+  } catch {
+    return null;
+  }
 }
 
 async function processUpdate(update: TelegramUpdate): Promise<void> {
   const msg = update.message;
-  if (!msg?.text) return;
+  if (!msg) return;
 
   const chatId = msg.chat.id;
-  const text   = msg.text.trim();
+
+  // ── Handle file/document uploads ─────────────────────────────────────────
+  const doc = msg.document;
+  if (doc) {
+    const mime = doc.mime_type ?? '';
+    if (!Object.keys(SUPPORTED_MIME).some(m => mime.startsWith(m.split('/')[0])) && !SUPPORTED_MIME[mime]) {
+      // still try — let fileParser decide
+    }
+    await sendTelegram(chatId, '📄 Got it — reading your file...');
+
+    const downloaded = await downloadTelegramFile(doc.file_id);
+    if (!downloaded) {
+      await sendTelegram(chatId, '❌ Could not download the file. Try again.');
+      return;
+    }
+
+    const fileId = await uploadToAria(downloaded.buffer, downloaded.fileName, downloaded.ext);
+    if (!fileId) {
+      await sendTelegram(chatId, '❌ Could not process the file. Make sure it is Excel, PDF, Word, or CSV.');
+      return;
+    }
+
+    const caption = msg.caption?.trim() || 'Analyse this file and summarise the key insights.';
+    const userId  = USER_ID();
+    try {
+      const { answer } = await runWorkflow(userId, caption, [fileId]);
+      await sendTelegram(chatId, answer);
+    } catch (err) {
+      const e = err as Error & { cause?: Error };
+      await sendTelegram(chatId, `❌ Error: ${e.cause?.message ?? e.message}`);
+    }
+    return;
+  }
+
+  if (!msg.text) return;
+
+  const text = msg.text.trim();
 
   console.log(`[telegram] message from chat_id ${chatId}: ${text.slice(0, 60)}`);
 
@@ -295,11 +388,8 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
 
   const userId = USER_ID();
   try {
-    const reply = await claw.run('chat', {
-      userId,
-      messages: [{ role: 'user', content: text }],
-    });
-    await sendTelegram(chatId, String(reply ?? "I've noted that down."));
+    const { answer } = await runWorkflow(userId, text);
+    await sendTelegram(chatId, answer);
   } catch (err) {
     const e = err as Error & { cause?: Error };
     const root = e.cause?.message ?? e.message;
@@ -314,7 +404,7 @@ async function poll(): Promise<void> {
     const res = await fetch(`${API()}/getUpdates`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ offset: lastOffset, timeout: 30, allowed_updates: ['message'] }),
+      body:    JSON.stringify({ offset: lastOffset, timeout: 30, allowed_updates: ['message', 'channel_post'] }),
       signal:  AbortSignal.timeout(35_000),
     });
 
