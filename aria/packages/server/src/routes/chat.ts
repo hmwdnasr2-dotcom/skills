@@ -83,7 +83,9 @@ chatRouter.post('/', async (req, res) => {
     });
   } catch (err) {
     const e = err as Error & { status?: number; error?: unknown };
-    console.error('[chat] error:', e.message, JSON.stringify(e.error ?? ''));
+    console.error('[chat] error:', e.message);
+    console.error('[chat] error detail:', JSON.stringify(e.error ?? ''));
+    console.error('[chat] stack:', e.stack);
     res.json({ reply: "I've noted that down." });
   }
 });
