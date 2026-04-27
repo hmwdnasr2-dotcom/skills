@@ -1,28 +1,28 @@
 /* ─── Design tokens ──────────────────────────────────────────────────────────── */
 
 :root {
-  --bg:         #111111;
-  --surface:    #181818;
-  --surface-2:  #202020;
-  --surface-3:  #282828;
-  --border:     #2a2a2a;
-  --border-2:   #383838;
-  --text:       #e8e8e8;
-  --text-2:     #888888;
-  --text-3:     #4a4a4a;
-  --accent:     #f59e0b;
-  --accent-dim: rgba(245, 158, 11, 0.12);
-  --accent-mid: rgba(245, 158, 11, 0.25);
-  --green:      #22c55e;
-  --green-dim:  rgba(34, 197, 94, 0.12);
-  --blue:       #60a5fa;
-  --red:        #f87171;
-  --font:       -apple-system, 'Inter', BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --mono:       'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-  --radius:     12px;
+  --bg:         #f5f4ed;
+  --surface:    #faf9f5;
+  --surface-2:  #e8e6dc;
+  --surface-3:  #f0eee6;
+  --border:     #f0eee6;
+  --border-2:   #e8e6dc;
+  --text:       #141413;
+  --text-2:     #5e5d59;
+  --text-3:     #87867f;
+  --accent:     #c96442;
+  --accent-dim: rgba(201, 100, 66, 0.10);
+  --accent-mid: rgba(201, 100, 66, 0.20);
+  --green:      #3d9e6e;
+  --green-dim:  rgba(61, 158, 110, 0.12);
+  --blue:       #3898ec;
+  --red:        #b53333;
+  --font:       'Inter', system-ui, -apple-system, sans-serif;
+  --mono:       'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --radius:     8px;
   --radius-sm:  8px;
   --radius-xs:  5px;
-  --shadow:     0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow:     rgba(0, 0, 0, 0.05) 0px 4px 24px;
 }
 
 *,
@@ -86,7 +86,7 @@ body {
   height: 7px;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 8px var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
   flex-shrink: 0;
 }
 
@@ -219,7 +219,7 @@ body {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.08em;
-  color: var(--accent);
+  color: var(--text-3);
   margin-bottom: 5px;
   padding: 0 2px;
   user-select: none;
@@ -231,7 +231,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 18px 18px 4px 18px;
   padding: 11px 15px;
-  max-width: 82%;
+  max-width: min(72%, 500px);
   word-break: break-word;
   font-size: 15px;
   line-height: 1.55;
@@ -320,7 +320,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 1px 5px;
-  color: var(--accent);
+  color: var(--text);
 }
 
 .md-pre {
@@ -754,7 +754,7 @@ body {
 }
 
 .input-field::placeholder { color: var(--text-3); }
-.input-field:focus        { border-color: var(--border-2); }
+.input-field:focus        { box-shadow: 0 0 0 2px var(--blue); border-color: transparent; }
 .input-field:disabled     { opacity: 0.4; }
 
 .input-send {
@@ -763,10 +763,10 @@ body {
   justify-content: center;
   width: 38px;
   height: 38px;
-  background: var(--accent-dim);
-  border: 1px solid var(--border);
+  background: var(--accent);
+  border: 1px solid var(--accent);
   border-radius: var(--radius-sm);
-  color: var(--accent);
+  color: var(--surface);
   font-size: 18px;
   cursor: pointer;
   flex-shrink: 0;
@@ -776,8 +776,8 @@ body {
 }
 
 .input-send:hover:not(:disabled) {
-  background: var(--accent-mid);
-  border-color: var(--accent);
+  background: #d97757;
+  border-color: #d97757;
 }
 
 .input-send:disabled {
@@ -821,7 +821,7 @@ body {
   .memory-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.25);
     z-index: 99;
     animation: fade-in 0.2s ease;
   }
@@ -900,7 +900,7 @@ body {
 
 .mem-item:hover { border-color: var(--border-2); }
 
-.mem-item--new { border-color: rgba(245, 158, 11, 0.3); }
+.mem-item--new { border-color: rgba(201, 100, 66, 0.3); }
 
 .mem-content {
   flex: 1;
