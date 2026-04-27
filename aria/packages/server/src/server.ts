@@ -10,6 +10,7 @@ import { buildProjectAdapters } from './connectors/tasks.js';
 import { buildWorkspaceAdapters } from './connectors/workspace.js';
 import { buildReminderAdapters } from './connectors/reminders.js';
 import { buildReportAdapters } from './connectors/reports.js';
+import { buildIdeasAdapters } from './connectors/ideas.js';
 import { startScheduler } from './proactive/scheduler.js';
 import { authRouter } from './routes/auth.js';
 import { chatRouter } from './routes/chat.js';
@@ -74,7 +75,14 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
     workspaceBridge.register(adapter.name, adapter);
   }
   claw.use(workspaceBridge);
-  console.log('[server] Workspace tools registered (follow-ups, achievements, daily logs, reports)');
+  console.log('[server] Workspace tools registered (follow-ups, achievements, daily logs)');
+
+  const ideasBridge = new AgentBridgeConnector();
+  for (const adapter of buildIdeasAdapters()) {
+    ideasBridge.register(adapter.name, adapter);
+  }
+  claw.use(ideasBridge);
+  console.log('[server] Ideas tools registered (save_idea, list_ideas)');
 } else {
   console.log('[server] Task tools skipped — SUPABASE_URL / SUPABASE_ANON_KEY not set');
 }

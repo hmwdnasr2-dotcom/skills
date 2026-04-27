@@ -1,4 +1,4 @@
-import { claw } from '../core/index.js';
+import { claw, setAgentMode } from '../core/index.js';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -107,7 +107,7 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
 
   if (text.startsWith('/start')) {
     const brain = process.env.ARIA_BRAIN ?? 'claude';
-    await sendTelegram(chatId, `Hello${msg.from?.first_name ? ` ${msg.from.first_name}` : ''}! I'm ARIA.\n\nCurrent brain: ${brain}\n\nCommands:\n/setkey sk-ant-... — set Anthropic API key\n/setdeepseek sk-... — switch to DeepSeek\n/testkey — verify current key\n/status — server status`);
+    await sendTelegram(chatId, `Hello${msg.from?.first_name ? ` ${msg.from.first_name}` : ''}! I'm ARIA — your full personal AI.\n\nAgent modes:\n/aria — Chief of Staff (default)\n/researcher — search + synthesize\n/strategist — frameworks + decisions\n/developer — code + architecture\n/coach — clarity + accountability\n\nSystem:\n/setkey sk-ant-... — set Anthropic key\n/setdeepseek sk-... — switch to DeepSeek\n/testkey — verify API key\n/status — server info\n/debug — full diagnostic`);
     return;
   }
 
@@ -193,6 +193,24 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
       await sendTelegram(chatId, `❌ Network error: ${(err as Error).message}`);
     }
     return;
+  }
+
+  // ── Agent mode switching (/researcher /strategist /developer /coach /aria) ──
+  const AGENT_MODES: Record<string, string> = {
+    aria:        '👔 Chief of Staff mode — I handle everything.',
+    researcher:  '🔍 Researcher mode — I search before I answer. Ask me anything.',
+    strategist:  '♟ Strategist mode — frameworks, decisions, second-order thinking.',
+    developer:   '💻 Developer mode — working code, architecture, no hand-waving.',
+    coach:       '🎯 Coach mode — sharp questions, one action at the end.',
+  };
+
+  if (text.startsWith('/')) {
+    const cmd = text.slice(1).split(' ')[0].toLowerCase();
+    if (cmd in AGENT_MODES) {
+      setAgentMode(USER_ID(), cmd);
+      await sendTelegram(chatId, AGENT_MODES[cmd]);
+      return;
+    }
   }
 
   if (text === '/status') {
