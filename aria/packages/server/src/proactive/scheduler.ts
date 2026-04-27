@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import { claw } from '../core/index.js';
 import { connectedUserIds, pushToCommandLog } from './push.js';
 import { sendTelegram, telegramEnabled } from '../services/telegram.js';
+import { getDueReminders, markReminderSent } from '../connectors/reminders.js';
 
 const BRIEFING_PROMPT = (userId: string, memBlock: string) =>
   `You are ARIA delivering the morning briefing for user "${userId}".
@@ -48,4 +49,24 @@ export function startScheduler() {
   });
 
   console.log('[scheduler] Morning briefing cron registered (07:00 daily)');
+
+  // ── Reminder fire (every minute) ───────────────────────────────────────────
+  cron.schedule('* * * * *', async () => {
+    try {
+      const due = await getDueReminders();
+      for (const reminder of due) {
+        const text = `⏰ *Reminder*\n\n${reminder.message}`;
+        if (telegramEnabled()) {
+          await sendTelegram(text);
+        }
+        await pushToCommandLog(reminder.user_id, `⏰ Reminder: ${reminder.message}`);
+        await markReminderSent(reminder.id);
+        console.log(`[scheduler] Reminder fired: "${reminder.message}" for ${reminder.user_id}`);
+      }
+    } catch (err) {
+      console.error('[scheduler] Reminder check failed:', (err as Error).message);
+    }
+  });
+
+  console.log('[scheduler] Reminder cron registered (every minute)');
 }

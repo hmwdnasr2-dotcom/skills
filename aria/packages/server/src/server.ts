@@ -8,6 +8,7 @@ import { claw } from './core/index.js';
 import { GmailConnector, buildGmailAdapters } from './connectors/gmail.js';
 import { buildProjectAdapters } from './connectors/tasks.js';
 import { buildWorkspaceAdapters } from './connectors/workspace.js';
+import { buildReminderAdapters } from './connectors/reminders.js';
 import { startScheduler } from './proactive/scheduler.js';
 import { authRouter } from './routes/auth.js';
 import { chatRouter } from './routes/chat.js';
@@ -52,6 +53,13 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
   }
   claw.use(taskBridge);
   console.log('[server] Task tools registered (add_task, list_tasks, complete_task, create_project, list_projects)');
+
+  const reminderBridge = new AgentBridgeConnector();
+  for (const adapter of buildReminderAdapters()) {
+    reminderBridge.register(adapter.name, adapter);
+  }
+  claw.use(reminderBridge);
+  console.log('[server] Reminder tools registered (set_reminder, list_reminders, cancel_reminder)');
 
   const workspaceBridge = new AgentBridgeConnector();
   for (const adapter of buildWorkspaceAdapters()) {
