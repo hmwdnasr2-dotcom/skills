@@ -15,6 +15,7 @@ import { eventsRouter } from './routes/events.js';
 import { memoryRouter } from './routes/memory.js';
 import { uploadRouter } from './routes/upload.js';
 import { downloadRouter } from './routes/download.js';
+import { startTelegramPolling, telegramEnabled } from './services/telegram.js';
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 4000);
@@ -80,4 +81,11 @@ app.listen(PORT, () => {
   console.log(`[server] ARIA server listening on http://localhost:${PORT}`);
   console.log(`[server] Brain: ${process.env.ARIA_BRAIN ?? 'claude'} / ${process.env.ARIA_MODEL ?? 'default'}`);
   startScheduler();
+
+  if (telegramEnabled()) {
+    startTelegramPolling();
+    console.log('[server] Telegram bot active — polling for messages');
+  } else {
+    console.log('[server] Telegram disabled — set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID to enable');
+  }
 });

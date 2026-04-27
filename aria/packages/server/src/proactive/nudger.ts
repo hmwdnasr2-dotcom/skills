@@ -1,5 +1,6 @@
 import { claw } from '../core/index.js';
 import { pushToCommandLog } from './push.js';
+import { sendTelegram, telegramEnabled } from '../services/telegram.js';
 
 interface NudgePayload {
   needed: boolean;
@@ -34,6 +35,10 @@ export async function scheduleNudgeIfNeeded(userId: string, reply: string) {
   if (!parsed.needed) return;
 
   setTimeout(async () => {
-    await pushToCommandLog(userId, `▸ Follow-up: ${parsed.reminder}`);
+    const reminder = `▸ Follow-up: ${parsed.reminder}`;
+    await pushToCommandLog(userId, reminder);
+    if (telegramEnabled()) {
+      await sendTelegram(`⏰ *ARIA Reminder*\n\n${parsed.reminder}`);
+    }
   }, parsed.delayMs);
 }

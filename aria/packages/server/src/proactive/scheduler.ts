@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { claw } from '../core/index.js';
 import { connectedUserIds, pushToCommandLog } from './push.js';
+import { sendTelegram, telegramEnabled } from '../services/telegram.js';
 
 const BRIEFING_PROMPT = (userId: string, memBlock: string) =>
   `You are ARIA delivering the morning briefing for user "${userId}".
@@ -37,6 +38,9 @@ export function startScheduler() {
         });
 
         await pushToCommandLog(userId, briefing);
+        if (telegramEnabled()) {
+          await sendTelegram(`🌅 *ARIA Morning Briefing*\n\n${briefing}`);
+        }
       } catch (err) {
         console.error(`[scheduler] Briefing failed for ${userId}:`, err);
       }
