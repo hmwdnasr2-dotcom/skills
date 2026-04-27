@@ -1,0 +1,156 @@
+{
+  "name": "ARIA — Weekly Report",
+  "nodes": [
+    {
+      "id": "e5f6a7b8-0005-0005-0005-000000000001",
+      "name": "Sunday 6 PM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 18 * * 0" }]
+        }
+      }
+    },
+    {
+      "id": "e5f6a7b8-0005-0005-0005-000000000002",
+      "name": "Set Week Range",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "jsCode": "const now = new Date();\nconst weekStart = new Date(now);\nweekStart.setDate(now.getDate() - 6);\nweekStart.setHours(0, 0, 0, 0);\n\nconst weekEnd = new Date(now);\nweekEnd.setHours(23, 59, 59, 999);\n\nreturn [{\n  json: {\n    weekStart: weekStart.toISOString(),\n    weekEnd: weekEnd.toISOString(),\n    weekLabel: `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`\n  }\n}];"
+      }
+    },
+    {
+      "id": "e5f6a7b8-0005-0005-0005-000000000003",
+      "name": "Get Completed Tasks",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [700, 140],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "aria_tasks",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            { "keyName": "status", "condition": "eq", "keyValue": "done" },
+            { "keyName": "updated_at", "condition": "gte", "keyValue": "={{ $('Set Week Range').item.json.weekStart }}" }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "REPLACE_WITH_SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "id": "e5f6a7b8-0005-0005-0005-000000000004",
+      "name": "Get All Projects",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [700, 300],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "aria_projects",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            { "keyName": "status", "condition": "neq", "keyValue": "archived" }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "REPLACE_WITH_SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "id": "e5f6a7b8-0005-0005-0005-000000000005",
+      "name": "Get Achievements",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [700, 460],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "aria_achievements",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            { "keyName": "created_at", "condition": "gte", "keyValue": "={{ $('Set Week Range').item.json.weekStart }}" }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "REPLACE_WITH_SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "id": "e5f6a7b8-0005-0005-0005-000000000006",
+      "name": "Build Report Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const weekLabel = $('Set Week Range').item.json.weekLabel;\nconst tasks = $('Get Completed Tasks').all().map(i => i.json);\nconst projects = $('Get All Projects').all().map(i => i.json);\nconst achievements = $('Get Achievements').all().map(i => i.json);\n\nlet prompt = `Generate my weekly report for the week of ${weekLabel}.\\n\\n`;\n\n// Tasks completed\nprompt += `## Completed Tasks This Week (${tasks.length})\\n`;\nif (tasks.length > 0) {\n  tasks.forEach(t => { prompt += `- ${t.title}\\n`; });\n} else {\n  prompt += `No tasks marked complete this week.\\n`;\n}\nprompt += '\\n';\n\n// Active projects\nprompt += `## Active Projects (${projects.length})\\n`;\nif (projects.length > 0) {\n  projects.forEach(p => { prompt += `- ${p.name} [${p.status}]: ${p.goal || ''}\\n`; });\n} else {\n  prompt += `No active projects.\\n`;\n}\nprompt += '\\n';\n\n// Achievements\nprompt += `## Achievements & Wins (${achievements.length})\\n`;\nif (achievements.length > 0) {\n  achievements.forEach(a => { prompt += `- ${a.title}: ${a.description || ''}\\n`; });\n} else {\n  prompt += `No achievements logged this week.\\n`;\n}\nprompt += '\\n';\n\nprompt += `Based on this data, please:\\n1. Write a concise weekly summary (3-5 sentences)\\n2. Highlight top 3 accomplishments\\n3. Identify any risks or blockers\\n4. Suggest 3 priorities for next week\\n5. Store this as a weekly report in the database.`;\n\nreturn [{ json: { message: prompt, weekLabel } }];"
+      }
+    },
+    {
+      "id": "e5f6a7b8-0005-0005-0005-000000000007",
+      "name": "Send to ARIA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1180, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://188.245.242.236:4000/api/aria/chat",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Content-Type", "value": "application/json" }]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"userId\": \"n8n-weekly-report\",\n  \"message\": {{ JSON.stringify($json.message) }}\n}"
+      }
+    }
+  ],
+  "connections": {
+    "Sunday 6 PM": {
+      "main": [[{ "node": "Set Week Range", "type": "main", "index": 0 }]]
+    },
+    "Set Week Range": {
+      "main": [
+        [
+          { "node": "Get Completed Tasks", "type": "main", "index": 0 },
+          { "node": "Get All Projects", "type": "main", "index": 0 },
+          { "node": "Get Achievements", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Get Completed Tasks": {
+      "main": [[{ "node": "Build Report Prompt", "type": "main", "index": 0 }]]
+    },
+    "Get All Projects": {
+      "main": [[{ "node": "Build Report Prompt", "type": "main", "index": 0 }]]
+    },
+    "Get Achievements": {
+      "main": [[{ "node": "Build Report Prompt", "type": "main", "index": 0 }]]
+    },
+    "Build Report Prompt": {
+      "main": [[{ "node": "Send to ARIA", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "ARIA" }]
+}

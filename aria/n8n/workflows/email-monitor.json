@@ -1,0 +1,136 @@
+{
+  "name": "ARIA — Email Monitor",
+  "nodes": [
+    {
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 15 }]
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-0001-0001-000000000002",
+      "name": "Get Unread Emails",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 20,
+        "filters": {
+          "labelIds": ["UNREAD", "INBOX"],
+          "readStatus": "unread"
+        },
+        "options": {
+          "attachmentsPrefix": "attachment_",
+          "format": "resolved"
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_WITH_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail OAuth2"
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-0001-0001-000000000003",
+      "name": "Build Email Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const emails = items.map(item => ({\n  from: item.json.from?.value?.[0]?.address || item.json.from,\n  subject: item.json.subject || '(no subject)',\n  snippet: item.json.snippet || '',\n  date: item.json.date\n}));\n\nif (emails.length === 0) {\n  return [{ json: { skip: true } }];\n}\n\nconst summary = emails.map((e, i) =>\n  `${i + 1}. From: ${e.from}\\n   Subject: ${e.subject}\\n   Preview: ${e.snippet}`\n).join('\\n\\n');\n\nconst message = `You have ${emails.length} new email(s) in the last 15 minutes:\\n\\n${summary}\\n\\nPlease summarize these emails and flag anything requiring my attention or follow-up.`;\n\nreturn [{ json: { message, emailCount: emails.length, skip: false } }];"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-0001-0001-000000000004",
+      "name": "Skip If No Emails",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "notEquals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-0001-0001-000000000005",
+      "name": "Send to ARIA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1120, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "http://188.245.242.236:4000/api/aria/chat",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Content-Type", "value": "application/json" }]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"userId\": \"n8n-email-monitor\",\n  \"message\": {{ JSON.stringify($json.message) }}\n}"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-0001-0001-000000000006",
+      "name": "Mark Emails Read",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1340, 220],
+      "parameters": {
+        "resource": "message",
+        "operation": "markAsRead",
+        "messageId": "={{ $('Get Unread Emails').item.json.id }}"
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_WITH_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail OAuth2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 15 Minutes": {
+      "main": [[{ "node": "Get Unread Emails", "type": "main", "index": 0 }]]
+    },
+    "Get Unread Emails": {
+      "main": [[{ "node": "Build Email Summary", "type": "main", "index": 0 }]]
+    },
+    "Build Email Summary": {
+      "main": [[{ "node": "Skip If No Emails", "type": "main", "index": 0 }]]
+    },
+    "Skip If No Emails": {
+      "main": [
+        [{ "node": "Send to ARIA", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Send to ARIA": {
+      "main": [[{ "node": "Mark Emails Read", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "ARIA" }]
+}
