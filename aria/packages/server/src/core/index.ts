@@ -11,25 +11,36 @@ import {
   PerplexityAdapter,
   buildMemoryStack,
 } from '@aria/core';
+import type { BrainAdapter, ChatOptions, ChatResponse, Message } from '@aria/core';
 
-// ─── Bootstrap brain based on env ──────────────────────────────────────────────
+// ─── Proxy brain — reads ARIA_BRAIN on every call so /setdeepseek takes effect instantly ──
 
-function buildBrain() {
-  const provider = process.env.ARIA_BRAIN ?? 'claude';
-  const model    = process.env.ARIA_MODEL;
-  switch (provider) {
-    case 'claude':   return new ClaudeBrain(model ? { model } : {});
-    case 'deepseek': return new DeepSeekBrain(model ? { model } : {});
-    case 'openai':   return new OpenAIBrain(model ? { model } : {});
-    case 'groq':     return new GroqBrain(model ? { model } : {});
-    case 'ollama':   return new OllamaBrain(model ? { model } : {});
-    default:         return new GeminiBrain({ model: model ?? 'gemini-2.0-flash' });
+class LiveBrain implements BrainAdapter {
+  private delegate(): BrainAdapter {
+    const provider = process.env.ARIA_BRAIN ?? 'claude';
+    const model    = process.env.ARIA_MODEL;
+    switch (provider) {
+      case 'claude':   return new ClaudeBrain(model ? { model } : {});
+      case 'deepseek': return new DeepSeekBrain(model ? { model } : {});
+      case 'openai':   return new OpenAIBrain(model ? { model } : {});
+      case 'groq':     return new GroqBrain(model ? { model } : {});
+      case 'ollama':   return new OllamaBrain(model ? { model } : {});
+      default:         return new GeminiBrain({ model: model ?? 'gemini-2.0-flash' });
+    }
+  }
+
+  chat(messages: Message[], opts?: ChatOptions): Promise<ChatResponse> {
+    return this.delegate().chat(messages, opts);
+  }
+
+  stream(messages: Message[], opts?: ChatOptions): AsyncGenerator<string> {
+    return this.delegate().stream(messages, opts);
   }
 }
 
 // ─── Singleton ─────────────────────────────────────────────────────────────────
 
-const brain = buildBrain();
+const brain  = new LiveBrain();
 const memory = buildMemoryStack();
 const bridge = new AgentBridgeConnector();
 
