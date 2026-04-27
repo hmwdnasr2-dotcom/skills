@@ -1,4 +1,18 @@
 import { claw } from '../core/index.js';
+import { execSync } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ENV_PATH = resolve(dirname(fileURLToPath(import.meta.url)), '../../../../.env');
+
+function updateEnvKey(name: string, value: string): void {
+  let content = '';
+  try { content = readFileSync(ENV_PATH, 'utf8'); } catch { content = ''; }
+  const lines = content.split('\n').filter(l => !l.startsWith(`${name}=`));
+  lines.push(`${name}=${value}`);
+  writeFileSync(ENV_PATH, lines.join('\n'));
+}
 
 // ── Config ─────────────────────────────────────────────────────────────────────
 
@@ -93,9 +107,35 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
   console.log(`[telegram] message from chat_id ${chatId}: ${text.slice(0, 60)}`);
 
   if (text.startsWith('/start')) {
-    await sendTelegram(chatId, `Hello${msg.from?.first_name ? ` ${msg.from.first_name}` : ''}! I'm ARIA. Send me a message and I'll respond.`);
+    await sendTelegram(chatId, `Hello${msg.from?.first_name ? ` ${msg.from.first_name}` : ''}! I'm ARIA.\n\nCommands:\n/setkey sk-ant-... — update Anthropic API key\n/status — check server status`);
     return;
   }
+
+  if (text.startsWith('/setkey ')) {
+    const newKey = text.slice(8).trim().replace(/[\n\r\s]/g, '');
+    if (!newKey.startsWith('sk-ant-') || newKey.length < 80) {
+      await sendTelegram(chatId, '❌ Invalid key. Must start with sk-ant- and be ~108 chars.');
+      return;
+    }
+    try {
+      updateEnvKey('ANTHROPIC_API_KEY', newKey);
+      await sendTelegram(chatId, `✅ Key saved (${newKey.length} chars). Restarting server...`);
+      setTimeout(() => {
+        try { execSync('pm2 restart aria-server --update-env'); } catch { /* pm2 may not be in PATH */ }
+      }, 500);
+    } catch (err) {
+      await sendTelegram(chatId, `❌ Failed to save key: ${(err as Error).message}`);
+    }
+    return;
+  }
+
+  if (text === '/status') {
+    const keySet = Boolean(process.env.ANTHROPIC_API_KEY);
+    const keyLen = process.env.ANTHROPIC_API_KEY?.length ?? 0;
+    await sendTelegram(chatId, `ARIA Status\n\nAPI key: ${keySet ? `✅ set (${keyLen} chars)` : '❌ missing'}\nTelegram: ✅ connected\nModel: ${process.env.ARIA_MODEL ?? 'claude-haiku-4-5-20251001'}`);
+    return;
+  }
+
   if (text.startsWith('/')) return;
 
   const userId = USER_ID();
