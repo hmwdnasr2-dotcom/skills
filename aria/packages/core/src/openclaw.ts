@@ -53,6 +53,10 @@ export class ToolRegistry {
   private definitions: ToolDefinition[] = [];
 
   register(name: string, handler: ToolHandler, definition: ToolDefinition) {
+    if (this.handlers.has(name)) {
+      console.warn(`[tools] duplicate tool ignored: "${name}"`);
+      return;
+    }
     this.handlers.set(name, handler);
     this.definitions.push(definition);
   }
