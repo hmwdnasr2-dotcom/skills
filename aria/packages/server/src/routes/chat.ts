@@ -4,9 +4,10 @@ import type { Message } from '@aria/core';
 import { scheduleNudgeIfNeeded } from '../proactive/nudger.js';
 import { fileRegistry } from './upload.js';
 import { parseFile } from '../services/fileParser.js';
+import { route } from '../core/router.js';
+import { buildContext } from '../core/contextBuilder.js';
 import {
   detectReportIntent,
-  buildMessages,
   extractReportData,
 } from '../services/aiWorkflow.js';
 import {
@@ -32,9 +33,13 @@ chatRouter.post('/', async (req, res) => {
     return;
   }
 
+  // ── Route: classify intent and decide tools ──────────────────────────────────
+  const plan = route(message, fileIds);
+  console.log(`[chat] intent=${plan.intent} search=${plan.useSearch} files=${plan.useFiles}`);
+
   // ── Parse any attached files ─────────────────────────────────────────────────
   const parsedDocs: ParsedDocument[] = [];
-  if (fileIds && fileIds.length > 0) {
+  if (plan.useFiles && fileIds) {
     for (const fileId of fileIds) {
       const record = fileRegistry.get(fileId);
       if (!record) continue;
@@ -47,12 +52,8 @@ chatRouter.post('/', async (req, res) => {
     }
   }
 
-  // ── Build AI messages (text + optional Vision blocks) ────────────────────────
-  const brainMessages = parsedDocs.length > 0
-    ? buildMessages(message, parsedDocs)
-    : [{ role: 'user' as const, content: message }];
-  // BrainMessage.content may be Part[] for image uploads; cast is safe —
-  // ClaudeBrain accepts vision content blocks at runtime.
+  // ── Build context (intent-aware, with file injection) ────────────────────────
+  const brainMessages = buildContext(message, plan, parsedDocs);
   const clawMessages = brainMessages as unknown as Message[];
 
   try {
@@ -63,15 +64,15 @@ chatRouter.post('/', async (req, res) => {
 
     // ── Detect report intent and generate downloadable output ────────────────
     const downloads: ReportResult[] = [];
-    const intent = detectReportIntent(message);
+    const reportIntent = detectReportIntent(message);
 
-    if (intent && parsedDocs.length > 0) {
+    if (reportIntent && parsedDocs.length > 0) {
       try {
         const reportData = extractReportData(reply as string, parsedDocs, message);
         let result: ReportResult;
-        if (intent === 'excel')     result = await generateExcel(reportData);
-        else if (intent === 'pdf')  result = await generatePDF(reportData);
-        else                        result = await generatePPTX(reportData);
+        if (reportIntent === 'excel')     result = await generateExcel(reportData);
+        else if (reportIntent === 'pdf')  result = await generatePDF(reportData);
+        else                              result = await generatePPTX(reportData);
         downloads.push(result);
       } catch (err) {
         console.warn('[chat] report generation failed:', (err as Error).message);
@@ -83,6 +84,7 @@ chatRouter.post('/', async (req, res) => {
 
     res.json({
       reply,
+      intent: plan.intent,
       downloads: downloads.length > 0 ? downloads : undefined,
     });
   } catch (err) {
