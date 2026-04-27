@@ -147,6 +147,8 @@ async function parseExcel(filePath: string, fileName: string): Promise<ParsedDoc
 
 async function parsePDF(filePath: string, fileName: string): Promise<ParsedDocument> {
   // pdf-parse is CJS; dynamic import with .default handles both
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore — pdf-parse has no TS declarations
   const pdfParseMod = await import('pdf-parse');
   const pdfParse = (pdfParseMod as any).default ?? pdfParseMod;
   const buffer = fs.readFileSync(filePath);

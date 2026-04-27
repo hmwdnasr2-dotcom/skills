@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { claw } from '../core/index.js';
+import type { Message } from '@aria/core';
 import { scheduleNudgeIfNeeded } from '../proactive/nudger.js';
 import { fileRegistry } from './upload.js';
 import { parseFile } from '../services/fileParser.js';
@@ -50,11 +51,14 @@ chatRouter.post('/', async (req, res) => {
   const brainMessages = parsedDocs.length > 0
     ? buildMessages(message, parsedDocs)
     : [{ role: 'user' as const, content: message }];
+  // BrainMessage.content may be Part[] for image uploads; cast is safe —
+  // ClaudeBrain accepts vision content blocks at runtime.
+  const clawMessages = brainMessages as unknown as Message[];
 
   try {
     const reply = await claw.run('chat', {
       userId,
-      messages: brainMessages,
+      messages: clawMessages,
     });
 
     // ── Detect report intent and generate downloadable output ────────────────
