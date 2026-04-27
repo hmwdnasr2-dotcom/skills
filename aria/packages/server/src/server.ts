@@ -83,8 +83,7 @@ app.listen(PORT, () => {
   startScheduler();
 
   if (telegramEnabled()) {
-    startTelegramPolling();
-    console.log('[server] Telegram bot active — polling for messages');
+    startTelegramPolling().catch((err) => console.error('[server] Telegram startup error:', err));
   } else {
     console.log('[server] Telegram disabled — set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID to enable');
   }

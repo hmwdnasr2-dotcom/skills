@@ -15,10 +15,10 @@ export function telegramEnabled(): boolean {
 
 function stripHeavyMarkdown(text: string): string {
   return text
-    .replace(/```[\s\S]*?```/g, (m) => m)   // keep code blocks as-is
-    .replace(/\*\*(.*?)\*\*/g, '*$1*')        // bold: ** → *
-    .replace(/#{1,6}\s+(.+)/g, '*$1*')        // headings → bold
-    .replace(/^[-•▸→]\s+/gm, '• ')           // normalise bullets
+    .replace(/```[\s\S]*?```/g, (m) => m)
+    .replace(/\*\*(.*?)\*\*/g, '*$1*')
+    .replace(/#{1,6}\s+(.+)/g, '*$1*')
+    .replace(/^[-•▸→]\s+/gm, '• ')
     .trim();
 }
 
@@ -43,11 +43,28 @@ export async function sendTelegram(a: string | number, b?: string): Promise<void
       }),
     });
     if (!res.ok) {
-      const err = await res.text();
-      console.warn('[telegram] sendMessage failed:', err);
+      console.warn('[telegram] sendMessage failed:', await res.text());
     }
   } catch (err) {
     console.warn('[telegram] network error:', (err as Error).message);
+  }
+}
+
+// ── Verify bot token is valid ──────────────────────────────────────────────────
+
+async function verifyBot(): Promise<boolean> {
+  try {
+    const res  = await fetch(`${API()}/getMe`);
+    const body = await res.json() as { ok: boolean; result?: { username?: string } };
+    if (body.ok) {
+      console.log(`[telegram] Bot verified: @${body.result?.username}`);
+      return true;
+    }
+    console.error('[telegram] getMe failed — check TELEGRAM_BOT_TOKEN:', JSON.stringify(body));
+    return false;
+  } catch (err) {
+    console.error('[telegram] cannot reach Telegram API:', (err as Error).message);
+    return false;
   }
 }
 
@@ -73,16 +90,15 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
   const chatId = msg.chat.id;
   const text   = msg.text.trim();
 
-  // Ignore bot commands except /start
+  console.log(`[telegram] message from chat_id ${chatId}: ${text.slice(0, 60)}`);
+
   if (text.startsWith('/start')) {
     await sendTelegram(chatId, `Hello${msg.from?.first_name ? ` ${msg.from.first_name}` : ''}! I'm ARIA. Send me a message and I'll respond.`);
-    console.log(`[telegram] /start from chat_id ${chatId}`);
     return;
   }
   if (text.startsWith('/')) return;
 
   const userId = USER_ID();
-
   try {
     const reply = await claw.run('chat', {
       userId,
@@ -95,38 +111,58 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
   }
 }
 
+// Use POST + JSON body to avoid URL-encoding issues with allowed_updates
 async function poll(): Promise<void> {
-  const url = `${API()}/getUpdates?offset=${lastOffset}&timeout=30&allowed_updates=["message"]`;
   try {
-    const res  = await fetch(url, { signal: AbortSignal.timeout(35_000) });
+    const res = await fetch(`${API()}/getUpdates`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ offset: lastOffset, timeout: 30, allowed_updates: ['message'] }),
+      signal:  AbortSignal.timeout(35_000),
+    });
+
     if (!res.ok) {
-      console.warn('[telegram] getUpdates failed:', res.status);
+      console.warn('[telegram] getUpdates HTTP error:', res.status, await res.text());
       return;
     }
-    const body = await res.json() as { ok: boolean; result: TelegramUpdate[] };
-    if (!body.ok) return;
+
+    const body = await res.json() as { ok: boolean; result: TelegramUpdate[]; description?: string };
+    if (!body.ok) {
+      console.warn('[telegram] getUpdates not ok:', body.description);
+      return;
+    }
 
     for (const update of body.result) {
       lastOffset = update.update_id + 1;
       processUpdate(update).catch((err) => console.error('[telegram] processUpdate:', err));
     }
   } catch (err) {
-    if ((err as Error).name !== 'TimeoutError') {
+    const name = (err as Error).name;
+    if (name !== 'TimeoutError' && name !== 'AbortError') {
       console.warn('[telegram] poll error:', (err as Error).message);
     }
   }
 }
 
-export function startTelegramPolling(): void {
+export async function startTelegramPolling(): Promise<void> {
   if (pollingActive || !TOKEN()) return;
+
+  const ok = await verifyBot();
+  if (!ok) {
+    console.error('[telegram] Polling NOT started — fix TELEGRAM_BOT_TOKEN first');
+    return;
+  }
+
+  // Send a startup ping so you know it's live
+  await sendTelegram('✅ ARIA is online and ready.');
+
   pollingActive = true;
-  console.log('[telegram] Polling started — bot ready for messages');
+  console.log('[telegram] Polling started — listening for messages');
 
   (async function loop() {
     while (pollingActive) {
       await poll();
-      // small gap between polls to avoid hammering on repeated errors
-      await new Promise((r) => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 300));
     }
   })().catch((err) => console.error('[telegram] polling loop crashed:', err));
 }
