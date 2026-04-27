@@ -1,5 +1,4 @@
 import { claw } from '../core/index.js';
-import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -107,7 +106,7 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
   console.log(`[telegram] message from chat_id ${chatId}: ${text.slice(0, 60)}`);
 
   if (text.startsWith('/start')) {
-    await sendTelegram(chatId, `Hello${msg.from?.first_name ? ` ${msg.from.first_name}` : ''}! I'm ARIA.\n\nCommands:\n/setkey sk-ant-... — update Anthropic API key\n/status — check server status`);
+    await sendTelegram(chatId, `Hello${msg.from?.first_name ? ` ${msg.from.first_name}` : ''}! I'm ARIA.\n\nCommands:\n/setkey sk-ant-... — update Anthropic API key\n/testkey — verify current API key works\n/reloadkey — reload key from .env without restart\n/status — check server status`);
     return;
   }
 
@@ -119,12 +118,55 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
     }
     try {
       updateEnvKey('ANTHROPIC_API_KEY', newKey);
-      await sendTelegram(chatId, `✅ Key saved (${newKey.length} chars). Restarting server...`);
-      setTimeout(() => {
-        try { execSync('pm2 restart aria-server --update-env'); } catch { /* pm2 may not be in PATH */ }
-      }, 500);
+      await sendTelegram(chatId, `✅ Key saved (${newKey.length} chars). Restarting server now — I'll be back in ~5 seconds.`);
+      // Let PM2 restart us automatically when we exit with code 0
+      setTimeout(() => process.exit(0), 800);
     } catch (err) {
       await sendTelegram(chatId, `❌ Failed to save key: ${(err as Error).message}`);
+    }
+    return;
+  }
+
+  if (text === '/testkey') {
+    const key = process.env.ANTHROPIC_API_KEY ?? '';
+    if (!key) { await sendTelegram(chatId, '❌ No API key set in process env.'); return; }
+    await sendTelegram(chatId, `🔍 Testing key (${key.length} chars, starts: ${key.slice(0, 14)}...)...`);
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 5, messages: [{ role: 'user', content: 'hi' }] }),
+      });
+      const data = await res.json() as { type?: string; error?: { type?: string; message?: string } };
+      if (res.ok) {
+        await sendTelegram(chatId, `✅ API key is valid! Anthropic API responding correctly.`);
+      } else {
+        await sendTelegram(chatId, `❌ API error ${res.status}: ${data.error?.message ?? JSON.stringify(data)}`);
+      }
+    } catch (err) {
+      await sendTelegram(chatId, `❌ Network error: ${(err as Error).message}`);
+    }
+    return;
+  }
+
+  if (text === '/reloadkey') {
+    try {
+      const { readFileSync: rfs } = await import('node:fs');
+      const envContent = rfs(ENV_PATH, 'utf8');
+      const match = envContent.match(/^ANTHROPIC_API_KEY=(.+)$/m);
+      if (match) {
+        const key = match[1].trim();
+        process.env.ANTHROPIC_API_KEY = key;
+        await sendTelegram(chatId, `✅ Key reloaded from .env into process (${key.length} chars, starts: ${key.slice(0, 14)}...)\n\nRun /testkey to verify.`);
+      } else {
+        await sendTelegram(chatId, '❌ ANTHROPIC_API_KEY not found in .env file.');
+      }
+    } catch (err) {
+      await sendTelegram(chatId, `❌ Failed to read .env: ${(err as Error).message}`);
     }
     return;
   }
