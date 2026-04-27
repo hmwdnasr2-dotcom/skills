@@ -3,6 +3,8 @@ import './load-env.js';
 
 import cors from 'cors';
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { AgentBridgeConnector } from '@aria/core';
 import { claw } from './core/index.js';
 import { GmailConnector, buildGmailAdapters } from './connectors/gmail.js';
@@ -22,6 +24,8 @@ import { startTelegramPolling, telegramEnabled } from './services/telegram.js';
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 4000);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const WEB_DIST  = path.resolve(__dirname, '../../web/dist');
 
 // ─── Middleware ────────────────────────────────────────────────────────────────
 
@@ -96,8 +100,12 @@ app.use('/api/aria/upload', uploadRouter);
 app.use('/api/aria/download', downloadRouter);
 app.use('/api/auth', authRouter);
 
-app.get('/', (_req, res) => res.json({ service: 'ARIA', status: 'ok' }));
 app.get('/health', (_req, res) => res.json({ ok: true }));
+
+// ─── Serve React frontend (must be after all API routes) ──────────────────────
+
+app.use(express.static(WEB_DIST));
+app.get('*', (_req, res) => res.sendFile(path.join(WEB_DIST, 'index.html')));
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 
