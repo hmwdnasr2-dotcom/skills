@@ -1,6 +1,7 @@
 import {
   AgentBridgeConnector,
   ClaudeBrain,
+  DeepSeekBrain,
   GeminiBrain,
   GroqBrain,
   N8nAdapter,
@@ -17,11 +18,12 @@ function buildBrain() {
   const provider = process.env.ARIA_BRAIN ?? 'claude';
   const model    = process.env.ARIA_MODEL;
   switch (provider) {
-    case 'claude': return new ClaudeBrain(model ? { model } : {});
-    case 'openai': return new OpenAIBrain(model ? { model } : {});
-    case 'groq':   return new GroqBrain(model ? { model } : {});
-    case 'ollama': return new OllamaBrain(model ? { model } : {});
-    default:       return new GeminiBrain({ model: model ?? 'gemini-2.0-flash' });
+    case 'claude':   return new ClaudeBrain(model ? { model } : {});
+    case 'deepseek': return new DeepSeekBrain(model ? { model } : {});
+    case 'openai':   return new OpenAIBrain(model ? { model } : {});
+    case 'groq':     return new GroqBrain(model ? { model } : {});
+    case 'ollama':   return new OllamaBrain(model ? { model } : {});
+    default:         return new GeminiBrain({ model: model ?? 'gemini-2.0-flash' });
   }
 }
 

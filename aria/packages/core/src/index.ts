@@ -17,6 +17,7 @@ export type {
 } from './brain/adapter.js';
 
 export { ClaudeBrain } from './brain/claude.js';
+export { DeepSeekBrain } from './brain/deepseek.js';
 export { GeminiBrain } from './brain/gemini.js';
 export { GroqBrain } from './brain/groq.js';
 export { OllamaBrain } from './brain/ollama.js';

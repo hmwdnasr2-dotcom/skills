@@ -106,30 +106,73 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
   console.log(`[telegram] message from chat_id ${chatId}: ${text.slice(0, 60)}`);
 
   if (text.startsWith('/start')) {
-    await sendTelegram(chatId, `Hello${msg.from?.first_name ? ` ${msg.from.first_name}` : ''}! I'm ARIA.\n\nCommands:\n/setkey sk-ant-... — update API key (live, no restart needed)\n/testkey — verify the current key works\n/status — check server status`);
+    const brain = process.env.ARIA_BRAIN ?? 'claude';
+    await sendTelegram(chatId, `Hello${msg.from?.first_name ? ` ${msg.from.first_name}` : ''}! I'm ARIA.\n\nCurrent brain: ${brain}\n\nCommands:\n/setkey sk-ant-... — set Anthropic API key\n/setdeepseek sk-... — switch to DeepSeek\n/testkey — verify current key\n/status — server status`);
     return;
   }
 
   if (text.startsWith('/setkey ')) {
     const newKey = text.slice(8).trim().replace(/[\n\r\s]/g, '');
     if (!newKey.startsWith('sk-ant-') || newKey.length < 80) {
-      await sendTelegram(chatId, '❌ Invalid key. Must start with sk-ant- and be ~108 chars.');
+      await sendTelegram(chatId, '❌ Invalid Anthropic key. Must start with sk-ant- and be ~108 chars.');
       return;
     }
     try {
       updateEnvKey('ANTHROPIC_API_KEY', newKey);
+      updateEnvKey('ARIA_BRAIN', 'claude');
+      updateEnvKey('ARIA_MODEL', 'claude-haiku-4-5-20251001');
       process.env.ANTHROPIC_API_KEY = newKey;
-      await sendTelegram(chatId, `✅ Key active (${newKey.length} chars). Run /testkey to verify, then try chatting.`);
+      process.env.ARIA_BRAIN = 'claude';
+      process.env.ARIA_MODEL = 'claude-haiku-4-5-20251001';
+      await sendTelegram(chatId, `✅ Anthropic key active (${newKey.length} chars). Run /testkey to verify.`);
     } catch (err) {
       await sendTelegram(chatId, `❌ Failed to save key: ${(err as Error).message}`);
     }
     return;
   }
 
+  if (text.startsWith('/setdeepseek ')) {
+    const newKey = text.slice(13).trim().replace(/[\n\r\s]/g, '');
+    if (!newKey.startsWith('sk-') || newKey.length < 20) {
+      await sendTelegram(chatId, '❌ Invalid DeepSeek key. Must start with sk- and be at least 20 chars.');
+      return;
+    }
+    try {
+      updateEnvKey('DEEPSEEK_API_KEY', newKey);
+      updateEnvKey('ARIA_BRAIN', 'deepseek');
+      updateEnvKey('ARIA_MODEL', 'deepseek-chat');
+      process.env.DEEPSEEK_API_KEY = newKey;
+      process.env.ARIA_BRAIN = 'deepseek';
+      process.env.ARIA_MODEL = 'deepseek-chat';
+      await sendTelegram(chatId, `✅ Switched to DeepSeek! Key saved (${newKey.length} chars). Run /testkey to verify.`);
+    } catch (err) {
+      await sendTelegram(chatId, `❌ Failed: ${(err as Error).message}`);
+    }
+    return;
+  }
+
   if (text === '/testkey') {
+    const brain = process.env.ARIA_BRAIN ?? 'claude';
+    if (brain === 'deepseek') {
+      const key = process.env.DEEPSEEK_API_KEY ?? '';
+      if (!key) { await sendTelegram(chatId, '❌ No DEEPSEEK_API_KEY set.'); return; }
+      await sendTelegram(chatId, `🔍 Testing DeepSeek key (${key.length} chars)...`);
+      try {
+        const res = await fetch('https://api.deepseek.com/chat/completions', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'deepseek-chat', max_tokens: 5, messages: [{ role: 'user', content: 'hi' }] }),
+        });
+        const data = await res.json() as { error?: { message?: string } };
+        if (res.ok) await sendTelegram(chatId, '✅ DeepSeek key valid! API responding.');
+        else await sendTelegram(chatId, `❌ DeepSeek error ${res.status}: ${data.error?.message ?? JSON.stringify(data)}`);
+      } catch (err) { await sendTelegram(chatId, `❌ Network error: ${(err as Error).message}`); }
+      return;
+    }
+    // Default: Claude
     const key = process.env.ANTHROPIC_API_KEY ?? '';
-    if (!key) { await sendTelegram(chatId, '❌ No API key set in process env.'); return; }
-    await sendTelegram(chatId, `🔍 Testing key (${key.length} chars, starts: ${key.slice(0, 14)}...)...`);
+    if (!key) { await sendTelegram(chatId, '❌ No ANTHROPIC_API_KEY set.'); return; }
+    await sendTelegram(chatId, `🔍 Testing Anthropic key (${key.length} chars, starts: ${key.slice(0, 14)}...)...`);
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -142,7 +185,7 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
       });
       const data = await res.json() as { type?: string; error?: { type?: string; message?: string } };
       if (res.ok) {
-        await sendTelegram(chatId, `✅ API key is valid! Anthropic API responding correctly.`);
+        await sendTelegram(chatId, `✅ Anthropic key valid!`);
       } else {
         await sendTelegram(chatId, `❌ API error ${res.status}: ${data.error?.message ?? JSON.stringify(data)}`);
       }
@@ -152,10 +195,12 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
     return;
   }
 
-if (text === '/status') {
-    const keySet = Boolean(process.env.ANTHROPIC_API_KEY);
-    const keyLen = process.env.ANTHROPIC_API_KEY?.length ?? 0;
-    await sendTelegram(chatId, `ARIA Status\n\nAPI key: ${keySet ? `✅ set (${keyLen} chars)` : '❌ missing'}\nTelegram: ✅ connected\nModel: ${process.env.ARIA_MODEL ?? 'claude-haiku-4-5-20251001'}`);
+  if (text === '/status') {
+    const brain   = process.env.ARIA_BRAIN ?? 'claude';
+    const model   = process.env.ARIA_MODEL ?? (brain === 'deepseek' ? 'deepseek-chat' : 'claude-haiku-4-5-20251001');
+    const key     = brain === 'deepseek' ? process.env.DEEPSEEK_API_KEY : process.env.ANTHROPIC_API_KEY;
+    const keyInfo = key ? `✅ set (${key.length} chars)` : '❌ missing';
+    await sendTelegram(chatId, `ARIA Status\n\nBrain: ${brain}\nModel: ${model}\nAPI key: ${keyInfo}\nTelegram: ✅ connected`);
     return;
   }
 
