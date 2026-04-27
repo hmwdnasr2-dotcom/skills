@@ -2,12 +2,16 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { BrainAdapter, ChatOptions, ChatResponse, Message } from './adapter.js';
 
 export class ClaudeBrain implements BrainAdapter {
-  private client: Anthropic;
   private model: string;
 
   constructor({ model = 'claude-haiku-4-5-20251001' }: { model?: string } = {}) {
-    this.client = new Anthropic();
     this.model = model;
+  }
+
+  // Create a fresh client on each use so a key change via /setkey takes
+  // effect immediately without needing a server restart.
+  private get client(): Anthropic {
+    return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   }
 
   async chat(messages: Message[], opts: ChatOptions = {}): Promise<ChatResponse> {

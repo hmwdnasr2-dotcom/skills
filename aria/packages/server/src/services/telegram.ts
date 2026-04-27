@@ -106,7 +106,7 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
   console.log(`[telegram] message from chat_id ${chatId}: ${text.slice(0, 60)}`);
 
   if (text.startsWith('/start')) {
-    await sendTelegram(chatId, `Hello${msg.from?.first_name ? ` ${msg.from.first_name}` : ''}! I'm ARIA.\n\nCommands:\n/setkey sk-ant-... — update Anthropic API key\n/testkey — verify current API key works\n/reloadkey — reload key from .env without restart\n/status — check server status`);
+    await sendTelegram(chatId, `Hello${msg.from?.first_name ? ` ${msg.from.first_name}` : ''}! I'm ARIA.\n\nCommands:\n/setkey sk-ant-... — update API key (live, no restart needed)\n/testkey — verify the current key works\n/status — check server status`);
     return;
   }
 
@@ -118,9 +118,8 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
     }
     try {
       updateEnvKey('ANTHROPIC_API_KEY', newKey);
-      await sendTelegram(chatId, `✅ Key saved (${newKey.length} chars). Restarting server now — I'll be back in ~5 seconds.`);
-      // Exit with code 1 so PM2 treats it as a crash and auto-restarts
-      setTimeout(() => process.exit(1), 800);
+      process.env.ANTHROPIC_API_KEY = newKey;
+      await sendTelegram(chatId, `✅ Key active (${newKey.length} chars). Run /testkey to verify, then try chatting.`);
     } catch (err) {
       await sendTelegram(chatId, `❌ Failed to save key: ${(err as Error).message}`);
     }
@@ -153,25 +152,7 @@ async function processUpdate(update: TelegramUpdate): Promise<void> {
     return;
   }
 
-  if (text === '/reloadkey') {
-    try {
-      const { readFileSync: rfs } = await import('node:fs');
-      const envContent = rfs(ENV_PATH, 'utf8');
-      const match = envContent.match(/^ANTHROPIC_API_KEY=(.+)$/m);
-      if (match) {
-        const key = match[1].trim();
-        process.env.ANTHROPIC_API_KEY = key;
-        await sendTelegram(chatId, `✅ Key reloaded from .env into process (${key.length} chars, starts: ${key.slice(0, 14)}...)\n\nRun /testkey to verify.`);
-      } else {
-        await sendTelegram(chatId, '❌ ANTHROPIC_API_KEY not found in .env file.');
-      }
-    } catch (err) {
-      await sendTelegram(chatId, `❌ Failed to read .env: ${(err as Error).message}`);
-    }
-    return;
-  }
-
-  if (text === '/status') {
+if (text === '/status') {
     const keySet = Boolean(process.env.ANTHROPIC_API_KEY);
     const keyLen = process.env.ANTHROPIC_API_KEY?.length ?? 0;
     await sendTelegram(chatId, `ARIA Status\n\nAPI key: ${keySet ? `✅ set (${keyLen} chars)` : '❌ missing'}\nTelegram: ✅ connected\nModel: ${process.env.ARIA_MODEL ?? 'claude-haiku-4-5-20251001'}`);
