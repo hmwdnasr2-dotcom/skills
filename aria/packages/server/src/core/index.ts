@@ -4,6 +4,7 @@ import {
   DeepSeekBrain,
   GeminiBrain,
   GroqBrain,
+  BraveSearchAdapter,
   N8nAdapter,
   OllamaBrain,
   OpenAIBrain,
@@ -62,8 +63,12 @@ if (process.env.N8N_RESEARCH_WEBHOOK_URL) {
   );
 }
 
-if (process.env.PERPLEXITY_API_KEY) {
+if (process.env.BRAVE_SEARCH_API_KEY) {
+  bridge.register('web_search', new BraveSearchAdapter());
+  console.log('[core] web_search: Brave Search');
+} else if (process.env.PERPLEXITY_API_KEY) {
   bridge.register('web_search', new PerplexityAdapter());
+  console.log('[core] web_search: Perplexity');
 }
 
 // ─── OpenClaw instance ────────────────────────────────────────────────────────

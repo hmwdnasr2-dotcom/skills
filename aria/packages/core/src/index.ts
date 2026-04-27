@@ -36,3 +36,4 @@ export { HttpBridgeAdapter } from './bridge/adapters/http.js';
 export { LangChainAdapter } from './bridge/adapters/langchain.js';
 export { N8nAdapter } from './bridge/adapters/n8n.js';
 export { PerplexityAdapter } from './bridge/adapters/perplexity.js';
+export { BraveSearchAdapter } from './bridge/adapters/brave.js';
