@@ -3,46 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#f5f4ed">
+<meta name="theme-color" content="#0d0d0d">
 <title>ARIA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root {
-  --parchment:   #f5f4ed;
-  --ivory:       #faf9f5;
-  --warm-sand:   #e8e6dc;
-  --near-black:  #141413;
-  --dark-surface:#30302e;
-  --tx:          #141413;
-  --tx-olive:    #5e5d59;
-  --tx-stone:    #87867f;
-  --tx-charcoal: #4d4c48;
-  --terracotta:  #c96442;
-  --coral:       #d97757;
-  --border-cream:#f0eee6;
-  --border-warm: #e8e6dc;
-  --ring-warm:   #d1cfc5;
-  --ring-deep:   #c2c0b6;
-  --focus-blue:  #3898ec;
-  --online:      #3d9e6e;
-  --serif: 'Lora', Georgia, serif;
-  --sans:  'Inter', system-ui, -apple-system, sans-serif;
-  --mono:  'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-}
-
 html, body {
   height: 100%;
-  background: var(--parchment);
-  color: var(--tx);
-  font-family: var(--sans);
-  font-size: 16px;
+  background: #0d0d0d;
+  color: #d4d4d4;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
+  font-size: 13px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
@@ -55,387 +29,341 @@ html, body {
   height: 100vh;
 }
 
-/* ── Header ── */
-header {
+/* ── Log entries ── */
+#log-entries {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 28px 12px;
+  scroll-behavior: smooth;
+}
+
+#log-entries::-webkit-scrollbar { width: 3px; }
+#log-entries::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+
+.log-line {
+  display: flex;
+  gap: 0;
+  padding: 1px 0;
+  word-break: break-word;
+}
+
+.log-ts {
+  color: #444;
+  flex-shrink: 0;
+  user-select: none;
+  margin-right: 10px;
+}
+
+.log-speaker {
+  font-weight: 600;
+  flex-shrink: 0;
+  width: 56px;
+  margin-right: 6px;
+}
+
+.log-line--aria   .log-speaker { color: #7ec8e3; }
+.log-line--you    .log-speaker { color: #c8e37e; }
+.log-line--system .log-speaker { color: #666; }
+.log-line--system { opacity: 0.65; }
+
+.log-content {
+  flex: 1;
+  white-space: pre-wrap;
+}
+
+/* Blinking cursor during streaming */
+.cursor {
+  display: inline-block;
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+/* Divider lines */
+.log-divider {
+  color: #222;
+  padding: 6px 0 6px 72px;
+  user-select: none;
+}
+
+/* Boot / starter prompt lines (clickable) */
+.log-starter {
+  cursor: pointer;
+}
+.log-starter .log-content {
+  text-decoration: none;
+}
+.log-starter:hover .log-content {
+  color: #c8e37e;
+}
+
+/* ── Input row ── */
+#input-area {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 28px;
-  height: 56px;
-  padding-top: env(safe-area-inset-top);
-  background: var(--ivory);
-  border-bottom: 1px solid var(--border-cream);
+  gap: 10px;
+  padding: 12px 28px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+  border-top: 1px solid #1e1e1e;
+  background: #0d0d0d;
 }
-.h-brand { display: flex; align-items: center; gap: 11px; }
-.logo {
-  width: 32px; height: 32px; border-radius: 8px;
-  background: var(--terracotta);
-  display: flex; align-items: center; justify-content: center;
+
+#prompt-symbol {
+  color: #7ec8e3;
+  font-weight: 600;
+  user-select: none;
   flex-shrink: 0;
-  box-shadow: 0 0 0 1px var(--terracotta);
-}
-.logo-letter {
-  font-family: var(--serif); font-size: 16px; font-weight: 500;
-  color: var(--ivory); line-height: 1; margin-top: 1px;
-}
-.h-name {
-  font-family: var(--serif); font-size: 18px; font-weight: 500;
-  color: var(--tx); letter-spacing: -0.2px; line-height: 1;
-}
-.h-status {
-  display: flex; align-items: center; gap: 7px;
-  font-family: var(--sans); font-size: 12px; color: var(--tx-stone);
-}
-.h-pip {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--online); flex-shrink: 0;
-}
-.h-pip.thinking {
-  background: var(--terracotta);
-  animation: pip-blink 0.85s ease-in-out infinite;
-}
-@keyframes pip-blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
-.h-btn {
-  height: 30px; padding: 0 12px; border-radius: 8px; border: none;
-  background: var(--warm-sand); color: var(--tx-charcoal);
-  font-family: var(--sans); font-size: 12px; font-weight: 500;
-  cursor: pointer; box-shadow: 0 0 0 1px var(--ring-warm);
-  transition: box-shadow .15s, background .15s;
-}
-.h-btn:hover { background: var(--border-warm); box-shadow: 0 0 0 1px var(--ring-deep); }
-
-/* ── Messages ── */
-#messages {
-  flex: 1; overflow-y: auto; overflow-x: hidden;
-  scroll-behavior: smooth; background: var(--parchment);
-}
-#messages::-webkit-scrollbar { width: 4px; }
-#messages::-webkit-scrollbar-thumb { background: var(--ring-warm); border-radius: 2px; }
-
-.feed { max-width: 700px; margin: 0 auto; padding: 0 28px 24px; }
-
-/* Welcome */
-.welcome {
-  padding: 52px 0 40px; display: flex; flex-direction: column;
-  align-items: flex-start; gap: 14px;
-}
-.welcome-title {
-  font-family: var(--serif); font-size: 32px; font-weight: 500;
-  color: var(--tx); line-height: 1.2; letter-spacing: -0.3px;
-}
-.welcome-sub {
-  font-family: var(--sans); font-size: 16px; color: var(--tx-olive);
-  line-height: 1.6; max-width: 440px;
-}
-.starters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
-.starter {
-  padding: 8px 16px; border-radius: 20px; border: none;
-  background: var(--ivory); box-shadow: 0 0 0 1px var(--border-warm);
-  color: var(--tx-olive); font-family: var(--sans); font-size: 14px;
-  cursor: pointer; text-align: left;
-  transition: box-shadow .15s, color .15s, background .15s;
-}
-.starter:hover { box-shadow: 0 0 0 1px var(--ring-warm); background: var(--warm-sand); color: var(--tx); }
-
-/* Date separator */
-.date-sep {
-  display: flex; align-items: center; gap: 14px;
-  padding: 28px 0 20px; color: var(--tx-stone);
-  font-family: var(--sans); font-size: 10px; font-weight: 400;
-  letter-spacing: 0.5px; text-transform: uppercase;
-}
-.date-sep::before, .date-sep::after {
-  content: ''; flex: 1; height: 1px; background: var(--border-cream);
 }
 
-/* Message */
-.msg { padding: 16px 0; animation: msg-in .2s ease both; }
-.msg + .msg { border-top: 1px solid var(--border-cream); }
-@keyframes msg-in { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+#inp {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #d4d4d4;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.6;
+  caret-color: #7ec8e3;
+}
+#inp::placeholder { color: #3a3a3a; }
+#inp:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* ARIA message */
-.msg.aria-msg { display: flex; align-items: flex-start; gap: 14px; }
-.aria-av {
-  width: 30px; height: 30px; border-radius: 8px;
-  background: var(--terracotta); display: flex; align-items: center;
-  justify-content: center; flex-shrink: 0; margin-top: 1px;
-  box-shadow: 0 0 0 1px var(--terracotta);
-}
-.aria-av-letter { font-family: var(--serif); font-size: 13px; font-weight: 500; color: var(--ivory); line-height: 1; }
-.aria-content { flex: 1; min-width: 0; }
-.aria-label {
-  font-family: var(--sans); font-size: 10px; font-weight: 500;
-  letter-spacing: 0.5px; text-transform: uppercase;
-  color: var(--tx-stone); margin-bottom: 6px;
-}
-
-/* Prose (Lora) */
-.prose {
-  font-family: var(--serif); font-size: 16px; font-weight: 400;
-  line-height: 1.75; color: var(--tx); word-break: break-word;
-}
-.prose p { margin: 0 0 12px; }
-.prose p:last-child { margin-bottom: 0; }
-.prose strong { font-weight: 600; color: var(--tx); font-family: var(--sans); }
-.prose em { font-style: italic; color: var(--tx-olive); }
-.prose h1,.prose h2,.prose h3 {
-  font-family: var(--serif); font-weight: 500; line-height: 1.3;
-  color: var(--tx); margin: 20px 0 8px;
-}
-.prose h1 { font-size: 22px; } .prose h2 { font-size: 19px; } .prose h3 { font-size: 17px; }
-.prose h1:first-child,.prose h2:first-child,.prose h3:first-child { margin-top: 0; }
-.prose ul,.prose ol { padding-left: 22px; margin: 8px 0 12px; }
-.prose li { margin: 7px 0; line-height: 1.7; }
-.prose li::marker { color: var(--terracotta); }
-.prose code {
-  font-family: var(--mono); font-size: 13.5px;
-  background: var(--warm-sand); border: 1px solid var(--border-warm);
-  border-radius: 5px; padding: 1px 6px; color: var(--dark-surface);
-}
-.prose pre {
-  background: var(--near-black); border-radius: 10px;
-  padding: 16px 18px; overflow-x: auto; margin: 14px 0;
-  box-shadow: 0 0 0 1px var(--dark-surface);
-}
-.prose pre code { background: none; border: none; padding: 0; color: #e8d5c4; font-size: 13.5px; line-height: 1.65; }
-.prose blockquote { border-left: 3px solid var(--terracotta); padding-left: 16px; margin: 14px 0; color: var(--tx-olive); font-style: italic; }
-.prose hr { border: none; border-top: 1px solid var(--border-warm); margin: 18px 0; }
-.prose a { color: var(--terracotta); text-decoration: underline; text-underline-offset: 3px; }
-.prose table { border-collapse: collapse; width: 100%; margin: 14px 0; font-family: var(--sans); font-size: 14px; }
-.prose th { background: var(--warm-sand); padding: 8px 14px; text-align: left; font-weight: 600; font-size: 11px; letter-spacing: 0.4px; text-transform: uppercase; color: var(--tx-charcoal); border-bottom: 1px solid var(--border-warm); }
-.prose td { padding: 9px 14px; border-bottom: 1px solid var(--border-cream); color: var(--tx-olive); }
-
-/* Typing cursor */
-.type-cursor {
-  display: inline-block; width: 2px; height: 1em;
-  background: var(--terracotta); border-radius: 1px;
-  margin-left: 2px; vertical-align: text-bottom;
-  animation: cur-blink .9s step-end infinite;
-}
-@keyframes cur-blink { 0%,100%{opacity:1} 50%{opacity:0} }
-
-/* Thinking dots */
-.thinking { display: flex; align-items: center; gap: 5px; padding: 4px 0; }
-.thinking-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--ring-warm);
-  animation: dot-rise 1.3s ease-in-out infinite;
-}
-.thinking-dot:nth-child(2){animation-delay:.15s} .thinking-dot:nth-child(3){animation-delay:.3s}
-@keyframes dot-rise { 0%,60%,100%{opacity:.3;transform:translateY(0)} 30%{opacity:1;transform:translateY(-4px)} }
-
-/* User bubble */
-.msg.user-msg { display: flex; justify-content: flex-end; }
-.user-bubble {
-  max-width: min(72%, 500px);
-  background: var(--warm-sand); border-radius: 18px 18px 4px 18px;
-  padding: 13px 18px; box-shadow: 0 0 0 1px var(--ring-warm);
-  font-family: var(--sans); font-size: 15px; line-height: 1.65;
-  color: var(--tx); word-break: break-word;
-}
-
-/* ── Input ── */
-#input-area {
+/* Hint text */
+#input-hint {
   flex-shrink: 0;
-  padding: 16px 28px;
-  padding-bottom: max(20px, env(safe-area-inset-bottom));
-  background: var(--ivory);
-  border-top: 1px solid var(--border-cream);
-}
-.input-wrap { max-width: 700px; margin: 0 auto; }
-.input-shell {
-  display: flex; align-items: flex-end; gap: 10px;
-  background: var(--parchment); border-radius: 14px;
-  padding: 12px 12px 12px 18px;
-  box-shadow: 0 0 0 1.5px var(--border-warm);
-  transition: box-shadow .2s;
-}
-.input-shell:focus-within { box-shadow: 0 0 0 2px var(--focus-blue); }
-textarea#inp {
-  flex: 1; background: transparent; border: none; outline: none;
-  color: var(--tx); font-family: var(--sans); font-size: 15px;
-  line-height: 1.55; resize: none; min-height: 24px; max-height: 160px;
-  overflow-y: auto; caret-color: var(--terracotta);
-}
-textarea#inp::placeholder { color: var(--tx-stone); }
-#send-btn {
-  width: 36px; height: 36px; border-radius: 9px; border: none;
-  background: var(--terracotta); color: var(--ivory); cursor: pointer;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  box-shadow: 0 0 0 1px var(--terracotta);
-  transition: background .15s, box-shadow .15s, transform .1s;
-}
-#send-btn:hover { background: var(--coral); box-shadow: 0 0 0 1px var(--coral); }
-#send-btn:active { transform: scale(.93); }
-#send-btn:disabled {
-  background: var(--warm-sand); box-shadow: 0 0 0 1px var(--ring-warm);
-  color: var(--tx-stone); cursor: not-allowed; transform: none;
-}
-.input-hint {
-  margin-top: 9px; text-align: center;
-  font-family: var(--sans); font-size: 11px; color: var(--tx-stone); letter-spacing: .1px;
+  color: #333;
+  font-size: 11px;
+  user-select: none;
+  white-space: nowrap;
 }
 
 @media (max-width: 600px) {
-  header { padding: 0 16px; }
-  .feed { padding: 0 16px 20px; }
-  #input-area { padding: 12px 16px; padding-bottom: max(20px, env(safe-area-inset-bottom)); }
-  .welcome-title { font-size: 26px; }
-  .user-bubble { max-width: 88%; }
-}
-@media (min-width: 900px) {
-  .feed { padding: 0 48px 24px; }
-  #input-area { padding: 18px 48px; padding-bottom: 24px; }
+  #log-entries { padding: 14px 16px 8px; }
+  #input-area  { padding: 10px 16px; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  #input-hint  { display: none; }
 }
 </style>
 </head>
 <body>
 <div id="app">
-  <header>
-    <div class="h-brand">
-      <div class="logo"><span class="logo-letter">A</span></div>
-      <span class="h-name">ARIA</span>
-    </div>
-    <div class="h-status">
-      <div class="h-pip" id="pip"></div>
-      <span id="status-txt">Ready</span>
-    </div>
-    <button class="h-btn" onclick="clearChat()">Clear</button>
-  </header>
-
-  <div id="messages">
-    <div class="feed" id="feed">
-      <div id="welcome" class="welcome">
-        <div class="welcome-title">How can I help you today?</div>
-        <div class="welcome-sub">I can help you plan tasks, track projects, follow up on work, and keep your week on track.</div>
-        <div class="starters">
-          <button class="starter" onclick="prefill(this)">📋 What's on my plate today?</button>
-          <button class="starter" onclick="prefill(this)">🚀 Create a new project</button>
-          <button class="starter" onclick="prefill(this)">⏰ What tasks are overdue?</button>
-          <button class="starter" onclick="prefill(this)">📊 Summarize my week</button>
-        </div>
-      </div>
-      <div id="msg-list"></div>
-    </div>
+  <div id="log-entries" role="log" aria-live="polite" aria-label="Conversation log">
+    <div id="log-list"></div>
   </div>
-
   <div id="input-area">
-    <div class="input-wrap">
-      <div class="input-shell">
-        <textarea id="inp" rows="1" placeholder="Ask ARIA to plan, track, or follow up…" autocomplete="off" spellcheck="true"></textarea>
-        <button id="send-btn" disabled>
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M8 13V3M3 8l5-5 5 5"/>
-          </svg>
-        </button>
-      </div>
-      <div class="input-hint">Enter to send · Shift + Enter for new line</div>
-    </div>
+    <span id="prompt-symbol" aria-hidden="true">&gt;</span>
+    <input id="inp" type="text" placeholder="type a message…" autocomplete="off" spellcheck="true" aria-label="Message input">
+    <span id="input-hint">Enter ↵ to send</span>
   </div>
 </div>
 
 <script>
-(function(){
+(function () {
   'use strict';
-  const API='http://188.245.242.236:4000', UID='user-1', CHAR_MS=12;
-  const $msgs=document.getElementById('messages'),
-        $list=document.getElementById('msg-list'),
-        $welcome=document.getElementById('welcome'),
-        $inp=document.getElementById('inp'),
-        $btn=document.getElementById('send-btn'),
-        $pip=document.getElementById('pip'),
-        $stxt=document.getElementById('status-txt');
 
-  marked.setOptions({breaks:true,gfm:true});
-  let busy=false, started=false;
+  const API    = 'http://188.245.242.236:4000';
+  const UID    = 'user-1';
+  const TYPE_MS = 8;
 
-  $inp.addEventListener('input',()=>{
-    $inp.style.height='auto';
-    $inp.style.height=Math.min($inp.scrollHeight,160)+'px';
-    $btn.disabled=!$inp.value.trim()||busy;
-  });
-  $inp.addEventListener('keydown',e=>{
-    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!$btn.disabled)submit();}
-  });
-  $btn.addEventListener('click',submit);
+  const $entries = document.getElementById('log-entries');
+  const $list    = document.getElementById('log-list');
+  const $inp     = document.getElementById('inp');
 
-  window.prefill=function(btn){
-    const text=btn.textContent.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}\s]+/u,'').trim();
-    $inp.value=text; $inp.dispatchEvent(new Event('input')); $inp.focus();
-  };
+  let busy = false;
 
-  function addUser(text){
-    ensureStarted();
-    const d=document.createElement('div'); d.className='msg user-msg';
-    const b=document.createElement('div'); b.className='user-bubble'; b.textContent=text;
-    d.appendChild(b); $list.appendChild(d); scroll();
+  /* ── Helpers ── */
+
+  function now() {
+    return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   }
 
-  function addAria(){
-    ensureStarted();
-    const d=document.createElement('div'); d.className='msg aria-msg';
-    d.innerHTML='<div class="aria-av"><span class="aria-av-letter">A</span></div><div class="aria-content"><div class="aria-label">ARIA</div><div class="aria-body"></div></div>';
-    $list.appendChild(d); scroll();
-    return d.querySelector('.aria-body');
+  function scroll() {
+    requestAnimationFrame(() => { $entries.scrollTop = $entries.scrollHeight; });
   }
 
-  function showThinking(body){
-    body.innerHTML='<div class="thinking"><div class="thinking-dot"></div><div class="thinking-dot"></div><div class="thinking-dot"></div></div>';
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  /**
+   * Append a single log line. Returns the content <span> so callers can
+   * update it (e.g. streaming).
+   */
+  function appendLine(speaker, text, opts = {}) {
+    const row = document.createElement('div');
+    row.className = 'log-line log-line--' + speaker.toLowerCase();
+    if (opts.starter) row.classList.add('log-starter');
+
+    const tsEl  = document.createElement('span');
+    tsEl.className   = 'log-ts';
+    tsEl.textContent = '[' + now() + ']';
+
+    const spkEl = document.createElement('span');
+    spkEl.className   = 'log-speaker';
+    spkEl.textContent = speaker.padEnd(6);
+
+    const cEl = document.createElement('span');
+    cEl.className   = 'log-content';
+    cEl.textContent = text;
+
+    row.appendChild(tsEl);
+    row.appendChild(spkEl);
+    row.appendChild(cEl);
+    $list.appendChild(row);
+    scroll();
+
+    if (opts.starter) {
+      row.addEventListener('click', () => {
+        if (busy) return;
+        $inp.value = opts.starterText || text;
+        $inp.focus();
+        submit();
+      });
+    }
+
+    return { row, cEl };
+  }
+
+  function appendDivider() {
+    const d = document.createElement('div');
+    d.className   = 'log-divider';
+    d.textContent = '─'.repeat(64);
+    $list.appendChild(d);
     scroll();
   }
 
-  async function typeReply(body,text){
-    body.innerHTML='';
-    const c=document.createElement('div'); c.className='prose'; body.appendChild(c);
-    const cur=document.createElement('span'); cur.className='type-cursor';
-    for(const ch of text){
+  /** Remove an element from the log. */
+  function removeLine(row) { row.remove(); }
+
+  /**
+   * Animate text into a content span character by character, with a
+   * blinking ▌ cursor that disappears when done.
+   */
+  async function typeInto(cEl, text) {
+    cEl.textContent = '';
+    const cur = document.createElement('span');
+    cur.className   = 'cursor';
+    cur.textContent = '▌';
+    cEl.appendChild(cur);
+
+    for (const ch of text) {
       cur.remove();
-      c.appendChild(ch==='\n'?document.createElement('br'):document.createTextNode(ch));
-      c.appendChild(cur); scroll();
-      await sleep(CHAR_MS);
+      cEl.appendChild(document.createTextNode(ch));
+      cEl.appendChild(cur);
+      scroll();
+      await sleep(TYPE_MS);
     }
     cur.remove();
-    c.innerHTML=marked.parse(text);
     scroll();
   }
 
-  async function submit(){
-    const text=$inp.value.trim(); if(!text||busy)return;
-    busy=true; $btn.disabled=true; $inp.value=''; $inp.style.height='auto';
-    addUser(text);
-    const body=addAria(); showThinking(body); setStatus(true);
-    try{
-      const r=await fetch(`${API}/api/aria/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:UID,message:text})});
-      if(!r.ok)throw new Error('HTTP '+r.status);
-      const{reply}=await r.json();
-      await typeReply(body,reply||"I've noted that down.");
-    }catch(e){
-      await typeReply(body,`_Could not reach ARIA — ${e.message}_`);
-    }finally{
-      busy=false; setStatus(false); $inp.focus();
+  /**
+   * Convert a markdown-flavored reply into one or more plain-text lines
+   * suitable for command-log display.
+   * Rules: ## Heading → ALL CAPS · - item → ▸ item · **bold** stripped
+   */
+  function replyToLines(text) {
+    return text
+      .replace(/\r\n/g, '\n')
+      .split('\n')
+      .map(line => {
+        line = line.replace(/\*\*(.+?)\*\*/g, '$1')
+                   .replace(/\*(.+?)\*/g, '$1')
+                   .replace(/`(.+?)`/g, '$1');
+        if (/^#{1,3}\s/.test(line)) return line.replace(/^#{1,3}\s+/, '').toUpperCase();
+        if (/^[-*]\s/.test(line))   return '▸ ' + line.replace(/^[-*]\s+/, '');
+        return line;
+      })
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  /* ── Send flow ── */
+
+  async function submit() {
+    const text = $inp.value.trim();
+    if (!text || busy) return;
+
+    busy = true;
+    $inp.disabled = true;
+    $inp.value = '';
+
+    appendLine('YOU', text);
+
+    const { row: sysRow } = appendLine('SYSTEM', 'processing…');
+
+    try {
+      const r = await fetch(`${API}/api/aria/chat`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ userId: UID, message: text })
+      });
+
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const { reply } = await r.json();
+
+      removeLine(sysRow);
+
+      const cleaned = replyToLines(reply || "I've noted that down.");
+      const lines   = cleaned.split('\n');
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (!line) continue;
+        if (i === 0) {
+          const { cEl } = appendLine('ARIA', '');
+          await typeInto(cEl, line);
+        } else {
+          appendLine('ARIA', line);
+        }
+      }
+
+    } catch (e) {
+      removeLine(sysRow);
+      appendLine('SYSTEM', 'error: ' + e.message);
+    } finally {
+      busy = false;
+      $inp.disabled = false;
+      $inp.focus();
     }
   }
 
-  function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-  function scroll(){requestAnimationFrame(()=>{$msgs.scrollTop=$msgs.scrollHeight;});}
-  function setStatus(on){
-    $pip.className=on?'h-pip thinking':'h-pip';
-    $stxt.textContent=on?'Thinking…':'Ready';
+  /* ── Input handling ── */
+
+  $inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); }
+  });
+
+  /* ── SSE — proactive events ── */
+
+  function connectSSE() {
+    const es = new EventSource(`${API}/api/aria/events?userId=${UID}`);
+    es.onmessage = e => {
+      try {
+        const { content } = JSON.parse(e.data);
+        if (content) appendLine('ARIA', content);
+      } catch (_) {}
+    };
+    es.onerror = () => {
+      es.close();
+      setTimeout(connectSSE, 6000);
+    };
   }
-  function ensureStarted(){
-    if(started)return; started=true;
-    $welcome.style.display='none';
-    const sep=document.createElement('div'); sep.className='date-sep';
-    sep.textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-    $list.insertAdjacentElement('beforebegin',sep);
-  }
-  window.clearChat=function(){
-    started=false; $list.innerHTML='';
-    document.querySelectorAll('.date-sep').forEach(el=>el.remove());
-    $welcome.style.display='';
-  };
-  setTimeout(()=>$inp.focus(),150);
+
+  /* ── Boot sequence ── */
+
+  appendLine('SYSTEM', 'ARIA v1.0  •  connected to ' + API);
+  appendDivider();
+  appendLine('ARIA', 'Ready. How can I help you today?');
+  appendLine('ARIA', ' ');
+  appendLine('ARIA', '▸ What\'s on my plate today?',          { starter: true, starterText: "What's on my plate today?" });
+  appendLine('ARIA', '▸ Create a new project',               { starter: true, starterText: 'Create a new project' });
+  appendLine('ARIA', '▸ What tasks are overdue?',            { starter: true, starterText: 'What tasks are overdue?' });
+  appendLine('ARIA', '▸ Summarize my week',                  { starter: true, starterText: 'Summarize my week' });
+  appendDivider();
+
+  connectSSE();
+  setTimeout(() => $inp.focus(), 100);
 })();
 </script>
 </body>
