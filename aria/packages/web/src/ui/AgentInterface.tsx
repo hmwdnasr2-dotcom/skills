@@ -41,7 +41,8 @@ interface AgentInterfaceProps {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const SLASH_COMMANDS = [
-  { cmd: '/analyze',   icon: '🔍', desc: 'Analyze file or context' },
+  { cmd: '/search',    icon: '🔍', desc: 'Search the web' },
+  { cmd: '/analyze',   icon: '🔎', desc: 'Analyze file or context' },
   { cmd: '/summarize', icon: '📝', desc: 'Summarize current context' },
   { cmd: '/build',     icon: '🏗️',  desc: 'Create a structured plan' },
   { cmd: '/research',  icon: '🔬', desc: 'Deep-dive research mode' },
@@ -52,6 +53,7 @@ const SLASH_COMMANDS = [
 ];
 
 const SLASH_EXPANSIONS: Record<string, string> = {
+  '/search':    'Search the web for: ',
   '/analyze':   'Analyze the following and give me key insights: ',
   '/summarize': 'Summarize this concisely: ',
   '/build':     'Create a detailed step-by-step plan for: ',
@@ -216,10 +218,13 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
   const [thinkSteps, setThinkSteps]   = useState<ThinkStep[]>([]);
   const [slashOpen, setSlashOpen]     = useState(false);
   const [copiedId, setCopiedId]       = useState<string | null>(null);
+  const [showSearch, setShowSearch]   = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const bottomRef  = useRef<HTMLDivElement>(null);
   const inputRef   = useRef<HTMLTextAreaElement>(null);
   const fileRef    = useRef<HTMLInputElement>(null);
+  const searchRef  = useRef<HTMLInputElement>(null);
   const timerRefs  = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
@@ -359,6 +364,56 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
     }
   }
 
+  // ── Search ────────────────────────────────────────────────────────────────────
+
+  async function handleSearch(e?: React.FormEvent) {
+    e?.preventDefault();
+    const q = searchQuery.trim();
+    if (!q || busy) return;
+
+    setSearchQuery('');
+    setShowSearch(false);
+    setBusy(true);
+
+    addMessage({ role: 'user', content: `🔍 ${q}` });
+
+    const steps: ThinkStep[] = [
+      { id: 'search', icon: '🔍', label: 'Searching the web', state: 'waiting' },
+    ];
+    startThinkAnimation(steps);
+
+    const pendingId = uid();
+    addMessage({ id: pendingId, role: 'aria', content: '' });
+
+    try {
+      const res = await fetch(`${apiBase}/api/aria/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, message: `Search the web for: ${q}` }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { reply } = await res.json() as { reply?: string };
+      finishThinkAnimation();
+      patchMessage(pendingId, {
+        content: reply || 'No results found.',
+        steps: steps.map((s) => ({ ...s, state: 'done' as StepState })),
+      });
+    } catch (err) {
+      finishThinkAnimation();
+      patchMessage(pendingId, { content: `Search error — ${(err as Error).message}` });
+    } finally {
+      setBusy(false);
+      inputRef.current?.focus();
+    }
+  }
+
+  function toggleSearch() {
+    setShowSearch((v) => {
+      if (!v) setTimeout(() => searchRef.current?.focus(), 50);
+      return !v;
+    });
+  }
+
   // ── File upload ───────────────────────────────────────────────────────────────
 
   async function handleFileAttach(e: React.ChangeEvent<HTMLInputElement>) {
@@ -474,6 +529,14 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
           </div>
 
           <button
+            className={`memory-toggle${showSearch ? ' memory-toggle--active' : ''}`}
+            onClick={toggleSearch}
+            title="Web search"
+          >
+            🔍
+          </button>
+
+          <button
             className={`memory-toggle${showMemory ? ' memory-toggle--active' : ''}`}
             onClick={() => setShowMemory((v) => !v)}
             title="Memory panel"
@@ -481,6 +544,41 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
             🧠
           </button>
         </header>
+
+        {/* Search bar */}
+        {showSearch && (
+          <div className="search-bar-wrap">
+            <form className="search-bar-inner" onSubmit={handleSearch}>
+              <input
+                ref={searchRef}
+                className="search-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Escape') setShowSearch(false); }}
+                placeholder="Search the web…"
+                disabled={busy}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+              <button
+                type="submit"
+                className="search-submit"
+                disabled={busy || !searchQuery.trim()}
+              >
+                Search
+              </button>
+              <button
+                type="button"
+                className="search-close"
+                onClick={() => setShowSearch(false)}
+                aria-label="Close search"
+              >
+                ×
+              </button>
+            </form>
+          </div>
+        )}
 
         {/* Message list */}
         <div className="agent-messages">
