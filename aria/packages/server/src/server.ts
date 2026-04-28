@@ -11,8 +11,10 @@ import { buildWorkspaceAdapters } from './connectors/workspace.js';
 import { startScheduler } from './proactive/scheduler.js';
 import { authRouter } from './routes/auth.js';
 import { chatRouter } from './routes/chat.js';
+import { downloadRouter } from './routes/download.js';
 import { eventsRouter } from './routes/events.js';
 import { memoryRouter } from './routes/memory.js';
+import { uploadRouter } from './routes/upload.js';
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 4000);
@@ -63,8 +65,10 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
 // ─── Routes ──────────────────────────────────────────────────────────────────────────────────
 
 app.use('/api/aria/chat', chatRouter);
+app.use('/api/aria/download', downloadRouter);
 app.use('/api/aria/events', eventsRouter);
 app.use('/api/aria/memory', memoryRouter);
+app.use('/api/aria/upload', uploadRouter);
 app.use('/api/auth', authRouter);
 
 app.get('/', (_req, res) => res.json({ service: 'ARIA', status: 'ok' }));
