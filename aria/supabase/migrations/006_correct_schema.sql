@@ -133,3 +133,38 @@ create table if not exists aria_memory (
 
 create index if not exists aria_memory_user_id on aria_memory(user_id);
 alter table aria_memory disable row level security;
+
+-- ─── Reminders ────────────────────────────────────────────────────────────────
+
+create table if not exists aria_reminders (
+  id         uuid        primary key default gen_random_uuid(),
+  user_id    text        not null,
+  message    text        not null,
+  remind_at  timestamptz not null,
+  sent       boolean     not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists aria_reminders_due_idx
+  on aria_reminders (sent, remind_at)
+  where sent = false;
+
+alter table aria_reminders disable row level security;
+
+-- ─── Ideas vault ──────────────────────────────────────────────────────────────
+
+create table if not exists aria_ideas (
+  id         uuid        primary key default gen_random_uuid(),
+  user_id    text        not null,
+  title      text        not null,
+  content    text,
+  category   text        default 'general',
+  tags       text[],
+  created_at timestamptz default now()
+);
+
+create index if not exists aria_ideas_user_created
+  on aria_ideas (user_id, created_at desc);
+
+alter table aria_ideas disable row level security;
+alter table aria_memory disable row level security;

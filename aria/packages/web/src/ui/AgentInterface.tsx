@@ -26,12 +26,21 @@ interface Attachment {
   uploadError?: string;
 }
 
+interface DownloadLink {
+  fileId: string;
+  fileName: string;
+  type: 'xlsx' | 'pdf' | 'pptx';
+  size: number;
+  url: string;
+}
+
 interface AriaMessage {
   id: string;
   role: 'user' | 'aria' | 'system';
   content: string;
   steps?: ThinkStep[];
   attachments?: Attachment[];
+  downloads?: DownloadLink[];
   ts: number;
   collapsed?: boolean;
 }
@@ -82,7 +91,15 @@ const MODE_PREFIXES: Record<Mode, string> = {
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 
-function uid() { return crypto.randomUUID(); }
+function uid(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes}B`;
@@ -375,12 +392,13 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
         body: JSON.stringify({ userId, message: fullMessage, ...(fileIds.length > 0 && { fileIds }) }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const { reply } = await res.json() as { reply?: string };
+      const { reply, downloads } = await res.json() as { reply?: string; downloads?: DownloadLink[] };
 
       finishThinkAnimation();
       patchMessage(pendingId, {
         content: reply || "I've noted that down.",
         steps: steps.map((s) => ({ ...s, state: 'done' as StepState })),
+        downloads: downloads?.length ? downloads : undefined,
       });
     } catch (err) {
       finishThinkAnimation();
@@ -857,6 +875,23 @@ function MessageRow({ msg, copied, onCopy, onToggleCollapse }: MessageRowProps) 
               </div>
             )
           }
+        </div>
+      )}
+
+      {/* Download buttons */}
+      {!isUser && msg.downloads && msg.downloads.length > 0 && (
+        <div className="msg-downloads">
+          {msg.downloads.map((dl) => (
+            <a
+              key={dl.fileId}
+              href={dl.url}
+              download={dl.fileName}
+              className="msg-download-btn"
+            >
+              {dl.type === 'xlsx' ? '📊' : dl.type === 'pdf' ? '📑' : '📽️'}
+              {' '}{dl.fileName}
+            </a>
+          ))}
         </div>
       )}
 

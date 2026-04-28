@@ -30,6 +30,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 const projectRef = SUPABASE_URL.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
 if (!projectRef) throw new Error(`Cannot parse project ref from ${SUPABASE_URL}`);
 
+// Run 006 (comprehensive schema) — includes reminders + ideas tables
 const migrationPath = resolve(__dirname, '../../../supabase/migrations/006_correct_schema.sql');
 const sql = readFileSync(migrationPath, 'utf-8');
 

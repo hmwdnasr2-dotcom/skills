@@ -111,8 +111,17 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 
 // ─── Serve React frontend (must be after all API routes) ──────────────────────
 
-app.use(express.static(WEB_DIST));
-app.get('*', (_req, res) => res.sendFile(path.join(WEB_DIST, 'index.html')));
+app.use(express.static(WEB_DIST, {
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('index.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  },
+}));
+app.get('*', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.sendFile(path.join(WEB_DIST, 'index.html'));
+});
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 

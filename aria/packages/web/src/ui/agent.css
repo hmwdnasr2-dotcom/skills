@@ -387,6 +387,36 @@ body {
   transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
 
+/* Download buttons */
+.msg-downloads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.msg-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: 13px;
+  font-family: var(--font);
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.msg-download-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
 .msg-action-btn:hover {
   background: var(--surface-2);
   color: var(--text);
