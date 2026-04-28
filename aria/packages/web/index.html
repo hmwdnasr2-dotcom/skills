@@ -5,41 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#f5f4ed">
+<meta name="theme-color" content="#F5F4EF">
 <title>ARIA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --parchment:   #f5f4ed;
-  --ivory:       #faf9f5;
-  --warm-sand:   #e8e6dc;
-  --near-black:  #141413;
-  --dark-surface:#30302e;
-  --tx:          #141413;
-  --tx-olive:    #5e5d59;
-  --tx-stone:    #87867f;
-  --tx-charcoal: #4d4c48;
-  --terracotta:  #c96442;
-  --coral:       #d97757;
-  --border-cream:#f0eee6;
-  --border-warm: #e8e6dc;
-  --ring-warm:   #d1cfc5;
-  --ring-deep:   #c2c0b6;
-  --focus-blue:  #3898ec;
-  --online:      #3d9e6e;
-  --serif: 'Lora', Georgia, serif;
-  --sans:  'Inter', system-ui, -apple-system, sans-serif;
-  --mono:  'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --bg:          #F5F4EF;
+  --surface:     #FAFAF7;
+  --pill-bg:     #EDECE6;
+  --pill-hover:  #E2E1DA;
+  --tx:          #1C1B18;
+  --tx-muted:    #68675F;
+  --tx-faint:    #9B9A94;
+  --accent:      #9580FF;
+  --border:      #E5E4DC;
+  --border-input:#D8D7CF;
+  --online:      #52C98E;
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
 }
 
 html, body {
   height: 100%;
-  background: var(--parchment);
+  background: var(--bg);
   color: var(--tx);
   font-family: var(--sans);
   font-size: 16px;
@@ -55,256 +48,404 @@ html, body {
   height: 100vh;
 }
 
+/* ── Header ── */
 header {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 28px;
-  height: 56px;
+  padding: 0 24px;
+  height: 52px;
   padding-top: env(safe-area-inset-top);
-  background: var(--ivory);
-  border-bottom: 1px solid var(--border-cream);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
 }
-.h-brand { display: flex; align-items: center; gap: 11px; }
-.logo {
-  width: 32px; height: 32px; border-radius: 8px;
-  background: var(--terracotta);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 0 0 1px var(--terracotta);
+
+.h-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
 }
-.logo-letter {
-  font-family: var(--serif); font-size: 16px; font-weight: 500;
-  color: var(--ivory); line-height: 1; margin-top: 1px;
-}
+
 .h-name {
-  font-family: var(--serif); font-size: 18px; font-weight: 500;
-  color: var(--tx); letter-spacing: -0.2px; line-height: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tx);
+  letter-spacing: -0.2px;
 }
-.h-status {
-  display: flex; align-items: center; gap: 7px;
-  font-family: var(--sans); font-size: 12px; color: var(--tx-stone);
-}
+
 .h-pip {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--online); flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--online);
+  flex-shrink: 0;
 }
 .h-pip.thinking {
-  background: var(--terracotta);
+  background: var(--accent);
   animation: pip-blink 0.85s ease-in-out infinite;
 }
-@keyframes pip-blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
-.h-btn {
-  height: 30px; padding: 0 12px; border-radius: 8px; border: none;
-  background: var(--warm-sand); color: var(--tx-charcoal);
-  font-family: var(--sans); font-size: 12px; font-weight: 500;
-  cursor: pointer; box-shadow: 0 0 0 1px var(--ring-warm);
-  transition: box-shadow .15s, background .15s;
-}
-.h-btn:hover { background: var(--border-warm); box-shadow: 0 0 0 1px var(--ring-deep); }
+@keyframes pip-blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
 
+.h-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: none;
+  background: var(--pill-bg);
+  color: var(--accent);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s;
+}
+.h-icon-btn:hover { background: var(--pill-hover); }
+
+/* ── Landing screen (NOT inside #messages — prevents flicker bug) ── */
+#landing {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 24px;
+  overflow: hidden;
+}
+#landing.hidden { display: none; }
+
+.landing-inner {
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+}
+
+.landing-title {
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--tx);
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  margin-bottom: 14px;
+}
+
+.landing-sub {
+  font-size: 15px;
+  color: var(--tx-muted);
+  line-height: 1.65;
+  max-width: 400px;
+  margin: 0 auto 32px;
+}
+
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.qa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 100px;
+  border: none;
+  background: var(--pill-bg);
+  color: var(--tx-muted);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  white-space: nowrap;
+}
+.qa-btn:hover { background: var(--pill-hover); color: var(--tx); }
+.qa-btn svg { flex-shrink: 0; opacity: 0.65; }
+
+/* ── Messages (hidden until first send — fixes disappearing message bug) ── */
 #messages {
-  flex: 1; overflow-y: auto; overflow-x: hidden;
-  scroll-behavior: smooth; background: var(--parchment);
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  background: var(--bg);
+  display: none;
 }
+#messages.visible { display: block; }
 #messages::-webkit-scrollbar { width: 4px; }
-#messages::-webkit-scrollbar-thumb { background: var(--ring-warm); border-radius: 2px; }
+#messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-.feed { max-width: 700px; margin: 0 auto; padding: 0 28px 24px; }
-
-.welcome {
-  padding: 52px 0 40px; display: flex; flex-direction: column;
-  align-items: flex-start; gap: 14px;
+.feed {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 28px 20px;
 }
-.welcome-title {
-  font-family: var(--serif); font-size: 32px; font-weight: 500;
-  color: var(--tx); line-height: 1.2; letter-spacing: -0.3px;
-}
-.welcome-sub {
-  font-family: var(--sans); font-size: 16px; color: var(--tx-olive);
-  line-height: 1.6; max-width: 440px;
-}
-.starters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
-.starter {
-  padding: 8px 16px; border-radius: 20px; border: none;
-  background: var(--ivory); box-shadow: 0 0 0 1px var(--border-warm);
-  color: var(--tx-olive); font-family: var(--sans); font-size: 14px;
-  cursor: pointer; text-align: left;
-  transition: box-shadow .15s, color .15s, background .15s;
-}
-.starter:hover { box-shadow: 0 0 0 1px var(--ring-warm); background: var(--warm-sand); color: var(--tx); }
 
 .date-sep {
-  display: flex; align-items: center; gap: 14px;
-  padding: 28px 0 20px; color: var(--tx-stone);
-  font-family: var(--sans); font-size: 10px;
-  letter-spacing: 0.5px; text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0 16px;
+  color: var(--tx-faint);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
 }
 .date-sep::before, .date-sep::after {
-  content: ''; flex: 1; height: 1px; background: var(--border-cream);
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
 }
 
-.msg { padding: 16px 0; animation: msg-in .2s ease both; }
-.msg + .msg { border-top: 1px solid var(--border-cream); }
-@keyframes msg-in { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.msg { padding: 16px 0; animation: msg-in .18s ease both; }
+.msg + .msg { border-top: 1px solid var(--border); }
+@keyframes msg-in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 
-.msg.aria-msg { display: flex; align-items: flex-start; gap: 14px; }
+.msg.aria-msg { display: flex; align-items: flex-start; gap: 12px; }
 .aria-av {
-  width: 30px; height: 30px; border-radius: 8px;
-  background: var(--terracotta); display: flex; align-items: center;
-  justify-content: center; flex-shrink: 0; margin-top: 1px;
-  box-shadow: 0 0 0 1px var(--terracotta);
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  opacity: 0.9;
 }
-.aria-av-letter { font-family: var(--serif); font-size: 13px; font-weight: 500; color: var(--ivory); line-height: 1; }
+.aria-av-letter {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1;
+}
 .aria-content { flex: 1; min-width: 0; }
 .aria-label {
-  font-family: var(--sans); font-size: 10px; font-weight: 500;
-  letter-spacing: 0.5px; text-transform: uppercase;
-  color: var(--tx-stone); margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--tx-faint);
+  margin-bottom: 5px;
 }
 
 .prose {
-  font-family: var(--serif); font-size: 16px; font-weight: 400;
-  line-height: 1.75; color: var(--tx); word-break: break-word;
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--tx);
+  word-break: break-word;
 }
-.prose p { margin: 0 0 12px; }
+.prose p { margin: 0 0 10px; }
 .prose p:last-child { margin-bottom: 0; }
-.prose strong { font-weight: 600; color: var(--tx); font-family: var(--sans); }
-.prose em { font-style: italic; color: var(--tx-olive); }
+.prose strong { font-weight: 600; color: var(--tx); }
+.prose em { font-style: italic; color: var(--tx-muted); }
 .prose h1,.prose h2,.prose h3 {
-  font-family: var(--serif); font-weight: 500; line-height: 1.3;
-  color: var(--tx); margin: 20px 0 8px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--tx);
+  margin: 18px 0 8px;
 }
-.prose h1 { font-size: 22px; } .prose h2 { font-size: 19px; } .prose h3 { font-size: 17px; }
+.prose h1 { font-size: 20px; }
+.prose h2 { font-size: 17px; }
+.prose h3 { font-size: 15px; }
 .prose h1:first-child,.prose h2:first-child,.prose h3:first-child { margin-top: 0; }
-.prose ul,.prose ol { padding-left: 22px; margin: 8px 0 12px; }
-.prose li { margin: 7px 0; line-height: 1.7; }
-.prose li::marker { color: var(--terracotta); }
+.prose ul,.prose ol { padding-left: 20px; margin: 8px 0 10px; }
+.prose li { margin: 5px 0; line-height: 1.7; }
+.prose li::marker { color: var(--accent); }
 .prose code {
-  font-family: var(--mono); font-size: 13.5px;
-  background: var(--warm-sand); border: 1px solid var(--border-warm);
-  border-radius: 5px; padding: 1px 6px; color: var(--dark-surface);
+  font-family: var(--mono);
+  font-size: 13px;
+  background: var(--pill-bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 1px 6px;
+  color: var(--tx);
 }
 .prose pre {
-  background: var(--near-black); border-radius: 10px;
-  padding: 16px 18px; overflow-x: auto; margin: 14px 0;
-  box-shadow: 0 0 0 1px var(--dark-surface);
+  background: #1E1E1E;
+  border-radius: 10px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  margin: 12px 0;
 }
-.prose pre code { background: none; border: none; padding: 0; color: #e8d5c4; font-size: 13.5px; line-height: 1.65; }
-.prose blockquote { border-left: 3px solid var(--terracotta); padding-left: 16px; margin: 14px 0; color: var(--tx-olive); font-style: italic; }
-.prose hr { border: none; border-top: 1px solid var(--border-warm); margin: 18px 0; }
-.prose a { color: var(--terracotta); text-decoration: underline; text-underline-offset: 3px; }
-.prose table { border-collapse: collapse; width: 100%; margin: 14px 0; font-family: var(--sans); font-size: 14px; }
-.prose th { background: var(--warm-sand); padding: 8px 14px; text-align: left; font-weight: 600; font-size: 11px; letter-spacing: 0.4px; text-transform: uppercase; color: var(--tx-charcoal); border-bottom: 1px solid var(--border-warm); }
-.prose td { padding: 9px 14px; border-bottom: 1px solid var(--border-cream); color: var(--tx-olive); }
+.prose pre code { background: none; border: none; padding: 0; color: #E8D5C4; font-size: 13px; line-height: 1.65; }
+.prose blockquote { border-left: 3px solid var(--accent); padding-left: 14px; margin: 12px 0; color: var(--tx-muted); font-style: italic; }
+.prose hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.prose a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.prose table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 14px; }
+.prose th { background: var(--pill-bg); padding: 7px 12px; text-align: left; font-weight: 600; font-size: 11px; letter-spacing: 0.4px; text-transform: uppercase; color: var(--tx-muted); border-bottom: 1px solid var(--border); }
+.prose td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--tx-muted); }
 
 .type-cursor {
-  display: inline-block; width: 2px; height: 1em;
-  background: var(--terracotta); border-radius: 1px;
-  margin-left: 2px; vertical-align: text-bottom;
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--accent);
+  border-radius: 1px;
+  margin-left: 2px;
+  vertical-align: text-bottom;
   animation: cur-blink .9s step-end infinite;
 }
 @keyframes cur-blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-.thinking { display: flex; align-items: center; gap: 5px; padding: 4px 0; }
+.thinking { display: flex; align-items: center; gap: 5px; padding: 3px 0; }
 .thinking-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--ring-warm);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--border-input);
   animation: dot-rise 1.3s ease-in-out infinite;
 }
-.thinking-dot:nth-child(2){animation-delay:.15s} .thinking-dot:nth-child(3){animation-delay:.3s}
+.thinking-dot:nth-child(2){animation-delay:.15s}
+.thinking-dot:nth-child(3){animation-delay:.3s}
 @keyframes dot-rise { 0%,60%,100%{opacity:.3;transform:translateY(0)} 30%{opacity:1;transform:translateY(-4px)} }
 
 .msg.user-msg { display: flex; justify-content: flex-end; }
 .user-bubble {
-  max-width: min(72%, 500px);
-  background: var(--warm-sand); border-radius: 18px 18px 4px 18px;
-  padding: 13px 18px; box-shadow: 0 0 0 1px var(--ring-warm);
-  font-family: var(--sans); font-size: 15px; line-height: 1.65;
-  color: var(--tx); word-break: break-word;
+  max-width: min(72%, 520px);
+  background: var(--pill-bg);
+  border-radius: 18px 18px 4px 18px;
+  padding: 11px 16px;
+  border: 1px solid var(--border);
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--tx);
+  word-break: break-word;
 }
 
+/* ── Input ── */
 #input-area {
   flex-shrink: 0;
-  padding: 16px 28px;
+  padding: 14px 24px;
   padding-bottom: max(20px, env(safe-area-inset-bottom));
-  background: var(--ivory);
-  border-top: 1px solid var(--border-cream);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
 }
-.input-wrap { max-width: 700px; margin: 0 auto; }
+.input-wrap { max-width: 720px; margin: 0 auto; }
 .input-shell {
-  display: flex; align-items: flex-end; gap: 10px;
-  background: var(--parchment); border-radius: 14px;
-  padding: 12px 12px 12px 18px;
-  box-shadow: 0 0 0 1.5px var(--border-warm);
-  transition: box-shadow .2s;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: var(--bg);
+  border-radius: 16px;
+  padding: 10px 10px 10px 18px;
+  border: 1.5px solid var(--border-input);
+  transition: border-color .2s;
 }
-.input-shell:focus-within { box-shadow: 0 0 0 2px var(--focus-blue); }
+.input-shell:focus-within { border-color: var(--accent); }
 textarea#inp {
-  flex: 1; background: transparent; border: none; outline: none;
-  color: var(--tx); font-family: var(--sans); font-size: 15px;
-  line-height: 1.55; resize: none; min-height: 24px; max-height: 160px;
-  overflow-y: auto; caret-color: var(--terracotta);
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--tx);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+  resize: none;
+  min-height: 24px;
+  max-height: 160px;
+  overflow-y: auto;
+  caret-color: var(--accent);
 }
-textarea#inp::placeholder { color: var(--tx-stone); }
+textarea#inp::placeholder { color: var(--tx-faint); }
 #send-btn {
-  width: 36px; height: 36px; border-radius: 9px; border: none;
-  background: var(--terracotta); color: var(--ivory); cursor: pointer;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  box-shadow: 0 0 0 1px var(--terracotta);
-  transition: background .15s, box-shadow .15s, transform .1s;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: none;
+  background: var(--tx);
+  color: var(--bg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity .15s, transform .1s;
 }
-#send-btn:hover { background: var(--coral); box-shadow: 0 0 0 1px var(--coral); }
-#send-btn:active { transform: scale(.93); }
+#send-btn:hover:not(:disabled) { opacity: 0.8; }
+#send-btn:active:not(:disabled) { transform: scale(.93); }
 #send-btn:disabled {
-  background: var(--warm-sand); box-shadow: 0 0 0 1px var(--ring-warm);
-  color: var(--tx-stone); cursor: not-allowed; transform: none;
-}
-.input-hint {
-  margin-top: 9px; text-align: center;
-  font-family: var(--sans); font-size: 11px; color: var(--tx-stone);
+  background: var(--pill-bg);
+  color: var(--tx-faint);
+  cursor: not-allowed;
 }
 
 @media (max-width: 600px) {
   header { padding: 0 16px; }
-  .feed { padding: 0 16px 20px; }
-  #input-area { padding: 12px 16px; padding-bottom: max(20px, env(safe-area-inset-bottom)); }
-  .welcome-title { font-size: 26px; }
+  .feed { padding: 20px 16px 16px; }
+  #input-area { padding: 10px 16px; padding-bottom: max(18px, env(safe-area-inset-bottom)); }
+  .landing-title { font-size: 30px; }
   .user-bubble { max-width: 88%; }
 }
 @media (min-width: 900px) {
-  .feed { padding: 0 48px 24px; }
-  #input-area { padding: 18px 48px; padding-bottom: 24px; }
+  .feed { padding: 28px 48px 20px; }
+  #input-area { padding: 16px 48px; padding-bottom: 20px; }
 }
 </style>
 </head>
 <body>
 <div id="app">
+
   <header>
-    <div class="h-brand">
-      <div class="logo"><span class="logo-letter">A</span></div>
+    <div class="h-left">
       <span class="h-name">ARIA</span>
-    </div>
-    <div class="h-status">
       <div class="h-pip" id="pip"></div>
-      <span id="status-txt">Ready</span>
     </div>
-    <button class="h-btn" onclick="clearChat()">Clear</button>
+    <button class="h-icon-btn" id="clear-btn" title="New conversation">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round">
+        <path d="M8 1.5L13.5 4.75V11.25L8 14.5L2.5 11.25V4.75L8 1.5Z"/>
+      </svg>
+    </button>
   </header>
 
+  <!-- Landing — completely separate from #messages; no DOM entanglement -->
+  <div id="landing">
+    <div class="landing-inner">
+      <div class="landing-title">ARIA</div>
+      <div class="landing-sub">How can I help you today? Type /help to see all commands, or pick a quick action below.</div>
+      <div class="quick-actions">
+        <button class="qa-btn" onclick="quickAction(this)" data-prompt="Analyze this for me: ">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="7" cy="7" r="5"/><path d="M10.5 10.5L14 14"/>
+            <path d="M7 4.5V7l1.5 1.5"/>
+          </svg>
+          Analyze
+        </button>
+        <button class="qa-btn" onclick="quickAction(this)" data-prompt="Summarize the following: ">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 4h10M3 8h7M3 12h5"/>
+          </svg>
+          Summarize
+        </button>
+        <button class="qa-btn" onclick="quickAction(this)" data-prompt="Create a build plan for: ">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="5" height="5" rx="1"/>
+            <rect x="9" y="2" width="5" height="5" rx="1"/>
+            <rect x="2" y="9" width="5" height="5" rx="1"/>
+            <rect x="9" y="9" width="5" height="5" rx="1"/>
+          </svg>
+          Build Plan
+        </button>
+        <button class="qa-btn" onclick="quickAction(this)" data-prompt="Give me a daily report">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="12" height="12" rx="2"/>
+            <path d="M5 7h6M5 10h4"/>
+            <path d="M5 4.5h2"/>
+          </svg>
+          Daily Report
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages — starts hidden; shown on first message send -->
   <div id="messages">
     <div class="feed" id="feed">
-      <div id="welcome" class="welcome">
-        <div class="welcome-title">How can I help you today?</div>
-        <div class="welcome-sub">I can help you plan tasks, track projects, follow up on work, and keep your week on track.</div>
-        <div class="starters">
-          <button class="starter" onclick="prefill(this)">📋 What's on my plate today?</button>
-          <button class="starter" onclick="prefill(this)">🚀 Create a new project</button>
-          <button class="starter" onclick="prefill(this)">⏰ What tasks are overdue?</button>
-          <button class="starter" onclick="prefill(this)">📊 Summarize my week</button>
-        </div>
-      </div>
       <div id="msg-list"></div>
     </div>
   </div>
@@ -312,119 +453,164 @@ textarea#inp::placeholder { color: var(--tx-stone); }
   <div id="input-area">
     <div class="input-wrap">
       <div class="input-shell">
-        <textarea id="inp" rows="1" placeholder="Ask ARIA to plan, track, or follow up…" autocomplete="off" spellcheck="true"></textarea>
+        <textarea id="inp" rows="1" placeholder="Message ARIA… or type / for commands" autocomplete="off" spellcheck="true"></textarea>
         <button id="send-btn" disabled>
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M8 13V3M3 8l5-5 5 5"/>
           </svg>
         </button>
       </div>
-      <div class="input-hint">Enter to send · Shift + Enter for new line</div>
     </div>
   </div>
-</div>
 
+</div>
 <script>
 (function(){
   'use strict';
   const API='http://188.245.242.236:4000', UID='user-1', CHAR_MS=12;
-  const $msgs=document.getElementById('messages'),
-        $list=document.getElementById('msg-list'),
-        $welcome=document.getElementById('welcome'),
-        $inp=document.getElementById('inp'),
-        $btn=document.getElementById('send-btn'),
-        $pip=document.getElementById('pip'),
-        $stxt=document.getElementById('status-txt');
 
-  marked.setOptions({breaks:true,gfm:true});
-  let busy=false, started=false;
+  const $msgs    = document.getElementById('messages'),
+        $list    = document.getElementById('msg-list'),
+        $landing = document.getElementById('landing'),
+        $inp     = document.getElementById('inp'),
+        $btn     = document.getElementById('send-btn'),
+        $pip     = document.getElementById('pip');
 
-  $inp.addEventListener('input',()=>{
-    $inp.style.height='auto';
-    $inp.style.height=Math.min($inp.scrollHeight,160)+'px';
-    $btn.disabled=!$inp.value.trim()||busy;
+  marked.setOptions({breaks:true, gfm:true});
+
+  // started tracks whether any message has been sent this session
+  let busy = false, started = false;
+
+  /* ── Input resize + button state ── */
+  $inp.addEventListener('input', () => {
+    $inp.style.height = 'auto';
+    $inp.style.height = Math.min($inp.scrollHeight, 160) + 'px';
+    $btn.disabled = !$inp.value.trim() || busy;
   });
-  $inp.addEventListener('keydown',e=>{
-    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!$btn.disabled)submit();}
-  });
-  $btn.addEventListener('click',submit);
 
-  window.prefill=function(btn){
-    const text=btn.textContent.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}\s]+/u,'').trim();
-    $inp.value=text; $inp.dispatchEvent(new Event('input')); $inp.focus();
+  $inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!$btn.disabled) submit(); }
+  });
+
+  $btn.addEventListener('click', submit);
+  document.getElementById('clear-btn').addEventListener('click', clearChat);
+
+  /* ── Quick action fills input ── */
+  window.quickAction = function(btn) {
+    const prompt = btn.dataset.prompt || btn.textContent.trim();
+    $inp.value = prompt;
+    $inp.dispatchEvent(new Event('input'));
+    $inp.focus();
+    const len = $inp.value.length;
+    $inp.setSelectionRange(len, len);
   };
 
-  function addUser(text){
-    ensureStarted();
-    const d=document.createElement('div'); d.className='msg user-msg';
-    const b=document.createElement('div'); b.className='user-bubble'; b.textContent=text;
-    d.appendChild(b); $list.appendChild(d); scroll();
+  /* ── Message builders ── */
+  function addUser(text) {
+    const d = document.createElement('div'); d.className = 'msg user-msg';
+    const b = document.createElement('div'); b.className = 'user-bubble';
+    b.textContent = text;
+    d.appendChild(b);
+    $list.appendChild(d);
+    scroll();
   }
 
-  function addAria(){
-    ensureStarted();
-    const d=document.createElement('div'); d.className='msg aria-msg';
-    d.innerHTML='<div class="aria-av"><span class="aria-av-letter">A</span></div><div class="aria-content"><div class="aria-label">ARIA</div><div class="aria-body"></div></div>';
-    $list.appendChild(d); scroll();
+  function addAria() {
+    const d = document.createElement('div'); d.className = 'msg aria-msg';
+    d.innerHTML = '<div class="aria-av"><span class="aria-av-letter">A</span></div>'
+                + '<div class="aria-content"><div class="aria-label">ARIA</div>'
+                + '<div class="aria-body"></div></div>';
+    $list.appendChild(d);
+    scroll();
     return d.querySelector('.aria-body');
   }
 
-  function showThinking(body){
-    body.innerHTML='<div class="thinking"><div class="thinking-dot"></div><div class="thinking-dot"></div><div class="thinking-dot"></div></div>';
+  function showThinking(body) {
+    body.innerHTML = '<div class="thinking">'
+      + '<div class="thinking-dot"></div>'
+      + '<div class="thinking-dot"></div>'
+      + '<div class="thinking-dot"></div></div>';
     scroll();
   }
 
-  async function typeReply(body,text){
-    body.innerHTML='';
-    const c=document.createElement('div'); c.className='prose'; body.appendChild(c);
-    const cur=document.createElement('span'); cur.className='type-cursor';
-    for(const ch of text){
+  async function typeReply(body, text) {
+    body.innerHTML = '';
+    const c = document.createElement('div'); c.className = 'prose'; body.appendChild(c);
+    const cur = document.createElement('span'); cur.className = 'type-cursor';
+    for (const ch of text) {
       cur.remove();
-      c.appendChild(ch==='\n'?document.createElement('br'):document.createTextNode(ch));
-      c.appendChild(cur); scroll();
+      c.appendChild(ch === '\n' ? document.createElement('br') : document.createTextNode(ch));
+      c.appendChild(cur);
+      scroll();
       await sleep(CHAR_MS);
     }
     cur.remove();
-    c.innerHTML=marked.parse(text);
+    c.innerHTML = marked.parse(text);
     scroll();
   }
 
-  async function submit(){
-    const text=$inp.value.trim(); if(!text||busy)return;
-    busy=true; $btn.disabled=true; $inp.value=''; $inp.style.height='auto';
+  /* ── Submit — messages appended, never replaced ── */
+  async function submit() {
+    const text = $inp.value.trim();
+    if (!text || busy) return;
+
+    busy = true;
+    $btn.disabled = true;
+    $inp.value = '';
+    $inp.style.height = 'auto';
+
+    // On first message: swap landing for messages view.
+    // This is the fix: landing and messages are fully separate DOM trees,
+    // so hiding landing cannot affect the messages list.
+    if (!started) {
+      started = true;
+      $landing.classList.add('hidden');
+      $msgs.classList.add('visible');
+      const sep = document.createElement('div'); sep.className = 'date-sep';
+      sep.textContent = new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+      $list.insertAdjacentElement('beforebegin', sep);
+    }
+
+    // Append user message — never overwrites existing messages
     addUser(text);
-    const body=addAria(); showThinking(body); setStatus(true);
-    try{
-      const r=await fetch(`${API}/api/aria/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:UID,message:text})});
-      if(!r.ok)throw new Error('HTTP '+r.status);
-      const{reply}=await r.json();
-      await typeReply(body,reply||"I've noted that down.");
-    }catch(e){
-      await typeReply(body,`_Could not reach ARIA — ${e.message}_`);
-    }finally{
-      busy=false; setStatus(false); $inp.focus();
+
+    const body = addAria();
+    showThinking(body);
+    setStatus(true);
+
+    try {
+      const r = await fetch(`${API}/api/aria/chat`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({userId: UID, message: text})
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const {reply} = await r.json();
+      await typeReply(body, reply || "I've noted that down.");
+    } catch(e) {
+      await typeReply(body, `*Could not reach ARIA* — ${e.message}`);
+    } finally {
+      busy = false;
+      setStatus(false);
+      $btn.disabled = !$inp.value.trim();
+      $inp.focus();
     }
   }
 
-  function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-  function scroll(){requestAnimationFrame(()=>{$msgs.scrollTop=$msgs.scrollHeight;});}
-  function setStatus(on){
-    $pip.className=on?'h-pip thinking':'h-pip';
-    $stxt.textContent=on?'Thinking…':'Ready';
+  /* ── Utilities ── */
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+  function scroll() { requestAnimationFrame(() => { $msgs.scrollTop = $msgs.scrollHeight; }); }
+  function setStatus(on) { $pip.className = on ? 'h-pip thinking' : 'h-pip'; }
+
+  function clearChat() {
+    started = false;
+    $list.innerHTML = '';
+    document.querySelectorAll('.date-sep').forEach(el => el.remove());
+    $msgs.classList.remove('visible');
+    $landing.classList.remove('hidden');
   }
-  function ensureStarted(){
-    if(started)return; started=true;
-    $welcome.style.display='none';
-    const sep=document.createElement('div'); sep.className='date-sep';
-    sep.textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-    $list.insertAdjacentElement('beforebegin',sep);
-  }
-  window.clearChat=function(){
-    started=false; $list.innerHTML='';
-    document.querySelectorAll('.date-sep').forEach(el=>el.remove());
-    $welcome.style.display='';
-  };
-  setTimeout(()=>$inp.focus(),150);
+
+  setTimeout(() => $inp.focus(), 150);
 })();
 </script>
 </body>
