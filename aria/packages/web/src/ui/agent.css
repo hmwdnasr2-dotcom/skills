@@ -184,7 +184,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 @media (min-width: 700px) {

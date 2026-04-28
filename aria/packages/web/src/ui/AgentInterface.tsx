@@ -249,7 +249,7 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'instant' });
-  }, [messages.length, thinkSteps.length]);
+  }, [messages.length, thinkSteps.length, messages[messages.length - 1]?.content]);
 
   // Proactive SSE push (briefings, nudges)
   useEffect(() => {
@@ -829,7 +829,7 @@ function MessageRow({ msg, copied, onCopy, onToggleCollapse }: MessageRowProps) 
       )}
 
       {/* Content */}
-      {msg.content && (
+      {(msg.content || !isUser) && (
         <div className={`msg-content${msg.collapsed ? ' msg-content--collapsed' : ''}`}>
           {isUser
             ? <div className="msg-bubble">{msg.content}</div>

@@ -30,6 +30,8 @@ chatRouter.post('/', async (req, res) => {
     autoSave?: boolean;
   };
 
+  console.log(`[chat] ← userId="${userId}" message="${String(message).slice(0, 40)}"`);
+
   if (!userId || !message) {
     res.status(400).json({ error: 'userId and message are required' });
     return;
