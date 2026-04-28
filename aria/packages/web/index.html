@@ -375,6 +375,90 @@ textarea#inp::placeholder { color: var(--tx-faint); }
   cursor: not-allowed;
 }
 
+#attach-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--tx-faint);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color .15s, background .15s;
+}
+#attach-btn:hover { color: var(--tx-muted); background: var(--pill-bg); }
+#attach-btn.has-files { color: var(--accent); }
+
+#attach-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 8px;
+}
+#attach-preview:empty { display: none; }
+
+.file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px 4px 8px;
+  border-radius: 100px;
+  background: var(--pill-bg);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--tx-muted);
+  max-width: 220px;
+}
+.file-chip-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+.file-chip-rm {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: var(--border-input);
+  color: var(--tx-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 10px;
+  line-height: 1;
+  transition: background .15s;
+  padding: 0;
+}
+.file-chip-rm:hover { background: var(--tx-faint); color: var(--bg); }
+.file-chip.uploading { opacity: 0.55; }
+
+.bubble-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+.bubble-file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 100px;
+  background: var(--border);
+  font-size: 11px;
+  color: var(--tx-muted);
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 @media (max-width: 600px) {
   header { padding: 0 16px; }
   .feed { padding: 20px 16px 16px; }
@@ -450,9 +534,17 @@ textarea#inp::placeholder { color: var(--tx-faint); }
     </div>
   </div>
 
+  <input type="file" id="file-input" multiple accept=".xlsx,.pdf,.csv,.docx,.txt,.png,.jpg" hidden>
+
   <div id="input-area">
     <div class="input-wrap">
+      <div id="attach-preview"></div>
       <div class="input-shell">
+        <button id="attach-btn" type="button" title="Attach file">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13.5 7.5L7 14a4 4 0 01-5.66-5.66l7-7a2.5 2.5 0 013.54 3.54L5.5 11.5A1 1 0 014 10l6-6"/>
+          </svg>
+        </button>
         <textarea id="inp" rows="1" placeholder="Message ARIA… or type / for commands" autocomplete="off" spellcheck="true"></textarea>
         <button id="send-btn" disabled>
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -469,24 +561,79 @@ textarea#inp::placeholder { color: var(--tx-faint); }
   'use strict';
   const API='', UID='user-1', CHAR_MS=12;
 
-  const $msgs    = document.getElementById('messages'),
-        $list    = document.getElementById('msg-list'),
-        $landing = document.getElementById('landing'),
-        $inp     = document.getElementById('inp'),
-        $btn     = document.getElementById('send-btn'),
-        $pip     = document.getElementById('pip');
+  const $msgs      = document.getElementById('messages'),
+        $list      = document.getElementById('msg-list'),
+        $landing   = document.getElementById('landing'),
+        $inp       = document.getElementById('inp'),
+        $btn       = document.getElementById('send-btn'),
+        $pip       = document.getElementById('pip'),
+        $attachBtn = document.getElementById('attach-btn'),
+        $fileInput = document.getElementById('file-input'),
+        $preview   = document.getElementById('attach-preview');
 
   marked.setOptions({breaks:true, gfm:true});
 
-  // started tracks whether any message has been sent this session
   let busy = false, started = false;
+  let attachedFiles = []; // [{fileId, name}]
+
+  /* ── Attachment logic ── */
+  $attachBtn.addEventListener('click', () => $fileInput.click());
+
+  $fileInput.addEventListener('change', async () => {
+    const files = Array.from($fileInput.files);
+    $fileInput.value = '';
+    for (const file of files) {
+      const chip = addChip(file.name, null);
+      try {
+        const fd = new FormData();
+        fd.append('files', file);
+        fd.append('sessionId', UID);
+        const r = await fetch(`${API}/api/aria/upload`, {method:'POST', body: fd});
+        if (!r.ok) throw new Error('Upload failed');
+        const {files: uploaded} = await r.json();
+        const fileId = uploaded[0].fileId;
+        attachedFiles.push({fileId, name: file.name});
+        chip.classList.remove('uploading');
+        chip.dataset.fileId = fileId;
+      } catch(e) {
+        chip.remove();
+      }
+    }
+    updateSendBtn();
+    $attachBtn.classList.toggle('has-files', attachedFiles.length > 0);
+  });
+
+  function addChip(name, fileId) {
+    const chip = document.createElement('div');
+    chip.className = 'file-chip' + (fileId ? '' : ' uploading');
+    if (fileId) chip.dataset.fileId = fileId;
+    chip.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M13.5 7.5L7 14a4 4 0 01-5.66-5.66l7-7a2.5 2.5 0 013.54 3.54L5.5 11.5A1 1 0 014 10l6-6"/></svg><span class="file-chip-name">${name}</span><button class="file-chip-rm" aria-label="Remove">×</button>`;
+    chip.querySelector('.file-chip-rm').addEventListener('click', () => {
+      attachedFiles = attachedFiles.filter(f => f.fileId !== chip.dataset.fileId);
+      chip.remove();
+      $attachBtn.classList.toggle('has-files', attachedFiles.length > 0);
+      updateSendBtn();
+    });
+    $preview.appendChild(chip);
+    return chip;
+  }
+
+  function clearAttachments() {
+    attachedFiles = [];
+    $preview.innerHTML = '';
+    $attachBtn.classList.remove('has-files');
+  }
 
   /* ── Input resize + button state ── */
   $inp.addEventListener('input', () => {
     $inp.style.height = 'auto';
     $inp.style.height = Math.min($inp.scrollHeight, 160) + 'px';
-    $btn.disabled = !$inp.value.trim() || busy;
+    updateSendBtn();
   });
+
+  function updateSendBtn() {
+    $btn.disabled = (!$inp.value.trim() && attachedFiles.length === 0) || busy;
+  }
 
   $inp.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!$btn.disabled) submit(); }
@@ -506,10 +653,22 @@ textarea#inp::placeholder { color: var(--tx-faint); }
   };
 
   /* ── Message builders ── */
-  function addUser(text) {
+  function addUser(text, files) {
     const d = document.createElement('div'); d.className = 'msg user-msg';
     const b = document.createElement('div'); b.className = 'user-bubble';
-    b.textContent = text;
+    if (files && files.length) {
+      const strip = document.createElement('div'); strip.className = 'bubble-files';
+      files.forEach(f => {
+        const c = document.createElement('span'); c.className = 'bubble-file-chip';
+        c.textContent = '📎 ' + f.name;
+        strip.appendChild(c);
+      });
+      b.appendChild(strip);
+    }
+    if (text) {
+      const t = document.createElement('div'); t.textContent = text;
+      b.appendChild(t);
+    }
     d.appendChild(b);
     $list.appendChild(d);
     scroll();
@@ -552,16 +711,15 @@ textarea#inp::placeholder { color: var(--tx-faint); }
   /* ── Submit — messages appended, never replaced ── */
   async function submit() {
     const text = $inp.value.trim();
-    if (!text || busy) return;
+    const files = [...attachedFiles];
+    if ((!text && files.length === 0) || busy) return;
 
     busy = true;
     $btn.disabled = true;
     $inp.value = '';
     $inp.style.height = 'auto';
+    clearAttachments();
 
-    // On first message: swap landing for messages view.
-    // This is the fix: landing and messages are fully separate DOM trees,
-    // so hiding landing cannot affect the messages list.
     if (!started) {
       started = true;
       $landing.classList.add('hidden');
@@ -571,8 +729,7 @@ textarea#inp::placeholder { color: var(--tx-faint); }
       $list.insertAdjacentElement('beforebegin', sep);
     }
 
-    // Append user message — never overwrites existing messages
-    addUser(text);
+    addUser(text, files);
 
     const body = addAria();
     showThinking(body);
@@ -582,7 +739,7 @@ textarea#inp::placeholder { color: var(--tx-faint); }
       const r = await fetch(`${API}/api/aria/chat`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({userId: UID, message: text})
+        body: JSON.stringify({userId: UID, message: text, fileIds: files.map(f => f.fileId)})
       });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const {reply} = await r.json();
@@ -592,7 +749,7 @@ textarea#inp::placeholder { color: var(--tx-faint); }
     } finally {
       busy = false;
       setStatus(false);
-      $btn.disabled = !$inp.value.trim();
+      updateSendBtn();
       $inp.focus();
     }
   }
@@ -606,6 +763,7 @@ textarea#inp::placeholder { color: var(--tx-faint); }
     started = false;
     $list.innerHTML = '';
     document.querySelectorAll('.date-sep').forEach(el => el.remove());
+    clearAttachments();
     $msgs.classList.remove('visible');
     $landing.classList.remove('hidden');
   }
