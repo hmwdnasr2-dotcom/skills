@@ -21,11 +21,11 @@ export interface MemoryStack {
 
 export function buildMemoryStack(): MemoryStack {
   const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_ANON_KEY;
   const hasSupabase = Boolean(url && key);
 
   if (!hasSupabase) {
-    console.warn('[memory] SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set — running with working memory only (no persistence)');
+    console.warn('[memory] SUPABASE_URL / SUPABASE_ANON_KEY not set — running with working memory only (no persistence)');
   }
 
   const supabase = hasSupabase
