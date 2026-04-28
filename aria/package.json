@@ -1,0 +1,10 @@
+{
+  "name": "aria",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev": "npm run dev -w @aria/server",
+    "build": "npm run build -w @aria/server",
+    "start": "npm run start -w @aria/server"
+  }
+}
