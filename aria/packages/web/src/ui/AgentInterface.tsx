@@ -240,6 +240,7 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
   const [copiedId, setCopiedId]       = useState<string | null>(null);
   const [showSearch, setShowSearch]   = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [online, setOnline]           = useState<boolean | null>(null);
 
   const bottomRef  = useRef<HTMLDivElement>(null);
   const inputRef   = useRef<HTMLTextAreaElement>(null);
@@ -250,6 +251,13 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'instant' });
   }, [messages.length, thinkSteps.length, messages[messages.length - 1]?.content]);
+
+  // Health check — ping /health on load to detect server connectivity
+  useEffect(() => {
+    fetch(`${apiBase}/health`)
+      .then((r) => setOnline(r.ok))
+      .catch(() => setOnline(false));
+  }, [apiBase]);
 
   // Proactive SSE push (briefings, nudges)
   useEffect(() => {
@@ -554,8 +562,15 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
         {/* Header */}
         <header className="agent-header">
           <div className="agent-brand">
-            <span className="agent-brand-dot" />
+            <span
+              className="agent-brand-dot"
+              style={online === false ? { background: '#b53333', boxShadow: '0 0 0 1px #b53333' } : undefined}
+              title={online === false ? 'Server unreachable — check if ARIA is running' : online === true ? 'Server connected' : 'Checking…'}
+            />
             <span className="agent-brand-name">ARIA</span>
+            {online === false && (
+              <span style={{ fontSize: 11, color: '#b53333', fontWeight: 600, marginLeft: 4 }}>offline</span>
+            )}
           </div>
 
           <div className="agent-identity">
