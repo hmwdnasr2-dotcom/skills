@@ -282,29 +282,40 @@ header {
 
 .type-cursor { display: none; }
 
-.status-anim {
+.status-anim { display: none; }
+
+.agent-status {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 2px 0;
+}
+.agent-step {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 4px 0;
+  gap: 9px;
+  font-size: 13px;
   color: var(--tx-muted);
-  font-size: 14px;
-  font-weight: 500;
+  transition: opacity .35s, font-size .2s;
 }
-.status-dot-anim {
-  width: 7px;
-  height: 7px;
+.agent-step.done {
+  opacity: 0.3;
+  font-size: 12px;
+}
+.as-dot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--accent);
   flex-shrink: 0;
+}
+.agent-step.active .as-dot {
+  background: var(--accent);
   animation: status-pulse 1.4s ease-in-out infinite;
 }
-@keyframes status-pulse {
-  0%,100% { opacity: 0.2; transform: scale(0.8); }
-  50%      { opacity: 1;   transform: scale(1.25); }
+.agent-step.done .as-dot {
+  background: var(--online);
+  animation: none;
 }
-.status-label { transition: opacity 0.2s ease; }
-.status-label.fade { opacity: 0; }
 
 .thinking { display: flex; align-items: center; gap: 5px; padding: 3px 0; }
 .thinking-dot {
@@ -698,33 +709,46 @@ textarea#inp::placeholder { color: var(--tx-faint); }
     return d.querySelector('.aria-body');
   }
 
-  function showThinking(body, userMsg) {
+  function showThinking(body, userMsg, hasFiles) {
     const m = (userMsg || '').toLowerCase();
-    let labels = ['Thinking', 'Processing', 'Generating'];
-    if (/report|excel|xlsx/.test(m))      labels = ['Reading data', 'Building report', 'Creating file'];
-    else if (/pdf/.test(m))               labels = ['Reading content', 'Generating PDF', 'Finishing up'];
-    else if (/word|doc/.test(m))          labels = ['Reading content', 'Creating document', 'Formatting'];
-    else if (/analyz/.test(m))            labels = ['Analyzing', 'Processing data', 'Finding insights'];
-    else if (/summar/.test(m))            labels = ['Reading', 'Summarizing', 'Finishing up'];
-    else if (/plan|build/.test(m))        labels = ['Planning', 'Structuring', 'Generating'];
-    else if (/file|attach|upload/.test(m))labels = ['Reading file', 'Processing', 'Generating insights'];
+    let steps;
 
-    const wrap = document.createElement('div'); wrap.className = 'status-anim';
-    const dot  = document.createElement('span'); dot.className = 'status-dot-anim';
-    const lbl  = document.createElement('span'); lbl.className = 'status-label';
-    lbl.textContent = labels[0];
-    wrap.appendChild(dot); wrap.appendChild(lbl);
+    if (hasFiles && /analyz|inspect|check|review|look/i.test(m))
+      steps = ['Parsing uploaded file', 'Extracting structure & data', 'Running AI analysis', 'Generating insights'];
+    else if (hasFiles)
+      steps = ['Reading uploaded file', 'Processing content', 'Running AI workflow', 'Generating response'];
+    else if (/excel|xlsx|spreadsheet/i.test(m))
+      steps = ['Understanding request', 'Planning spreadsheet structure', 'Generating data', 'Building Excel file'];
+    else if (/pdf/i.test(m))
+      steps = ['Understanding request', 'Planning report layout', 'Generating content', 'Building PDF'];
+    else if (/word|\.doc/i.test(m))
+      steps = ['Understanding request', 'Planning document structure', 'Generating content', 'Formatting document'];
+    else if (/pptx|slide|presentation/i.test(m))
+      steps = ['Understanding request', 'Planning slides', 'Generating content', 'Building presentation'];
+    else if (/summar/i.test(m))
+      steps = ['Loading context', 'Reading content', 'Identifying key points', 'Writing summary'];
+    else if (/plan|build|create|make|design/i.test(m))
+      steps = ['Understanding request', 'Planning approach', 'Running AI workflow', 'Generating response'];
+    else if (/edit|update|modify|change/i.test(m))
+      steps = ['Loading context', 'Analyzing changes needed', 'Running AI workflow', 'Generating response'];
+    else
+      steps = ['Loading context', 'Running AI workflow', 'Processing with Claude', 'Generating response'];
+
+    const wrap = document.createElement('div'); wrap.className = 'agent-status';
     body.appendChild(wrap); scroll();
 
     let i = 0;
-    return setInterval(() => {
-      lbl.classList.add('fade');
-      setTimeout(() => {
-        i = (i + 1) % labels.length;
-        lbl.textContent = labels[i];
-        lbl.classList.remove('fade');
-      }, 220);
-    }, 1800);
+    function nextStep() {
+      const cur = wrap.querySelector('.agent-step.active');
+      if (cur) cur.classList.replace('active', 'done');
+      if (i < steps.length) {
+        const el = document.createElement('div'); el.className = 'agent-step active';
+        el.innerHTML = `<span class="as-dot"></span><span>${steps[i]}</span>`;
+        wrap.appendChild(el); i++; scroll();
+      }
+    }
+    nextStep();
+    return setInterval(nextStep, 1800);
   }
 
   function renderReply(body, text) {
@@ -759,7 +783,7 @@ textarea#inp::placeholder { color: var(--tx-faint); }
     addUser(text, files);
 
     const body = addAria();
-    const statusTimer = showThinking(body, text);
+    const statusTimer = showThinking(body, text, files.length > 0);
     setStatus(true);
 
     try {
