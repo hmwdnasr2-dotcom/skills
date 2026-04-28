@@ -29,7 +29,14 @@ const WEB_DIST  = path.resolve(__dirname, '../../web/dist');
 
 // ─── Middleware ────────────────────────────────────────────────────────────────
 
-app.use(cors());          // Allow all origins — no exact-string matching
+app.use((req, _res, next) => {
+  if (!req.path.startsWith('/assets') && !req.path.startsWith('/api/aria/events')) {
+    console.log(`[http] ${req.method} ${req.path}`);
+  }
+  next();
+});
+
+app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 // ─── Wire Gmail connector ─────────────────────────────────────────────────────
