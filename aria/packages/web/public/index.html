@@ -280,17 +280,31 @@ header {
 .prose th { background: var(--pill-bg); padding: 7px 12px; text-align: left; font-weight: 600; font-size: 11px; letter-spacing: 0.4px; text-transform: uppercase; color: var(--tx-muted); border-bottom: 1px solid var(--border); }
 .prose td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--tx-muted); }
 
-.type-cursor {
-  display: inline-block;
-  width: 2px;
-  height: 1em;
-  background: var(--accent);
-  border-radius: 1px;
-  margin-left: 2px;
-  vertical-align: text-bottom;
-  animation: cur-blink .9s step-end infinite;
+.type-cursor { display: none; }
+
+.status-anim {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+  color: var(--tx-muted);
+  font-size: 14px;
+  font-weight: 500;
 }
-@keyframes cur-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.status-dot-anim {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  animation: status-pulse 1.4s ease-in-out infinite;
+}
+@keyframes status-pulse {
+  0%,100% { opacity: 0.2; transform: scale(0.8); }
+  50%      { opacity: 1;   transform: scale(1.25); }
+}
+.status-label { transition: opacity 0.2s ease; }
+.status-label.fade { opacity: 0; }
 
 .thinking { display: flex; align-items: center; gap: 5px; padding: 3px 0; }
 .thinking-dot {
@@ -559,7 +573,7 @@ textarea#inp::placeholder { color: var(--tx-faint); }
 <script>
 (function(){
   'use strict';
-  const API='', UID='user-1', CHAR_MS=12;
+  const API='', UID='user-1';
 
   const $msgs      = document.getElementById('messages'),
         $list      = document.getElementById('msg-list'),
@@ -684,27 +698,40 @@ textarea#inp::placeholder { color: var(--tx-faint); }
     return d.querySelector('.aria-body');
   }
 
-  function showThinking(body) {
-    body.innerHTML = '<div class="thinking">'
-      + '<div class="thinking-dot"></div>'
-      + '<div class="thinking-dot"></div>'
-      + '<div class="thinking-dot"></div></div>';
-    scroll();
+  function showThinking(body, userMsg) {
+    const m = (userMsg || '').toLowerCase();
+    let labels = ['Thinking', 'Processing', 'Generating'];
+    if (/report|excel|xlsx/.test(m))      labels = ['Reading data', 'Building report', 'Creating file'];
+    else if (/pdf/.test(m))               labels = ['Reading content', 'Generating PDF', 'Finishing up'];
+    else if (/word|doc/.test(m))          labels = ['Reading content', 'Creating document', 'Formatting'];
+    else if (/analyz/.test(m))            labels = ['Analyzing', 'Processing data', 'Finding insights'];
+    else if (/summar/.test(m))            labels = ['Reading', 'Summarizing', 'Finishing up'];
+    else if (/plan|build/.test(m))        labels = ['Planning', 'Structuring', 'Generating'];
+    else if (/file|attach|upload/.test(m))labels = ['Reading file', 'Processing', 'Generating insights'];
+
+    const wrap = document.createElement('div'); wrap.className = 'status-anim';
+    const dot  = document.createElement('span'); dot.className = 'status-dot-anim';
+    const lbl  = document.createElement('span'); lbl.className = 'status-label';
+    lbl.textContent = labels[0];
+    wrap.appendChild(dot); wrap.appendChild(lbl);
+    body.appendChild(wrap); scroll();
+
+    let i = 0;
+    return setInterval(() => {
+      lbl.classList.add('fade');
+      setTimeout(() => {
+        i = (i + 1) % labels.length;
+        lbl.textContent = labels[i];
+        lbl.classList.remove('fade');
+      }, 220);
+    }, 1800);
   }
 
-  async function typeReply(body, text) {
+  function renderReply(body, text) {
     body.innerHTML = '';
-    const c = document.createElement('div'); c.className = 'prose'; body.appendChild(c);
-    const cur = document.createElement('span'); cur.className = 'type-cursor';
-    for (const ch of text) {
-      cur.remove();
-      c.appendChild(ch === '\n' ? document.createElement('br') : document.createTextNode(ch));
-      c.appendChild(cur);
-      scroll();
-      await sleep(CHAR_MS);
-    }
-    cur.remove();
+    const c = document.createElement('div'); c.className = 'prose';
     c.innerHTML = marked.parse(text);
+    body.appendChild(c);
     scroll();
   }
 
@@ -732,7 +759,7 @@ textarea#inp::placeholder { color: var(--tx-faint); }
     addUser(text, files);
 
     const body = addAria();
-    showThinking(body);
+    const statusTimer = showThinking(body, text);
     setStatus(true);
 
     try {
@@ -741,11 +768,13 @@ textarea#inp::placeholder { color: var(--tx-faint); }
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({userId: UID, message: text, fileIds: files.map(f => f.fileId)})
       });
+      clearInterval(statusTimer);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const {reply} = await r.json();
-      await typeReply(body, reply || "I've noted that down.");
+      renderReply(body, reply || "I've noted that down.");
     } catch(e) {
-      await typeReply(body, `*Could not reach ARIA* — ${e.message}`);
+      clearInterval(statusTimer);
+      renderReply(body, `*Could not reach ARIA* — ${e.message}`);
     } finally {
       busy = false;
       setStatus(false);
@@ -755,7 +784,6 @@ textarea#inp::placeholder { color: var(--tx-faint); }
   }
 
   /* ── Utilities ── */
-  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
   function scroll() { requestAnimationFrame(() => { $msgs.scrollTop = $msgs.scrollHeight; }); }
   function setStatus(on) { $pip.className = on ? 'h-pip thinking' : 'h-pip'; }
 
