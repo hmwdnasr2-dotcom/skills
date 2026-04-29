@@ -495,6 +495,14 @@ textarea#inp::placeholder { color: var(--tx-faint); }
   .feed { padding: 28px 48px 20px; }
   #input-area { padding: 16px 48px; padding-bottom: 20px; }
 }
+.dl-wrap { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.dl-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px; background: var(--accent); color: #fff;
+  border-radius: 20px; text-decoration: none;
+  font-size: 0.83rem; font-weight: 500; width: fit-content;
+}
+.dl-btn:hover { opacity: 0.85; }
 </style>
 </head>
 <body>
@@ -759,6 +767,22 @@ textarea#inp::placeholder { color: var(--tx-faint); }
     scroll();
   }
 
+  function renderDownloads(body, downloads) {
+    const wrap = document.createElement('div');
+    wrap.className = 'dl-wrap';
+    downloads.forEach(d => {
+      const a = document.createElement('a');
+      a.href = d.url || (`${API}/api/aria/download/` + encodeURIComponent(d.filename));
+      a.download = d.filename || 'report';
+      a.className = 'dl-btn';
+      const ext = (d.filename || '').split('.').pop().toUpperCase();
+      a.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download ${ext} — ${d.filename}`;
+      wrap.appendChild(a);
+    });
+    body.appendChild(wrap);
+    scroll();
+  }
+
   /* ── Submit — messages appended, never replaced ── */
   async function submit() {
     const text = $inp.value.trim();
@@ -794,8 +818,9 @@ textarea#inp::placeholder { color: var(--tx-faint); }
       });
       clearInterval(statusTimer);
       if (!r.ok) throw new Error('HTTP ' + r.status);
-      const {reply} = await r.json();
+      const {reply, downloads} = await r.json();
       renderReply(body, reply || "I've noted that down.");
+      if (downloads && downloads.length > 0) renderDownloads(body, downloads);
     } catch(e) {
       clearInterval(statusTimer);
       renderReply(body, `*Could not reach ARIA* — ${e.message}`);
