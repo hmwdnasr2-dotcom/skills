@@ -23,6 +23,7 @@
 </style>
 </head>
 <body>
+<div id="sb-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:48" onclick="closeSb()"></div>
 <aside id="nav-sidebar" class="fixed left-0 top-0 h-full z-40 w-64 border-r flex flex-col shadow-2xl" style="display:none;background:var(--bg2);border-color:var(--border)">
   <div class="p-6 flex items-center gap-3">
     <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center">
@@ -30,6 +31,7 @@
     </div>
     <div><div class="font-bold text-sm" style="color:var(--text)">Agent Orchestrator</div>
     <div class="text-[10px] uppercase tracking-widest text-indigo-400 font-bold">ARIA</div></div>
+    <button onclick="closeSb()" style="margin-left:auto;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;background:none;border:none;color:var(--text3)" title="Close"><span class="material-symbols-outlined" style="font-size:20px">close</span></button>
   </div>
   <div class="px-4 mb-4">
     <a href="/" class="block w-full py-2 px-4 rounded-lg bg-indigo-500 text-white font-semibold text-sm text-center hover:bg-indigo-400 transition-all">
@@ -48,7 +50,6 @@
     <button onclick="doLogout()" class="text-red-400 hover:text-red-300 text-xs flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">logout</span>Sign out</button>
   </div>
 </aside>
-<script>if(screen.width>=768){document.getElementById("nav-sidebar").style.display="flex";document.getElementById("page-main").style.marginLeft="256px"}</script>
 
 <main id="page-main" class="min-h-screen p-8" style="background:var(--bg)">
   <div class="max-w-5xl">
@@ -229,6 +230,13 @@
       document.getElementById('core-model').textContent = 'Offline';
     });
 })();
+</script>
+<button onclick="openSb()" style="position:fixed;bottom:24px;right:24px;z-index:47;width:52px;height:52px;border-radius:50%;background:#4f46e5;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(79,70,229,0.5)" title="Menu">
+  <span class="material-symbols-outlined" style="font-size:24px">menu</span>
+</button>
+<script>
+function openSb(){document.getElementById("nav-sidebar").style.display="flex";document.getElementById("sb-backdrop").style.display="block";}
+function closeSb(){document.getElementById("nav-sidebar").style.display="none";document.getElementById("sb-backdrop").style.display="none";}
 </script>
 </body>
 </html>

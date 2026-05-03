@@ -58,6 +58,7 @@
 <body class="bg-background text-on-background font-body-md overflow-x-hidden">
 
 <!-- Sidebar -->
+<div id="sb-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:48" onclick="closeSb()"></div>
 <aside id="nav-sidebar" style="display:none" class="fixed left-0 top-0 h-full z-40 w-64 border-r border-slate-800/50 flex flex-col bg-slate-900/80 backdrop-blur-xl shadow-2xl shadow-black/20">
   <div class="p-lg flex items-center gap-md">
     <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center flex-shrink-0">
@@ -113,10 +114,9 @@
     </button>
   </div>
 </aside>
-<script>if(screen.width>=768){document.getElementById("nav-sidebar").style.display="flex";document.getElementById("page-main").style.marginLeft="256px"}</script>
 
 <!-- Header -->
-<header class="sticky top-0 z-30 w-full h-14 ml-64 border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-md flex justify-between items-center px-xl" style="width:calc(100% - 256px)">
+<header class="sticky top-0 z-30 w-full h-14 border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-md flex justify-between items-center px-xl" >
   <div class="flex items-center gap-sm">
     <span class="material-symbols-outlined text-slate-500" style="font-size:20px">search</span>
     <input class="bg-transparent border-none outline-none text-sm text-slate-300 placeholder:text-slate-600 w-48" placeholder="Search…" type="text"/>
@@ -509,6 +509,13 @@
   setInterval(checkHealth, 30000);
   setInterval(animateChart.bind(null, true), 4000);
 })();
+</script>
+<button onclick="openSb()" style="position:fixed;bottom:24px;right:24px;z-index:47;width:52px;height:52px;border-radius:50%;background:#4f46e5;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(79,70,229,0.5)" title="Menu">
+  <span class="material-symbols-outlined" style="font-size:24px">menu</span>
+</button>
+<script>
+function openSb(){document.getElementById("nav-sidebar").style.display="flex";document.getElementById("sb-backdrop").style.display="block";}
+function closeSb(){document.getElementById("nav-sidebar").style.display="none";document.getElementById("sb-backdrop").style.display="none";}
 </script>
 </body>
 </html>
