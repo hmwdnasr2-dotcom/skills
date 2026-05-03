@@ -27,7 +27,7 @@
 </style>
 </head>
 <body>
-<div id="sb-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:48" onclick="closeSb()"></div>
+<div id="sb-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:48"></div>
 <aside id="nav-sidebar" class="fixed left-0 top-0 h-full z-40 w-64 border-r flex flex-col shadow-2xl" style="display:none;background:var(--bg2);border-color:var(--border)">
   <div class="p-6 flex items-center gap-3">
     <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center">
@@ -35,7 +35,7 @@
     </div>
     <div><div class="font-bold text-sm" style="color:var(--text)">Agent Orchestrator</div>
     <div class="text-[10px] uppercase tracking-widest text-indigo-400 font-bold">ARIA</div></div>
-    <button onclick="closeSb()" style="margin-left:auto;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;background:none;border:none;color:var(--text3)" title="Close"><span class="material-symbols-outlined" style="font-size:20px">close</span></button>
+    <button style="margin-left:auto;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;background:none;border:none;color:var(--text3)" title="Close"><span class="material-symbols-outlined" style="font-size:20px">close</span></button>
   </div>
   <div class="px-4 mb-4">
     <a href="/" class="block w-full py-2 px-4 rounded-lg bg-indigo-500 text-white font-semibold text-sm text-center hover:bg-indigo-400 transition-all">
@@ -356,8 +356,10 @@
   <span class="material-symbols-outlined" style="font-size:24px">menu</span>
 </button>
 <script>
-function openSb(){document.getElementById("nav-sidebar").style.display="flex";document.getElementById("sb-backdrop").style.display="block";}
-function closeSb(){document.getElementById("nav-sidebar").style.display="none";document.getElementById("sb-backdrop").style.display="none";}
+var _sb=document.getElementById("nav-sidebar"),_bd=document.getElementById("sb-backdrop");
+function openSb(){_sb.style.display="flex";_bd.style.display="block";}
+function closeSb(){_sb.style.display="none";_bd.style.display="none";}
+document.addEventListener("click",function(e){if(_sb.style.display==="flex"&&!_sb.contains(e.target))closeSb();},true);
 </script>
 </body>
 </html>

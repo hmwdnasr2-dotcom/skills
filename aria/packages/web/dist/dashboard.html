@@ -58,7 +58,7 @@
 <body class="bg-background text-on-background font-body-md overflow-x-hidden">
 
 <!-- Sidebar -->
-<div id="sb-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:48" onclick="closeSb()"></div>
+<div id="sb-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:48"></div>
 <aside id="nav-sidebar" style="display:none" class="fixed left-0 top-0 h-full z-40 w-64 border-r border-slate-800/50 flex flex-col bg-slate-900/80 backdrop-blur-xl shadow-2xl shadow-black/20">
   <div class="p-lg flex items-center gap-md">
     <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center flex-shrink-0">
@@ -514,8 +514,10 @@
   <span class="material-symbols-outlined" style="font-size:24px">menu</span>
 </button>
 <script>
-function openSb(){document.getElementById("nav-sidebar").style.display="flex";document.getElementById("sb-backdrop").style.display="block";}
-function closeSb(){document.getElementById("nav-sidebar").style.display="none";document.getElementById("sb-backdrop").style.display="none";}
+var _sb=document.getElementById("nav-sidebar"),_bd=document.getElementById("sb-backdrop");
+function openSb(){_sb.style.display="flex";_bd.style.display="block";}
+function closeSb(){_sb.style.display="none";_bd.style.display="none";}
+document.addEventListener("click",function(e){if(_sb.style.display==="flex"&&!_sb.contains(e.target))closeSb();},true);
 </script>
 </body>
 </html>

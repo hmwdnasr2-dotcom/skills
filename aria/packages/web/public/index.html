@@ -96,7 +96,7 @@
 <body class="font-body-md antialiased" style="background:var(--bg);color:var(--text);overflow:hidden;height:100svh;height:100dvh">
 
 <!-- Mobile backdrop -->
-<div id="mob-backdrop" class="mob-backdrop" onclick="closeSidebar()"></div>
+<div id="mob-backdrop" class="mob-backdrop"></div>
 
 <!-- Sidebar -->
 <aside id="sidebar" class="sidebar fixed left-0 top-0 h-full z-50 w-64 border-r flex flex-col shadow-2xl shadow-black/20" style="display:none;background:var(--sidebar-bg);border-color:var(--border);backdrop-filter:blur(20px)">
@@ -654,15 +654,25 @@
     addMessage('aria', `**Memory search results for "${query}":**\n\n${lines}`);
   };
 
-  // ── Mobile sidebar ──
+  // ── Sidebar ──
+  var $sidebar = document.getElementById('sidebar');
+  var $backdrop = document.getElementById('mob-backdrop');
+
   window.openSidebar = function() {
-    document.getElementById('sidebar').style.display = 'flex';
-    document.getElementById('mob-backdrop').style.display = 'block';
+    $sidebar.style.display = 'flex';
+    $backdrop.style.display = 'block';
   };
   window.closeSidebar = function() {
-    document.getElementById('sidebar').style.display = 'none';
-    document.getElementById('mob-backdrop').style.display = 'none';
+    $sidebar.style.display = 'none';
+    $backdrop.style.display = 'none';
   };
+
+  // Close when tapping outside the sidebar (iOS-safe)
+  document.addEventListener('click', function(e) {
+    if ($sidebar.style.display === 'flex' && !$sidebar.contains(e.target)) {
+      closeSidebar();
+    }
+  }, true);
 
   // ── Logout ──
   window.doLogout = function() {
