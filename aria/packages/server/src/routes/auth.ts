@@ -1,5 +1,21 @@
 import { Router } from 'express';
 import { google } from 'googleapis';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dir = dirname(fileURLToPath(import.meta.url));
+const ENV_PATH = resolve(__dir, '../../../../.env'); // packages/server/src/routes → aria/.env
+
+function patchEnv(key: string, value: string): void {
+  if (!existsSync(ENV_PATH)) return;
+  const raw = readFileSync(ENV_PATH, 'utf8');
+  const escaped = value.replace(/\$/g, '\\$');
+  const updated = raw.includes(`${key}=`)
+    ? raw.replace(new RegExp(`^${key}=.*$`, 'm'), `${key}=${escaped}`)
+    : `${raw.trimEnd()}\n${key}=${escaped}\n`;
+  writeFileSync(ENV_PATH, updated, 'utf8');
+}
 
 export const authRouter = Router();
 
@@ -119,11 +135,20 @@ authRouter.get('/gmail/callback', async (req, res) => {
     const { tokens } = await oauthClient().getToken(code);
     const refresh = tokens.refresh_token;
 
-    console.log('\n========================================');
-    console.log('[auth] Gmail OAuth successful!');
-    console.log('[auth] Add this to your .env file:');
-    console.log(`GMAIL_REFRESH_TOKEN=${refresh}`);
-    console.log('========================================\n');
+    if (!refresh) {
+      res.status(400).send(
+        'Google did not return a refresh_token. Visit <a href="/api/auth/gmail">/api/auth/gmail</a> again — it forces re-consent.',
+      );
+      return;
+    }
+
+    // Write to .env immediately so the token survives server restarts
+    patchEnv('GMAIL_REFRESH_TOKEN', refresh);
+
+    // Apply live — no restart needed (GmailConnector reads process.env per call)
+    process.env.GMAIL_REFRESH_TOKEN = refresh;
+
+    console.log('[auth] Gmail OAuth successful — token written to .env and active immediately');
 
     res.send(`
       <!DOCTYPE html>
@@ -132,19 +157,21 @@ authRouter.get('/gmail/callback', async (req, res) => {
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1">
         <style>
-          body { font-family: monospace; background: #1c1c1c; color: #ececec;
-                 padding: 32px; max-width: 640px; margin: 0 auto; }
-          h2 { color: #d97706; }
-          pre { background: #252525; padding: 16px; border-radius: 8px;
-                word-break: break-all; white-space: pre-wrap; }
-          p { color: #aaa; }
+          body { font-family: system-ui, sans-serif; background: #0b1326; color: #dae2fd;
+                 padding: 40px 32px; max-width: 540px; margin: 0 auto; }
+          h2 { color: #8083ff; margin-bottom: 8px; }
+          .pill { display:inline-block; background:#1a2a10; color:#4ade80; border:1px solid #16a34a;
+                  border-radius:99px; padding:4px 14px; font-size:13px; margin-bottom:20px; }
+          p { color: #c7c4d7; line-height:1.6; }
+          a { color:#8083ff; }
         </style>
       </head>
       <body>
-        <h2>Gmail connected ✓</h2>
-        <p>Add the following line to your <code>.env</code> file, then restart ARIA:</p>
-        <pre>GMAIL_REFRESH_TOKEN=${refresh ?? '(no refresh token — re-authorise with prompt=consent)'}</pre>
-        <p>The token is also printed in the server console.</p>
+        <h2>Gmail connected</h2>
+        <span class="pill">Active immediately — no restart needed</span>
+        <p>ARIA can now read and send emails from your Gmail account.
+           The refresh token has been saved to <code>.env</code> automatically.</p>
+        <p><a href="/">← Back to ARIA</a></p>
       </body>
       </html>
     `);
