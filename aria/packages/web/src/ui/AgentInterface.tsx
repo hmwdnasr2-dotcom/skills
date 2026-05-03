@@ -80,7 +80,7 @@ const QUICK_ACTIONS = [
   { label: 'Analyze',      prompt: 'Analyze the following and give me key insights: ' },
   { label: 'Summarize',    prompt: 'Summarize this concisely: ' },
   { label: 'Build Plan',   prompt: 'Create a detailed step-by-step plan for: ' },
-  { label: 'Daily Report', prompt: 'Generate my daily report for today' },
+  { label: 'Generate Report', prompt: 'Generate my daily report for today' },
 ];
 
 const MODE_PREFIXES: Record<Mode, string> = {
