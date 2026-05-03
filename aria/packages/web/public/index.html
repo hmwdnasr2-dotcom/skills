@@ -107,9 +107,6 @@
 </head>
 <body class="font-body-md antialiased" style="background:var(--bg);color:var(--text);overflow:hidden;height:100svh;height:100dvh">
 
-<!-- Desktop: show sidebar + restore margin -->
-<script>if(window.innerWidth>=768){document.getElementById('sidebar').style.display='flex'}</script>
-
 <!-- Mobile backdrop -->
 <div id="mob-backdrop" class="mob-backdrop" onclick="closeSidebar()"></div>
 
@@ -186,9 +183,18 @@
     </div>
   </div>
 </aside>
+<script>
+if(screen.width>=768){
+  document.getElementById('sidebar').style.display='flex';
+  document.getElementById('chat-main').style.marginLeft='256px';
+} else {
+  document.getElementById('mob-menu-btn').style.display='flex';
+  document.getElementById('mob-close-btn').style.display='flex';
+}
+</script>
 
 <!-- Main -->
-<main id="chat-main" class="flex flex-col relative overflow-hidden" style="background:var(--bg);height:100svh;height:100dvh;margin-left:0"><script>if(window.innerWidth>=768)document.getElementById('chat-main').style.marginLeft='256px'</script>
+<main id="chat-main" class="flex flex-col relative overflow-hidden" style="background:var(--bg);height:100svh;height:100dvh;margin-left:0">
 
   <!-- Header -->
   <header id="main-header" class="flex items-center justify-between px-md h-12 w-full sticky top-0 z-30 border-b flex-shrink-0" style="background:rgba(11,19,38,0.85);border-color:var(--border);backdrop-filter:blur(12px)">
