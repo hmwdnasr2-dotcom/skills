@@ -266,6 +266,8 @@
 (function () {
   'use strict';
 
+  if (!localStorage.getItem('aria_auth')) { window.location.replace('/login.html'); return; }
+
   const API = '';
   const UID = localStorage.getItem('aria_uid') || 'user-1';
 
@@ -503,8 +505,8 @@
 
       // Clear pending chips and add confirmed ones
       $fileChips.innerHTML = '';
-      pendingFileIds = [...(pendingFileIds || []), ...uploaded.map((f: {fileId: string}) => f.fileId)];
-      uploaded.forEach((f: {name: string; fileId: string}) => addChip(f.name, f.fileId, false));
+      pendingFileIds = [...(pendingFileIds || []), ...uploaded.map(f => f.fileId)];
+      uploaded.forEach(f => addChip(f.name, f.fileId, false));
       $filePreview.classList.remove('hidden');
       $sendBtn.disabled = !$inp.value.trim() && pendingFileIds.length === 0 || busy;
     } catch (err) {
