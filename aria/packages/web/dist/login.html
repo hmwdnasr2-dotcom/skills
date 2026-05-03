@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ARIA | Sign In</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "background": "#0b1326", "surface": "#0b1326",
+          "surface-container": "#171f33", "surface-container-low": "#131b2e",
+          "surface-container-lowest": "#060e20", "surface-container-high": "#222a3d",
+          "on-background": "#dae2fd", "on-surface": "#dae2fd",
+          "on-surface-variant": "#c7c4d7", "outline": "#908fa0",
+          "outline-variant": "#464554", "primary": "#c0c1ff",
+          "primary-container": "#8083ff", "on-primary-container": "#0d0096",
+          "secondary": "#ddb7ff", "secondary-container": "#6f00be",
+          "tertiary": "#89ceff", "error": "#ffb4ab", "error-container": "#93000a"
+        },
+        borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+        spacing: { "xs": "4px", "sm": "8px", "md": "16px", "lg": "24px", "xl": "32px", "gutter": "24px" },
+        fontFamily: { "h1": ["Manrope"], "h2": ["Manrope"], "h3": ["Manrope"], "body-md": ["Inter"], "body-sm": ["Inter"], "label-md": ["Inter"] },
+        fontSize: {
+          "h1": ["40px",{"lineHeight":"1.2","letterSpacing":"-0.02em","fontWeight":"700"}],
+          "h2": ["32px",{"lineHeight":"1.3","letterSpacing":"-0.01em","fontWeight":"600"}],
+          "body-md": ["16px",{"lineHeight":"1.5","fontWeight":"400"}],
+          "body-sm": ["14px",{"lineHeight":"1.5","fontWeight":"400"}],
+          "label-md": ["12px",{"lineHeight":"1","letterSpacing":"0.05em","fontWeight":"600"}]
+        }
+      }
+    }
+  }
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; vertical-align: middle; }
+  .glass-card { background: rgba(11,19,38,0.6); backdrop-filter: blur(12px); border: 1px solid rgba(144,143,160,0.1); }
+  .aether-glow { background: radial-gradient(circle at 50% 50%, rgba(128,131,255,0.15) 0%, transparent 70%); }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .fade-in { animation: fadeIn 0.6s ease both; }
+  .btn-primary { background: linear-gradient(180deg, #8083ff, #4f52d9); }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-primary:active { transform: scale(0.98); }
+</style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col">
+
+<nav class="fixed top-0 w-full z-50 border-b bg-slate-950/80 backdrop-blur-xl border-slate-800/50">
+  <div class="flex justify-between items-center h-14 px-6 md:px-12">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center">
+        <span class="material-symbols-outlined text-white" style="font-size:18px">hub</span>
+      </div>
+      <span class="text-lg font-bold text-slate-100 font-h2">ARIA</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div id="server-status" class="flex items-center gap-2 text-xs text-slate-500">
+        <div class="w-1.5 h-1.5 rounded-full bg-slate-600"></div>
+        <span>Checking…</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="relative flex-1 flex flex-col items-center justify-center px-gutter pt-14 overflow-hidden">
+  <div class="absolute inset-0 pointer-events-none overflow-hidden">
+    <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-900/20 blur-[120px] rounded-full"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-900/10 blur-[120px] rounded-full"></div>
+    <div class="absolute inset-0 aether-glow opacity-40"></div>
+  </div>
+
+  <div class="relative z-10 w-full max-w-md fade-in">
+    <div class="flex justify-center mb-8">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-container to-secondary-container flex items-center justify-center shadow-xl shadow-indigo-500/20">
+        <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24">hub</span>
+      </div>
+    </div>
+
+    <div class="glass-card rounded-xl p-8 md:p-10 shadow-2xl">
+      <div class="text-center mb-8">
+        <h1 class="font-h2 text-h2 text-on-surface mb-2">Welcome Back</h1>
+        <p class="text-body-sm text-on-surface-variant">Enter your ARIA password to continue.</p>
+      </div>
+
+      <div id="error-msg" class="hidden mb-4 px-4 py-3 rounded-lg bg-error-container/30 border border-error/30 text-error text-sm"></div>
+
+      <form id="login-form" class="space-y-5" onsubmit="return false;">
+        <div class="space-y-2">
+          <label class="font-label-md text-on-surface-variant block ml-1">Password</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">lock</span>
+            <input id="pw-input" type="password" autocomplete="current-password"
+              class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface rounded-lg pl-10 pr-12 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all placeholder:text-outline/50"
+              placeholder="••••••••"
+              onkeydown="if(event.key==='Enter')doLogin();"/>
+            <button type="button" onclick="togglePw()" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors">
+              <span id="pw-eye" class="material-symbols-outlined text-sm">visibility</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 px-1">
+          <input type="checkbox" id="remember" class="w-4 h-4 rounded border-outline-variant bg-surface-container text-primary-container focus:ring-primary/50"/>
+          <label for="remember" class="text-body-sm text-on-surface-variant cursor-pointer">Keep me signed in</label>
+        </div>
+
+        <button type="button" onclick="doLogin()" id="login-btn"
+          class="btn-primary w-full text-white font-h3 font-semibold py-3 rounded-lg shadow-lg shadow-indigo-500/10 transition-all flex items-center justify-center gap-2">
+          <span id="btn-label">Sign In</span>
+          <span id="btn-icon" class="material-symbols-outlined text-sm">arrow_forward</span>
+        </button>
+      </form>
+    </div>
+
+    <p class="text-center mt-6 text-body-sm text-outline">
+      Your personal AI · Agent Orchestrator
+    </p>
+  </div>
+</main>
+
+<script>
+(function() {
+  'use strict';
+
+  const API = '';
+
+  // Redirect if already logged in
+  if (localStorage.getItem('aria_auth')) {
+    window.location.replace('/');
+  }
+
+  // Check server health
+  fetch(`${API}/health`)
+    .then(r => {
+      const el = document.getElementById('server-status');
+      if (r.ok) {
+        el.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-green-500"></div><span>Server online</span>';
+      } else {
+        el.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-red-500"></div><span>Server offline</span>';
+      }
+    })
+    .catch(() => {
+      const el = document.getElementById('server-status');
+      el.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-red-500"></div><span>Server unreachable</span>';
+    });
+
+  window.togglePw = function() {
+    const inp = document.getElementById('pw-input');
+    const eye = document.getElementById('pw-eye');
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      eye.textContent = 'visibility_off';
+    } else {
+      inp.type = 'password';
+      eye.textContent = 'visibility';
+    }
+  };
+
+  window.doLogin = async function() {
+    const pw = document.getElementById('pw-input').value;
+    const remember = document.getElementById('remember').checked;
+    const btn = document.getElementById('login-btn');
+    const errEl = document.getElementById('error-msg');
+    const btnLabel = document.getElementById('btn-label');
+    const btnIcon = document.getElementById('btn-icon');
+
+    if (!pw) {
+      showError('Please enter your password.');
+      return;
+    }
+
+    btn.disabled = true;
+    btnLabel.textContent = 'Signing in…';
+    btnIcon.textContent = 'progress_activity';
+    errEl.classList.add('hidden');
+
+    try {
+      const res = await fetch(`${API}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw })
+      });
+
+      if (res.ok) {
+        const storage = remember ? localStorage : sessionStorage;
+        storage.setItem('aria_auth', '1');
+        localStorage.setItem('aria_auth', '1'); // always persist for UX
+        window.location.replace('/');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        showError(data.error || 'Incorrect password. Please try again.');
+        btn.disabled = false;
+        btnLabel.textContent = 'Sign In';
+        btnIcon.textContent = 'arrow_forward';
+        document.getElementById('pw-input').focus();
+        document.getElementById('pw-input').select();
+      }
+    } catch (err) {
+      showError('Cannot reach server. Make sure ARIA is running.');
+      btn.disabled = false;
+      btnLabel.textContent = 'Sign In';
+      btnIcon.textContent = 'arrow_forward';
+    }
+  };
+
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  document.getElementById('pw-input').focus();
+})();
+</script>
+</body>
+</html>
