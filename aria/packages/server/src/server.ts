@@ -40,22 +40,16 @@ app.use((req, _res, next) => {
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// ─── Wire Gmail connector ─────────────────────────────────────────────────────
-
-if (
-  process.env.GMAIL_CLIENT_ID &&
-  process.env.GMAIL_CLIENT_SECRET &&
-  process.env.GMAIL_REFRESH_TOKEN
-) {
+// ─── Wire Gmail connector (always registered — credentials checked at call time)
+{
   const gmail = new GmailConnector();
   const gmailBridge = new AgentBridgeConnector();
   for (const adapter of buildGmailAdapters(gmail)) {
     gmailBridge.register(adapter.name, adapter);
   }
   claw.use(gmailBridge);
-  console.log('[server] Gmail connector registered (gmail_list, gmail_get, gmail_send)');
-} else {
-  console.log('[server] Gmail connector skipped — GMAIL_* env vars not set');
+  const gmailReady = !!(process.env.GMAIL_CLIENT_ID && process.env.GMAIL_CLIENT_SECRET && process.env.GMAIL_REFRESH_TOKEN);
+  console.log(`[server] Gmail connector registered (gmail_list, gmail_get, gmail_send, gmail_draft) — credentials ${gmailReady ? 'present' : 'MISSING — calls will fail'}`);
 }
 
 // ─── Wire task tools ──────────────────────────────────────────────────────────

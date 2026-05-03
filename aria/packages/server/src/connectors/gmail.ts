@@ -34,6 +34,9 @@ interface DraftInput {
 // ─── OAuth2 client factory ────────────────────────────────────────────────────
 
 function buildAuthClient() {
+  if (!process.env.GMAIL_CLIENT_ID || !process.env.GMAIL_CLIENT_SECRET || !process.env.GMAIL_REFRESH_TOKEN) {
+    throw new Error('Gmail not configured. Add GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, and GMAIL_REFRESH_TOKEN to aria/.env then restart the server.');
+  }
   const auth = new google.auth.OAuth2(
     process.env.GMAIL_CLIENT_ID,
     process.env.GMAIL_CLIENT_SECRET,
@@ -90,7 +93,9 @@ function encodeRaw(raw: string): string {
 // ─── GmailConnector ───────────────────────────────────────────────────────────
 
 export class GmailConnector {
-  private gmail = google.gmail({ version: 'v1', auth: buildAuthClient() });
+  private get gmail() {
+    return google.gmail({ version: 'v1', auth: buildAuthClient() });
+  }
 
   async listMessages(query = 'in:inbox', maxResults = 10): Promise<GmailMessage[]> {
     const listRes = await this.gmail.users.messages.list({

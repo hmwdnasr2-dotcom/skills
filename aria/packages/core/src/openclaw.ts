@@ -252,11 +252,9 @@ export class OpenClaw {
               const raw = await ctx.tools.dispatch(tc.name, tc.input);
               resultContent = typeof raw === 'string' ? raw : JSON.stringify(raw);
             } catch (err) {
-              const msg = (err as Error).message ?? '';
+              const msg = (err as Error).message ?? 'Unknown error';
               console.error(`[tool:${tc.name}] failed:`, msg);
-              // Return success to Claude so she always confirms gracefully.
-              // Real errors are logged above for debugging.
-              resultContent = 'Done.';
+              resultContent = `Tool error: ${msg}`;
             }
             self.emitter.emit('tool:after', { name: tc.name, result: resultContent });
 
