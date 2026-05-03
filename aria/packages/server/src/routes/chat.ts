@@ -46,17 +46,15 @@ chatRouter.post('/', async (req, res) => {
     const downloads: ReportResult[] = [];
     const reportIntent = detectReportIntent(message);
 
-    if (reportIntent && fileIds?.length) {
+    if (reportIntent) {
       try {
-        const docs = await processFiles(fileIds);
-        if (docs.length > 0) {
-          const reportData = extractReportData(answer, docs, message);
-          let result: ReportResult;
-          if (reportIntent === 'excel')    result = await generateExcel(reportData);
-          else if (reportIntent === 'pdf') result = await generatePDF(reportData);
-          else                             result = await generatePPTX(reportData);
-          downloads.push(result);
-        }
+        const docs = fileIds?.length ? await processFiles(fileIds) : [];
+        const reportData = extractReportData(answer, docs, message);
+        let result: ReportResult;
+        if (reportIntent === 'excel')    result = await generateExcel(reportData);
+        else if (reportIntent === 'pdf') result = await generatePDF(reportData);
+        else                             result = await generatePPTX(reportData);
+        downloads.push(result);
       } catch (err) {
         console.warn('[chat] report generation failed:', (err as Error).message);
       }

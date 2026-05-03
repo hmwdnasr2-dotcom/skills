@@ -8,7 +8,7 @@ export type ReportIntent = 'excel' | 'pdf' | 'pptx' | null;
 const INTENT_PATTERNS: [NonNullable<ReportIntent>, RegExp][] = [
   ['pptx',  /\b(pptx|powerpoint|presentation|slide[s]?|deck)\b/i],
   ['excel', /\b(excel|xlsx|spreadsheet|xls)\b/i],
-  ['pdf',   /\b(pdf|document report|export.*pdf|pdf.*export)\b/i],
+  ['pdf',   /\b(pdf|document report|export.*pdf|pdf.*export|generate.*report|create.*report|download.*report|report.*pdf)\b/i],
 ];
 
 export function detectReportIntent(message: string): ReportIntent {

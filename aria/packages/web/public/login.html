@@ -186,9 +186,14 @@
       });
 
       if (res.ok) {
+        const data = await res.json().catch(() => ({ role: 'tester' }));
         const storage = remember ? localStorage : sessionStorage;
         storage.setItem('aria_auth', '1');
-        localStorage.setItem('aria_auth', '1'); // always persist for UX
+        localStorage.setItem('aria_auth', '1');
+        localStorage.setItem('aria_role', data.role || 'tester');
+        if (data.role === 'admin') {
+          sessionStorage.setItem('aria_admin_pw', pw);
+        }
         window.location.replace('/');
       } else {
         const data = await res.json().catch(() => ({}));

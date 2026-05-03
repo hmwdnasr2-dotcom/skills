@@ -3,22 +3,76 @@ import { google } from 'googleapis';
 
 export const authRouter = Router();
 
+// In-memory tester code store (lost on server restart; use Supabase for persistence if needed)
+const testerCodes = new Map<string, { name: string; createdAt: Date }>();
+
+function isAdmin(password: string | undefined): boolean {
+  const expected = process.env.ARIA_PASSWORD;
+  return !!(expected && password === expected);
+}
+
 authRouter.post('/login', (req, res) => {
   const { password } = req.body as { password?: string };
   const expected = process.env.ARIA_PASSWORD;
 
   if (!expected) {
-    // No password configured — allow open access
     console.warn('[auth] ARIA_PASSWORD not set; login open to anyone');
-    res.json({ ok: true });
+    res.json({ ok: true, role: 'admin' });
     return;
   }
 
   if (password === expected) {
-    res.json({ ok: true });
-  } else {
-    res.status(401).json({ ok: false, error: 'Incorrect password' });
+    res.json({ ok: true, role: 'admin' });
+    return;
   }
+
+  if (testerCodes.has(password || '')) {
+    const info = testerCodes.get(password!)!;
+    res.json({ ok: true, role: 'tester', name: info.name });
+    return;
+  }
+
+  res.status(401).json({ ok: false, error: 'Incorrect password or access code' });
+});
+
+// Create tester code (admin only)
+authRouter.post('/testers', (req, res) => {
+  const { adminPassword, name, code } = req.body as { adminPassword?: string; name?: string; code?: string };
+  if (!isAdmin(adminPassword)) {
+    res.status(403).json({ error: 'Admin password required' });
+    return;
+  }
+  const newCode = code?.trim() || Math.random().toString(36).slice(2, 10).toUpperCase();
+  const displayName = name?.trim() || 'Tester';
+  testerCodes.set(newCode, { name: displayName, createdAt: new Date() });
+  console.log(`[auth] Tester code created: ${newCode} (${displayName})`);
+  res.json({ ok: true, code: newCode, name: displayName });
+});
+
+// List tester codes (admin only — pass admin password as x-admin-password header)
+authRouter.get('/testers', (req, res) => {
+  const adminPassword = req.headers['x-admin-password'] as string | undefined;
+  if (!isAdmin(adminPassword)) {
+    res.status(403).json({ error: 'Admin password required' });
+    return;
+  }
+  const testers = [...testerCodes.entries()].map(([code, info]) => ({
+    code,
+    name: info.name,
+    createdAt: info.createdAt.toISOString(),
+  }));
+  res.json({ testers });
+});
+
+// Delete tester code (admin only)
+authRouter.delete('/testers/:code', (req, res) => {
+  const adminPassword = req.headers['x-admin-password'] as string | undefined;
+  if (!isAdmin(adminPassword)) {
+    res.status(403).json({ error: 'Admin password required' });
+    return;
+  }
+  testerCodes.delete(req.params.code);
+  res.json({ ok: true });
 });
 
 const SCOPES = [
