@@ -1,117 +1,231 @@
 <!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
-<meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#0b1326"/>
 <title>Agents | ARIA</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: { extend: {
+      colors: {
+        "background": "#0b1326", "surface": "#0b1326",
+        "surface-container": "#171f33", "surface-container-low": "#131b2e",
+        "surface-container-lowest": "#060e20", "surface-container-high": "#222a3d",
+        "on-background": "#dae2fd", "on-surface": "#dae2fd",
+        "on-surface-variant": "#c7c4d7", "outline": "#908fa0",
+        "outline-variant": "#464554", "primary": "#c0c1ff",
+        "primary-container": "#8083ff", "secondary": "#ddb7ff",
+        "secondary-container": "#6f00be", "tertiary": "#89ceff",
+        "error": "#ffb4ab", "error-container": "#93000a"
+      },
+      borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+      spacing: { "xs": "4px", "sm": "8px", "md": "16px", "lg": "24px", "xl": "32px", "gutter": "24px", "margin": "32px", "2xl": "48px", "base": "4px" },
+      fontFamily: { "h1": ["Manrope","sans-serif"], "h2": ["Manrope","sans-serif"], "h3": ["Manrope","sans-serif"], "body-md": ["Inter","sans-serif"], "body-sm": ["Inter","sans-serif"] },
+      fontSize: {
+        "h1": ["40px",{"lineHeight":"1.2","letterSpacing":"-0.02em","fontWeight":"700"}],
+        "h2": ["32px",{"lineHeight":"1.3","letterSpacing":"-0.01em","fontWeight":"600"}],
+        "h3": ["24px",{"lineHeight":"1.4","fontWeight":"600"}],
+        "body-md": ["16px",{"lineHeight":"1.5","fontWeight":"400"}],
+        "body-sm": ["14px",{"lineHeight":"1.5","fontWeight":"400"}]
+      }
+    }}
+  }
+</script>
 <style>
-  :root { --bg:#0b1326;--bg2:#171f33;--bg3:#222a3d;--border:rgba(144,143,160,0.15);--text:#dae2fd;--text2:#c7c4d7;--text3:#908fa0;--accent:#8083ff; }
-  html.light { --bg:#f4f6fb;--bg2:#ffffff;--bg3:#e8ecf5;--border:rgba(0,0,0,0.1);--text:#1a1d2e;--text2:#3d4166;--text3:#7b7fa8;--accent:#4f52d9; }
-  body { background:var(--bg);color:var(--text);font-family:Inter,sans-serif; }
-  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;vertical-align:middle; }
+  :root {
+    --bg: #0b1326; --bg2: #171f33; --bg3: #222a3d;
+    --border: rgba(144,143,160,0.15); --border-strong: rgba(192,193,255,0.2);
+    --text: #dae2fd; --text2: #c7c4d7; --text3: #908fa0;
+    --accent: #8083ff; --accent2: #c0c1ff;
+    --sidebar-bg: rgba(10,15,30,0.92);
+  }
+  html.light {
+    --bg: #f4f6fb; --bg2: #ffffff; --bg3: #e8ecf5;
+    --border: rgba(0,0,0,0.1); --border-strong: rgba(99,102,241,0.3);
+    --text: #1a1d2e; --text2: #3d4166; --text3: #7b7fa8;
+    --accent: #4f52d9; --accent2: #6366f1;
+    --sidebar-bg: rgba(248,249,255,0.95);
+  }
+  html.light body { background: var(--bg); color: var(--text); }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; vertical-align: middle; }
+  .glass-card { background: rgba(45,52,73,0.4); backdrop-filter: blur(12px); border: 1px solid var(--border); }
+  html.light .glass-card { background: rgba(255,255,255,0.7); }
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #2d3449; border-radius: 2px; }
+  html.light ::-webkit-scrollbar-thumb { background: #c5cae9; }
+  .mob-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 49; }
+  /* Page-specific */
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
-  .status-pulse { animation:pulse 2s cubic-bezier(.4,0,.6,1) infinite; }
-  .agent-card { background:var(--bg2);border:1px solid var(--border);border-radius:14px;transition:all .2s; }
-  .agent-card:hover { border-color:rgba(128,131,255,0.3);box-shadow:0 4px 20px rgba(0,0,0,0.3); }
-  .setup-drawer { display:none;background:var(--bg3);border-top:1px solid var(--border);border-radius:0 0 14px 14px;padding:16px; }
-  .setup-drawer.open { display:block; }
-  .input-sm { background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;width:100%;outline:none;transition:border-color .15s; }
-  .input-sm:focus { border-color:var(--accent); }
-  @media (max-width:768px) { aside{display:none}main{margin-left:0!important} }
+  .status-pulse { animation: pulse 2s cubic-bezier(.4,0,.6,1) infinite; }
+  .agent-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; transition: all .2s; }
+  .agent-card:hover { border-color: rgba(128,131,255,0.3); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+  .input-sm { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; color: var(--text); font-size: 12px; width: 100%; outline: none; transition: border-color .15s; }
+  .input-sm:focus { border-color: var(--accent); }
 </style>
 </head>
-<body>
-<div id="sb-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:48"></div>
-<aside id="nav-sidebar" class="fixed left-0 top-0 h-full z-40 w-64 border-r flex flex-col shadow-2xl" style="display:none;background:var(--bg2);border-color:var(--border)">
-  <div class="p-6 flex items-center gap-3">
-    <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center">
+<body class="font-body-md antialiased" style="background:var(--bg);color:var(--text)">
+
+<div id="mob-backdrop" class="mob-backdrop"></div>
+
+<aside id="sidebar" class="sidebar fixed left-0 top-0 h-full z-50 w-64 border-r flex flex-col shadow-2xl shadow-black/20" style="display:none;background:var(--sidebar-bg);border-color:var(--border);backdrop-filter:blur(20px)">
+  <div class="p-xl flex items-center space-x-sm">
+    <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center flex-shrink-0">
       <span class="material-symbols-outlined text-white" style="font-size:18px">hub</span>
     </div>
-    <div><div class="font-bold text-sm" style="color:var(--text)">Agent Orchestrator</div>
-    <div class="text-[10px] uppercase tracking-widest text-indigo-400 font-bold">ARIA</div></div>
-    <button style="margin-left:auto;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;background:none;border:none;color:var(--text3)" title="Close"><span class="material-symbols-outlined" style="font-size:20px">close</span></button>
+    <div class="flex flex-col flex-1">
+      <span class="text-base font-bold tracking-wide" style="color:var(--text)">Agent Orchestrator</span>
+      <span class="text-[10px] uppercase tracking-widest font-bold text-indigo-400">ARIA</span>
+    </div>
+    <button onclick="closeSidebar()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors" style="color:var(--text3)">
+      <span class="material-symbols-outlined" style="font-size:20px">close</span>
+    </button>
   </div>
-  <div class="px-4 mb-4">
-    <a href="/" class="block w-full py-2 px-4 rounded-lg bg-indigo-500 text-white font-semibold text-sm text-center hover:bg-indigo-400 transition-all">
-      <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">add</span> New Session
+  <div class="px-md mt-md">
+    <a href="/" class="w-full py-sm px-md rounded-lg bg-indigo-500 text-white font-semibold flex items-center justify-center space-x-sm hover:bg-indigo-400 active:scale-95 transition-all text-sm">
+      <span class="material-symbols-outlined" style="font-size:18px">add</span>
+      <span>New Session</span>
     </a>
   </div>
-  <nav class="flex-1 px-3 space-y-1 text-sm">
-    <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-lg" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">chat</span>Chat</a>
-    <a href="/agents.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg border-r-2 border-indigo-500" style="background:rgba(99,102,241,0.1);color:#a5b4fc"><span class="material-symbols-outlined" style="font-size:18px">account_tree</span>Agents</a>
-    <a href="/workflows.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">device_hub</span>Workflows</a>
-    <a href="/knowledge.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">auto_stories</span>Knowledge Base</a>
-    <a href="/dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">monitoring</span>Performance</a>
-    <a href="/settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">settings</span>Settings</a>
+  <nav class="flex-1 px-sm mt-lg overflow-y-auto">
+    <a href="/" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
+      <span class="material-symbols-outlined" style="font-size:20px">chat</span><span>Chat</span>
+    </a>
+    <a href="/agents.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="background:rgba(99,102,241,0.1);color:var(--accent2)">
+      <span class="material-symbols-outlined" style="font-size:20px">account_tree</span><span>Agents</span>
+    </a>
+    <a href="/workflows.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
+      <span class="material-symbols-outlined" style="font-size:20px">device_hub</span><span>Workflows</span>
+    </a>
+    <a href="/knowledge.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
+      <span class="material-symbols-outlined" style="font-size:20px">auto_stories</span><span>Knowledge Base</span>
+    </a>
+    <a href="/dashboard.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
+      <span class="material-symbols-outlined" style="font-size:20px">monitoring</span><span>Performance</span>
+    </a>
+    <a href="/settings.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
+      <span class="material-symbols-outlined" style="font-size:20px">settings</span><span>Settings</span>
+    </a>
   </nav>
-  <div class="p-4 border-t" style="border-color:var(--border)">
-    <button onclick="doLogout()" class="text-red-400 hover:text-red-300 text-xs flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">logout</span>Sign out</button>
+  <div class="p-md border-t flex items-center justify-between" style="border-color:var(--border)">
+    <div class="flex items-center space-x-sm">
+      <div class="relative flex items-center justify-center w-4 h-4">
+        <span id="pulse-ring" class="absolute w-3.5 h-3.5 rounded-full opacity-0" style="background:var(--accent)"></span>
+        <div id="status-pip" class="relative w-2 h-2 rounded-full bg-slate-600"></div>
+      </div>
+      <span class="text-xs font-medium" id="node-label" style="color:var(--text3)">ARIA</span>
+    </div>
+    <div class="flex items-center gap-sm">
+      <button onclick="toggleTheme()" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-indigo-500/20" style="color:var(--text3)">
+        <span id="theme-icon" class="material-symbols-outlined" style="font-size:16px">light_mode</span>
+      </button>
+      <button onclick="doLogout()" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-500/20 text-red-400">
+        <span class="material-symbols-outlined" style="font-size:16px">logout</span>
+      </button>
+    </div>
   </div>
 </aside>
 
-<main id="page-main" class="min-h-screen p-8" style="background:var(--bg)">
+<header class="flex items-center justify-between px-md h-12 w-full sticky top-0 z-30 border-b flex-shrink-0" style="background:rgba(11,19,38,0.85);border-color:var(--border);backdrop-filter:blur(12px)">
+  <button onclick="openSidebar()" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-indigo-500/20" style="color:var(--text2)">
+    <span class="material-symbols-outlined" style="font-size:22px">menu</span>
+  </button>
+  <span class="text-sm font-semibold" style="color:var(--text2)">Agents</span>
+  <button onclick="toggleTheme()" style="color:var(--text3)" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-indigo-500/20">
+    <span id="theme-icon-header" class="material-symbols-outlined" style="font-size:20px">light_mode</span>
+  </button>
+</header>
+
+<main style="background:var(--bg)" class="min-h-screen overflow-y-auto p-lg">
   <div class="max-w-5xl">
-    <div class="flex items-end justify-between mb-8">
+    <div class="flex items-end justify-between mb-lg">
       <div>
-        <h1 class="text-2xl font-bold mb-1" style="color:var(--text);font-family:Manrope,sans-serif">Agents</h1>
+        <h1 class="text-2xl font-bold mb-xs font-h1" style="color:var(--text)">Agents</h1>
         <p class="text-sm" style="color:var(--text3)">Real agents running behind ARIA. Click <b style="color:var(--text2)">Configure</b> on inactive connectors to set them up.</p>
       </div>
-      <button onclick="loadAgents()" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border transition-all" style="background:var(--bg3);color:var(--text2);border-color:var(--border)" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <button onclick="loadAgents()" class="flex items-center gap-2 px-md py-sm rounded-lg text-sm font-semibold border transition-all" style="background:var(--bg3);color:var(--text2);border-color:var(--border)" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
         <span class="material-symbols-outlined" style="font-size:16px">refresh</span> Refresh
       </button>
     </div>
 
     <!-- Stats bar -->
-    <div class="grid grid-cols-4 gap-4 mb-8">
-      <div class="rounded-xl border p-4" style="background:var(--bg2);border-color:var(--border)">
-        <div class="text-[10px] uppercase tracking-wider font-bold mb-2" style="color:var(--text3)">Total Agents</div>
-        <div id="stat-total" class="text-2xl font-bold" style="color:var(--text);font-family:Manrope,sans-serif">—</div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-md mb-lg">
+      <div class="rounded-xl border p-md" style="background:var(--bg2);border-color:var(--border)">
+        <div class="text-[10px] uppercase tracking-wider font-bold mb-sm" style="color:var(--text3)">Total Agents</div>
+        <div id="stat-total" class="text-2xl font-bold font-h2" style="color:var(--text)">—</div>
       </div>
-      <div class="rounded-xl border p-4" style="background:var(--bg2);border-color:var(--border)">
-        <div class="text-[10px] uppercase tracking-wider font-bold mb-2" style="color:var(--text3)">Active</div>
-        <div id="stat-active" class="text-2xl font-bold text-green-400" style="font-family:Manrope,sans-serif">—</div>
+      <div class="rounded-xl border p-md" style="background:var(--bg2);border-color:var(--border)">
+        <div class="text-[10px] uppercase tracking-wider font-bold mb-sm" style="color:var(--text3)">Active</div>
+        <div id="stat-active" class="text-2xl font-bold text-green-400 font-h2">—</div>
       </div>
-      <div class="rounded-xl border p-4" style="background:var(--bg2);border-color:var(--border)">
-        <div class="text-[10px] uppercase tracking-wider font-bold mb-2" style="color:var(--text3)">Inactive</div>
-        <div id="stat-inactive" class="text-2xl font-bold" style="color:var(--text3);font-family:Manrope,sans-serif">—</div>
+      <div class="rounded-xl border p-md" style="background:var(--bg2);border-color:var(--border)">
+        <div class="text-[10px] uppercase tracking-wider font-bold mb-sm" style="color:var(--text3)">Inactive</div>
+        <div id="stat-inactive" class="text-2xl font-bold font-h2" style="color:var(--text3)">—</div>
       </div>
-      <div class="rounded-xl border p-4" style="background:var(--bg2);border-color:var(--border)">
-        <div class="text-[10px] uppercase tracking-wider font-bold mb-2" style="color:var(--text3)">Brain</div>
-        <div id="stat-brain" class="text-xl font-bold text-indigo-400" style="font-family:Manrope,sans-serif">—</div>
+      <div class="rounded-xl border p-md" style="background:var(--bg2);border-color:var(--border)">
+        <div class="text-[10px] uppercase tracking-wider font-bold mb-sm" style="color:var(--text3)">Brain</div>
+        <div id="stat-brain" class="text-xl font-bold text-indigo-400 font-h2">—</div>
       </div>
     </div>
 
     <!-- Agent grid -->
-    <div id="agents-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div id="agents-grid" class="grid grid-cols-1 md:grid-cols-2 gap-md">
       <div class="col-span-2 text-center py-12" style="color:var(--text3)">
         <span class="material-symbols-outlined" style="font-size:40px">hourglass_empty</span>
-        <p class="mt-2 text-sm">Loading agents…</p>
+        <p class="mt-sm text-sm">Loading agents…</p>
       </div>
     </div>
   </div>
 </main>
 
 <!-- Setup modal -->
-<div id="setup-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(4px)">
+<div id="setup-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-md" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(4px)">
   <div class="rounded-2xl border w-full max-w-lg" style="background:var(--bg2);border-color:var(--border)">
-    <div class="p-6 border-b flex items-center justify-between" style="border-color:var(--border)">
+    <div class="p-lg border-b flex items-center justify-between" style="border-color:var(--border)">
       <div>
-        <h2 id="modal-title" class="font-bold text-base" style="color:var(--text);font-family:Manrope,sans-serif">Configure Connector</h2>
-        <p id="modal-sub" class="text-xs mt-1" style="color:var(--text3)">Add the required environment variables on your VPS.</p>
+        <h2 id="modal-title" class="font-bold text-base font-h2" style="color:var(--text)">Configure Connector</h2>
+        <p id="modal-sub" class="text-xs mt-xs" style="color:var(--text3)">Add the required environment variables on your VPS.</p>
       </div>
       <button onclick="closeModal()" style="color:var(--text3)" class="hover:text-white transition-colors"><span class="material-symbols-outlined">close</span></button>
     </div>
-    <div id="modal-body" class="p-6"></div>
+    <div id="modal-body" class="p-lg"></div>
   </div>
 </div>
 
 <script>
 (function() {
   if (!localStorage.getItem('aria_auth')) { window.location.replace('/login.html'); return; }
-  const t = localStorage.getItem('aria_theme') || 'dark';
-  document.documentElement.classList.toggle('dark', t === 'dark');
-  document.documentElement.classList.toggle('light', t === 'light');
+
+  // Theme
+  function applyTheme(t) {
+    document.documentElement.classList.toggle('dark', t === 'dark');
+    document.documentElement.classList.toggle('light', t === 'light');
+    var icon = t === 'dark' ? 'light_mode' : 'dark_mode';
+    document.querySelectorAll('#theme-icon,#theme-icon-header').forEach(function(el) { el.textContent = icon; });
+    var hdr = document.querySelector('header');
+    if (hdr) hdr.style.background = t === 'light' ? 'rgba(244,246,251,0.95)' : 'rgba(11,19,38,0.85)';
+  }
+  window.toggleTheme = function() {
+    var isLight = document.documentElement.classList.contains('light');
+    var next = isLight ? 'dark' : 'light';
+    localStorage.setItem('aria_theme', next);
+    applyTheme(next);
+  };
+  applyTheme(localStorage.getItem('aria_theme') || 'dark');
+
+  // Sidebar
+  var _sb = document.getElementById('sidebar');
+  var _bd = document.getElementById('mob-backdrop');
+  window.openSidebar = function() { _sb.style.display = 'flex'; _bd.style.display = 'block'; };
+  window.closeSidebar = function() { _sb.style.display = 'none'; _bd.style.display = 'none'; };
+  document.addEventListener('click', function(e) {
+    if (_sb.style.display === 'flex' && !_sb.contains(e.target)) closeSidebar();
+  }, true);
+
+  // Logout
   window.doLogout = function() { localStorage.removeItem('aria_auth'); window.location.replace('/login.html'); };
 
   const SETUP_GUIDES = {
@@ -205,11 +319,11 @@
           const provider = c.provider ? `<span class="text-[10px] px-1.5 py-0.5 rounded" style="background:rgba(255,255,255,0.05);color:var(--text3)">${c.provider}</span>` : '';
           return `
             <div class="agent-card">
-              <div class="p-5">
-                <div class="flex items-start justify-between mb-3">
+              <div class="p-md">
+                <div class="flex items-start justify-between mb-md">
                   <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-${col}-400 flex-shrink-0" style="background:rgba(var(--${col}-rgb,99,102,241),0.1);background:rgba(128,131,255,0.12)">
-                      <span class="material-symbols-outlined">${icon}</span>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(128,131,255,0.12)">
+                      <span class="material-symbols-outlined text-${col}-400">${icon}</span>
                     </div>
                     <div>
                       <div class="font-semibold text-sm" style="color:var(--text)">${c.name}</div>
@@ -218,7 +332,7 @@
                   </div>
                   <div class="flex items-center gap-2">${provider}${badge}</div>
                 </div>
-                <div class="flex flex-wrap gap-1 mb-3">${tools}</div>
+                <div class="flex flex-wrap gap-1 mb-md">${tools}</div>
                 <div class="flex items-center justify-between">
                   ${setupBtn}
                   ${c.key === 'core' ? `<span class="text-xs" style="color:var(--text3)">Uptime: ${Math.floor(uptime/3600)}h ${Math.floor((uptime%3600)/60)}m</span>` : ''}
@@ -229,7 +343,7 @@
         }).join('');
       })
       .catch(() => {
-        document.getElementById('agents-grid').innerHTML = `<div class="col-span-2 text-center py-12" style="color:var(--text3)"><span class="material-symbols-outlined text-red-400" style="font-size:40px">error</span><p class="mt-2 text-sm">Cannot reach server</p></div>`;
+        document.getElementById('agents-grid').innerHTML = `<div class="col-span-2 text-center py-12" style="color:var(--text3)"><span class="material-symbols-outlined text-red-400" style="font-size:40px">error</span><p class="mt-sm text-sm">Cannot reach server</p></div>`;
       });
   };
 
@@ -239,22 +353,22 @@
     document.getElementById('modal-title').textContent = guide.title;
     const body = document.getElementById('modal-body');
     body.innerHTML = `
-      <div class="space-y-4">
-        <div class="space-y-3">
+      <div class="space-y-md">
+        <div class="space-y-md">
           ${guide.steps.map(s => `
             <div>
-              <label class="text-[10px] uppercase tracking-wider font-bold mb-1.5 block" style="color:var(--text3)">${s.label}</label>
-              <div class="flex items-center gap-2 p-3 rounded-lg border font-mono text-xs" style="background:var(--bg3);border-color:var(--border);color:var(--accent)">${s.label}=<span style="color:var(--text3)">your_value_here</span></div>
-              <p class="text-xs mt-1" style="color:var(--text3)">${s.hint}${s.link ? ` — <a href="${s.link}" target="_blank" class="text-indigo-400 hover:underline">Get key ↗</a>` : ''}</p>
+              <label class="text-[10px] uppercase tracking-wider font-bold mb-xs block" style="color:var(--text3)">${s.label}</label>
+              <div class="flex items-center gap-2 p-md rounded-lg border font-mono text-xs" style="background:var(--bg3);border-color:var(--border);color:var(--accent)">${s.label}=<span style="color:var(--text3)">your_value_here</span></div>
+              <p class="text-xs mt-xs" style="color:var(--text3)">${s.hint}${s.link ? ` — <a href="${s.link}" target="_blank" class="text-indigo-400 hover:underline">Get key ↗</a>` : ''}</p>
             </div>`).join('')}
         </div>
-        <div class="p-3 rounded-lg text-xs" style="background:rgba(99,102,241,0.08);color:var(--text2)">
+        <div class="p-md rounded-lg text-xs" style="background:rgba(99,102,241,0.08);color:var(--text2)">
           <b style="color:var(--text)">How to apply:</b><br>
           Add the variable(s) above to <code class="px-1 rounded" style="background:var(--bg3)">/root/skills/aria/.env</code> on your VPS:<br>
-          <code class="block mt-2 p-2 rounded text-[11px]" style="background:var(--bg3)">echo 'KEY=value' >> /root/skills/aria/.env<br>pm2 restart aria-server --update-env</code>
+          <code class="block mt-sm p-sm rounded text-[11px]" style="background:var(--bg3)">echo 'KEY=value' >> /root/skills/aria/.env<br>pm2 restart aria-server --update-env</code>
         </div>
-        <div class="p-3 rounded-lg text-xs border border-amber-500/20" style="background:rgba(245,158,11,0.05);color:var(--text2)">${guide.note}</div>
-        <button onclick="closeModal()" class="w-full py-2.5 rounded-lg font-semibold text-sm text-white transition-all" style="background:var(--accent)">Got it</button>
+        <div class="p-md rounded-lg text-xs border border-amber-500/20" style="background:rgba(245,158,11,0.05);color:var(--text2)">${guide.note}</div>
+        <button onclick="closeModal()" class="w-full py-sm rounded-lg font-semibold text-sm text-white transition-all" style="background:var(--accent)">Got it</button>
       </div>`;
     document.getElementById('setup-modal').classList.remove('hidden');
   };
@@ -265,15 +379,6 @@
 
   loadAgents();
 })();
-</script>
-<button onclick="openSb()" style="position:fixed;bottom:24px;right:24px;z-index:47;width:52px;height:52px;border-radius:50%;background:#4f46e5;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(79,70,229,0.5)" title="Menu">
-  <span class="material-symbols-outlined" style="font-size:24px">menu</span>
-</button>
-<script>
-var _sb=document.getElementById("nav-sidebar"),_bd=document.getElementById("sb-backdrop");
-function openSb(){_sb.style.display="flex";_bd.style.display="block";}
-function closeSb(){_sb.style.display="none";_bd.style.display="none";}
-document.addEventListener("click",function(e){if(_sb.style.display==="flex"&&!_sb.contains(e.target))closeSb();},true);
 </script>
 </body>
 </html>

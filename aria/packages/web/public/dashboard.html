@@ -2,248 +2,254 @@
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Intelligence Dashboard | ARIA</title>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#0b1326"/>
+<title>Performance | ARIA</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
   tailwind.config = {
     darkMode: "class",
-    theme: {
-      extend: {
-        colors: {
-          "background": "#0b1326", "surface": "#0b1326",
-          "surface-container": "#171f33", "surface-container-low": "#131b2e",
-          "surface-container-lowest": "#060e20", "surface-container-high": "#222a3d",
-          "surface-container-highest": "#2d3449",
-          "on-background": "#dae2fd", "on-surface": "#dae2fd",
-          "on-surface-variant": "#c7c4d7", "outline": "#908fa0",
-          "outline-variant": "#464554", "primary": "#c0c1ff",
-          "primary-container": "#8083ff", "on-primary-container": "#0d0096",
-          "secondary": "#ddb7ff", "secondary-container": "#6f00be",
-          "tertiary": "#89ceff", "tertiary-container": "#009ada",
-          "error": "#ffb4ab", "error-container": "#93000a"
-        },
-        borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
-        spacing: {
-          "xs": "4px", "sm": "8px", "md": "16px", "lg": "24px",
-          "xl": "32px", "gutter": "24px", "margin": "32px", "2xl": "48px", "base": "4px"
-        },
-        fontFamily: {
-          "h1": ["Manrope"], "h2": ["Manrope"], "h3": ["Manrope"],
-          "body-md": ["Inter"], "body-sm": ["Inter"], "label-md": ["Inter"]
-        },
-        fontSize: {
-          "h1": ["40px",{"lineHeight":"1.2","letterSpacing":"-0.02em","fontWeight":"700"}],
-          "h2": ["32px",{"lineHeight":"1.3","letterSpacing":"-0.01em","fontWeight":"600"}],
-          "h3": ["24px",{"lineHeight":"1.4","fontWeight":"600"}],
-          "body-md": ["16px",{"lineHeight":"1.5","fontWeight":"400"}],
-          "body-sm": ["14px",{"lineHeight":"1.5","fontWeight":"400"}],
-          "label-md": ["12px",{"lineHeight":"1","letterSpacing":"0.05em","fontWeight":"600"}]
-        }
+    theme: { extend: {
+      colors: {
+        "background": "#0b1326", "surface": "#0b1326",
+        "surface-container": "#171f33", "surface-container-low": "#131b2e",
+        "surface-container-lowest": "#060e20", "surface-container-high": "#222a3d",
+        "on-background": "#dae2fd", "on-surface": "#dae2fd",
+        "on-surface-variant": "#c7c4d7", "outline": "#908fa0",
+        "outline-variant": "#464554", "primary": "#c0c1ff",
+        "primary-container": "#8083ff", "secondary": "#ddb7ff",
+        "secondary-container": "#6f00be", "tertiary": "#89ceff",
+        "error": "#ffb4ab", "error-container": "#93000a"
+      },
+      borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+      spacing: { "xs": "4px", "sm": "8px", "md": "16px", "lg": "24px", "xl": "32px", "gutter": "24px", "margin": "32px", "2xl": "48px", "base": "4px" },
+      fontFamily: { "h1": ["Manrope","sans-serif"], "h2": ["Manrope","sans-serif"], "h3": ["Manrope","sans-serif"], "body-md": ["Inter","sans-serif"], "body-sm": ["Inter","sans-serif"] },
+      fontSize: {
+        "h1": ["40px",{"lineHeight":"1.2","letterSpacing":"-0.02em","fontWeight":"700"}],
+        "h2": ["32px",{"lineHeight":"1.3","letterSpacing":"-0.01em","fontWeight":"600"}],
+        "h3": ["24px",{"lineHeight":"1.4","fontWeight":"600"}],
+        "body-md": ["16px",{"lineHeight":"1.5","fontWeight":"400"}],
+        "body-sm": ["14px",{"lineHeight":"1.5","fontWeight":"400"}]
       }
-    }
+    }}
   }
 </script>
 <style>
+  :root {
+    --bg: #0b1326; --bg2: #171f33; --bg3: #222a3d;
+    --border: rgba(144,143,160,0.15); --border-strong: rgba(192,193,255,0.2);
+    --text: #dae2fd; --text2: #c7c4d7; --text3: #908fa0;
+    --accent: #8083ff; --accent2: #c0c1ff;
+    --sidebar-bg: rgba(10,15,30,0.92);
+  }
+  html.light {
+    --bg: #f4f6fb; --bg2: #ffffff; --bg3: #e8ecf5;
+    --border: rgba(0,0,0,0.1); --border-strong: rgba(99,102,241,0.3);
+    --text: #1a1d2e; --text2: #3d4166; --text3: #7b7fa8;
+    --accent: #4f52d9; --accent2: #6366f1;
+    --sidebar-bg: rgba(248,249,255,0.95);
+  }
+  html.light body { background: var(--bg); color: var(--text); }
   .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; vertical-align: middle; }
-  .border-subtle { border: 1px solid rgba(144,143,160,0.1); }
-  .glass-card { background: rgba(23,31,51,0.6); backdrop-filter: blur(12px); }
-  .glow-indigo { box-shadow: 0 0 20px rgba(128,131,255,0.15); }
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-thumb { background: #2d3449; border-radius: 10px; }
-  @media (max-width: 768px) { aside { display: none; } main { margin-left: 0 !important; } }
+  .glass-card { background: rgba(45,52,73,0.4); backdrop-filter: blur(12px); border: 1px solid var(--border); }
+  html.light .glass-card { background: rgba(255,255,255,0.7); }
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #2d3449; border-radius: 2px; }
+  html.light ::-webkit-scrollbar-thumb { background: #c5cae9; }
+  .mob-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 49; }
+  /* Page-specific */
+  .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .service-bar { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .perf-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 16px; transition: border-color .2s; }
+  .perf-card:hover { border-color: rgba(128,131,255,0.3); }
 </style>
 </head>
-<body class="bg-background text-on-background font-body-md overflow-x-hidden">
+<body class="font-body-md antialiased" style="background:var(--bg);color:var(--text)">
 
-<!-- Sidebar -->
-<div id="sb-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:48"></div>
-<aside id="nav-sidebar" style="display:none" class="fixed left-0 top-0 h-full z-40 w-64 border-r border-slate-800/50 flex flex-col bg-slate-900/80 backdrop-blur-xl shadow-2xl shadow-black/20">
-  <div class="p-lg flex items-center gap-md">
+<div id="mob-backdrop" class="mob-backdrop"></div>
+
+<aside id="sidebar" class="sidebar fixed left-0 top-0 h-full z-50 w-64 border-r flex flex-col shadow-2xl shadow-black/20" style="display:none;background:var(--sidebar-bg);border-color:var(--border);backdrop-filter:blur(20px)">
+  <div class="p-xl flex items-center space-x-sm">
     <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center flex-shrink-0">
       <span class="material-symbols-outlined text-white" style="font-size:18px">hub</span>
     </div>
-    <div>
-      <h1 class="text-base font-bold tracking-wide text-slate-100">Agent Orchestrator</h1>
-      <p class="text-[10px] uppercase tracking-widest text-indigo-400 font-bold">ARIA</p>
+    <div class="flex flex-col flex-1">
+      <span class="text-base font-bold tracking-wide" style="color:var(--text)">Agent Orchestrator</span>
+      <span class="text-[10px] uppercase tracking-widest font-bold text-indigo-400">ARIA</span>
     </div>
+    <button onclick="closeSidebar()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors" style="color:var(--text3)">
+      <span class="material-symbols-outlined" style="font-size:20px">close</span>
+    </button>
   </div>
-
   <div class="px-md mt-md">
-    <a href="/" class="block w-full py-sm px-md rounded-lg bg-indigo-500 text-white font-semibold flex items-center justify-center gap-sm hover:bg-indigo-400 transition-all text-sm text-center">
+    <a href="/" class="w-full py-sm px-md rounded-lg bg-indigo-500 text-white font-semibold flex items-center justify-center space-x-sm hover:bg-indigo-400 active:scale-95 transition-all text-sm">
       <span class="material-symbols-outlined" style="font-size:18px">add</span>
-      New Session
+      <span>New Session</span>
     </a>
   </div>
-
-  <nav class="flex-1 px-sm mt-xl space-y-xs">
-    <a href="/" class="flex items-center gap-md px-md py-sm rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition-all duration-200">
-      <span class="material-symbols-outlined">chat</span>
-      <span class="text-sm font-medium">Chat</span>
+  <nav class="flex-1 px-sm mt-lg overflow-y-auto">
+    <a href="/" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
+      <span class="material-symbols-outlined" style="font-size:20px">chat</span><span>Chat</span>
     </a>
-    <a href="/agents.html" class="flex items-center gap-md px-md py-sm rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition-all duration-200">
-      <span class="material-symbols-outlined">account_tree</span>
-      <span class="text-sm font-medium">Background Agents</span>
+    <a href="/agents.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
+      <span class="material-symbols-outlined" style="font-size:20px">account_tree</span><span>Agents</span>
     </a>
-    <a href="#" class="flex items-center gap-md px-md py-sm rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition-all duration-200">
-      <span class="material-symbols-outlined">folder_shared</span>
-      <span class="text-sm font-medium">Knowledge Base</span>
+    <a href="/workflows.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
+      <span class="material-symbols-outlined" style="font-size:20px">device_hub</span><span>Workflows</span>
     </a>
-    <a href="/dashboard.html" class="flex items-center gap-md px-md py-sm rounded-lg bg-indigo-500/10 text-indigo-400 border-r-2 border-indigo-500 transition-all duration-200">
-      <span class="material-symbols-outlined">analytics</span>
-      <span class="text-sm font-medium">Performance</span>
+    <a href="/knowledge.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
+      <span class="material-symbols-outlined" style="font-size:20px">auto_stories</span><span>Knowledge Base</span>
     </a>
-    <a href="#" class="flex items-center gap-md px-md py-sm rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition-all duration-200">
-      <span class="material-symbols-outlined">settings</span>
-      <span class="text-sm font-medium">Settings</span>
+    <a href="/dashboard.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="background:rgba(99,102,241,0.1);color:var(--accent2)">
+      <span class="material-symbols-outlined" style="font-size:20px">monitoring</span><span>Performance</span>
+    </a>
+    <a href="/settings.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
+      <span class="material-symbols-outlined" style="font-size:20px">settings</span><span>Settings</span>
     </a>
   </nav>
-
-  <div class="p-md border-t border-slate-800/50 space-y-xs">
-    <div class="flex items-center justify-between px-md py-sm text-slate-400">
-      <div class="flex items-center gap-md">
-        <span class="material-symbols-outlined">sensors</span>
-        <span class="text-sm font-medium">System Status</span>
+  <div class="p-md border-t flex items-center justify-between" style="border-color:var(--border)">
+    <div class="flex items-center space-x-sm">
+      <div class="relative flex items-center justify-center w-4 h-4">
+        <span id="pulse-ring" class="absolute w-3.5 h-3.5 rounded-full opacity-0" style="background:var(--accent)"></span>
+        <div id="status-pip" class="relative w-2 h-2 rounded-full bg-slate-600"></div>
       </div>
-      <div id="status-pip" class="w-2 h-2 rounded-full bg-slate-600"></div>
+      <span class="text-xs font-medium" id="node-label" style="color:var(--text3)">ARIA</span>
     </div>
-    <button onclick="doLogout()" class="flex items-center gap-md px-md py-sm rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/40 transition-all w-full text-sm">
-      <span class="material-symbols-outlined" style="font-size:18px">logout</span>
-      <span>Sign out</span>
-    </button>
+    <div class="flex items-center gap-sm">
+      <button onclick="toggleTheme()" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-indigo-500/20" style="color:var(--text3)">
+        <span id="theme-icon" class="material-symbols-outlined" style="font-size:16px">light_mode</span>
+      </button>
+      <button onclick="doLogout()" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-500/20 text-red-400">
+        <span class="material-symbols-outlined" style="font-size:16px">logout</span>
+      </button>
+    </div>
   </div>
 </aside>
 
-<!-- Header -->
-<header class="sticky top-0 z-30 w-full h-14 border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-md flex justify-between items-center px-xl" >
-  <div class="flex items-center gap-sm">
-    <span class="material-symbols-outlined text-slate-500" style="font-size:20px">search</span>
-    <input class="bg-transparent border-none outline-none text-sm text-slate-300 placeholder:text-slate-600 w-48" placeholder="Search…" type="text"/>
-  </div>
-  <span class="absolute left-1/2 -translate-x-1/2 text-lg font-black bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent font-h2">Intelligence Dashboard</span>
-  <div class="flex items-center gap-md">
-    <button class="text-slate-400 hover:text-white transition-colors">
-      <span class="material-symbols-outlined" style="font-size:20px">notifications</span>
-    </button>
-  </div>
+<header class="flex items-center justify-between px-md h-12 w-full sticky top-0 z-30 border-b flex-shrink-0" style="background:rgba(11,19,38,0.85);border-color:var(--border);backdrop-filter:blur(12px)">
+  <button onclick="openSidebar()" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-indigo-500/20" style="color:var(--text2)">
+    <span class="material-symbols-outlined" style="font-size:22px">menu</span>
+  </button>
+  <span class="text-sm font-semibold" style="color:var(--text2)">Performance</span>
+  <button onclick="toggleTheme()" style="color:var(--text3)" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-indigo-500/20">
+    <span id="theme-icon-header" class="material-symbols-outlined" style="font-size:20px">light_mode</span>
+  </button>
 </header>
 
-<!-- Main Content -->
-<main id="page-main" style="margin-left:0" class="p-margin min-h-[calc(100vh-56px)] bg-background">
+<main style="background:var(--bg)" class="min-h-screen overflow-y-auto p-lg">
 
   <!-- System Health Stats -->
-  <section class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-gutter">
-    <div class="glass-card border-subtle rounded-xl p-lg flex flex-col justify-between">
+  <section class="grid grid-cols-1 md:grid-cols-4 gap-md mb-lg">
+    <div class="stat-card flex flex-col justify-between">
       <div class="flex justify-between items-start">
-        <span class="font-label-md text-label-md text-slate-500 uppercase tracking-wider">System Heartbeat</span>
+        <span class="text-[10px] uppercase tracking-widest font-bold" style="color:var(--text3)">System Heartbeat</span>
         <div id="heartbeat-dot" class="w-2 h-2 rounded-full bg-slate-600"></div>
       </div>
       <div class="mt-md">
-        <h2 id="heartbeat-label" class="font-h2 text-primary">Checking…</h2>
-        <p id="heartbeat-sub" class="text-body-sm text-slate-400">Connecting to server</p>
+        <h2 id="heartbeat-label" class="text-2xl font-bold font-h2" style="color:var(--accent2)">Checking…</h2>
+        <p id="heartbeat-sub" class="text-sm mt-xs" style="color:var(--text3)">Connecting to server</p>
       </div>
     </div>
 
-    <div class="glass-card border-subtle rounded-xl p-lg flex flex-col justify-between">
-      <span class="font-label-md text-label-md text-slate-500 uppercase tracking-wider">Response Time</span>
+    <div class="stat-card flex flex-col justify-between">
+      <span class="text-[10px] uppercase tracking-widest font-bold" style="color:var(--text3)">Response Time</span>
       <div class="mt-md">
-        <h2 id="latency-label" class="font-h2 text-on-background">—</h2>
-        <p id="latency-sub" class="text-body-sm text-slate-400">Last health check</p>
+        <h2 id="latency-label" class="text-2xl font-bold font-h2" style="color:var(--text)">—</h2>
+        <p id="latency-sub" class="text-sm mt-xs" style="color:var(--text3)">Last health check</p>
       </div>
     </div>
 
-    <div class="glass-card border-subtle rounded-xl p-lg flex flex-col justify-between">
-      <span class="font-label-md text-label-md text-slate-500 uppercase tracking-wider">Session</span>
+    <div class="stat-card flex flex-col justify-between">
+      <span class="text-[10px] uppercase tracking-widest font-bold" style="color:var(--text3)">Session</span>
       <div class="mt-md">
-        <h2 class="font-h2 text-on-background">Active</h2>
-        <p id="session-since" class="text-body-sm text-slate-400">Since page load</p>
+        <h2 class="text-2xl font-bold font-h2" style="color:var(--text)">Active</h2>
+        <p id="session-since" class="text-sm mt-xs" style="color:var(--text3)">Since page load</p>
       </div>
     </div>
 
-    <div class="glass-card border-subtle rounded-xl p-lg flex flex-col justify-between">
-      <span class="font-label-md text-label-md text-slate-500 uppercase tracking-wider">Messages Sent</span>
-      <div class="mt-md flex items-end justify-between">
-        <h2 id="msg-count" class="font-h2 text-on-background">0</h2>
+    <div class="stat-card flex flex-col justify-between">
+      <span class="text-[10px] uppercase tracking-widest font-bold" style="color:var(--text3)">Health Checks</span>
+      <div class="mt-md">
+        <h2 id="msg-count" class="text-2xl font-bold font-h2" style="color:var(--text)">0</h2>
       </div>
     </div>
   </section>
 
   <!-- Main Layout -->
-  <div class="grid grid-cols-12 gap-gutter">
+  <div class="grid grid-cols-12 gap-md">
 
     <!-- Left: Charts + Processes -->
-    <div class="col-span-12 lg:col-span-8 space-y-gutter">
+    <div class="col-span-12 lg:col-span-8 space-y-md">
 
-      <!-- Resource Utilization -->
-      <div class="glass-card border-subtle rounded-xl p-lg col-span-2">
+      <!-- System Activity -->
+      <div class="rounded-xl border p-lg" style="background:var(--bg2);border-color:var(--border)">
         <div class="flex justify-between items-center mb-lg">
-          <h3 class="font-h3 text-slate-100 flex items-center gap-sm">
+          <h3 class="font-semibold text-base flex items-center gap-sm font-h3" style="color:var(--text)">
             <span class="material-symbols-outlined text-indigo-400">monitoring</span>
             System Activity
           </h3>
           <div class="flex items-center gap-sm">
             <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-            <span class="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Live</span>
+            <span class="text-[10px] font-bold uppercase tracking-widest" style="color:var(--text3)">Live</span>
           </div>
         </div>
-        <!-- Animated chart bars -->
         <div id="chart" class="h-36 w-full flex items-end gap-1.5 px-md"></div>
-        <div class="grid grid-cols-3 mt-lg pt-lg border-t border-slate-800/50">
+        <div class="grid grid-cols-3 mt-lg pt-lg border-t" style="border-color:var(--border)">
           <div>
-            <p class="font-label-md text-label-md text-slate-500 mb-xs">API CALLS</p>
-            <p id="stat-calls" class="font-bold text-xl text-on-background">—</p>
+            <p class="text-[10px] uppercase tracking-widest font-bold mb-xs" style="color:var(--text3)">API CALLS</p>
+            <p id="stat-calls" class="font-bold text-xl" style="color:var(--text)">—</p>
           </div>
           <div>
-            <p class="font-label-md text-label-md text-slate-500 mb-xs">UPTIME</p>
-            <p id="stat-uptime" class="font-bold text-xl text-on-background">—</p>
+            <p class="text-[10px] uppercase tracking-widest font-bold mb-xs" style="color:var(--text3)">UPTIME</p>
+            <p id="stat-uptime" class="font-bold text-xl" style="color:var(--text)">—</p>
           </div>
           <div>
-            <p class="font-label-md text-label-md text-slate-500 mb-xs">STATUS</p>
-            <p id="stat-status" class="font-bold text-xl text-secondary">—</p>
+            <p class="text-[10px] uppercase tracking-widest font-bold mb-xs" style="color:var(--text3)">STATUS</p>
+            <p id="stat-status" class="font-bold text-xl" style="color:var(--accent2)">—</p>
           </div>
         </div>
       </div>
 
-      <!-- Active Processes -->
-      <div class="glass-card border-subtle rounded-xl p-lg">
-        <h3 class="font-h3 text-slate-100 mb-lg">Active Services</h3>
+      <!-- Active Services -->
+      <div class="rounded-xl border p-lg" style="background:var(--bg2);border-color:var(--border)">
+        <h3 class="font-semibold text-base mb-lg font-h3" style="color:var(--text)">Active Services</h3>
         <div class="space-y-md">
-          <div class="p-md bg-slate-800/20 rounded-lg border border-slate-800/50">
+          <div class="service-bar">
             <div class="flex justify-between items-center mb-sm">
               <div class="flex items-center gap-sm">
-                <span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 text-[10px] font-bold">CORE</span>
-                <span class="text-sm font-medium text-slate-200">ARIA Chat Engine</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold" style="background:rgba(99,102,241,0.1);color:var(--accent)">CORE</span>
+                <span class="text-sm font-medium" style="color:var(--text)">ARIA Chat Engine</span>
               </div>
-              <span id="svc-chat" class="text-xs text-slate-500">—</span>
+              <span id="svc-chat" class="text-xs" style="color:var(--text3)">—</span>
             </div>
-            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <div class="w-full h-1.5 rounded-full overflow-hidden" style="background:var(--bg)">
               <div id="bar-chat" class="h-full bg-indigo-500 rounded-full transition-all duration-700" style="width:0%"></div>
             </div>
           </div>
 
-          <div class="p-md bg-slate-800/20 rounded-lg border border-slate-800/50">
+          <div class="service-bar">
             <div class="flex justify-between items-center mb-sm">
               <div class="flex items-center gap-sm">
-                <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-bold">EVENTS</span>
-                <span class="text-sm font-medium text-slate-200">SSE Event Stream</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold" style="background:rgba(59,130,246,0.1);color:#60a5fa">EVENTS</span>
+                <span class="text-sm font-medium" style="color:var(--text)">SSE Event Stream</span>
               </div>
-              <span id="svc-sse" class="text-xs text-slate-500">—</span>
+              <span id="svc-sse" class="text-xs" style="color:var(--text3)">—</span>
             </div>
-            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <div class="w-full h-1.5 rounded-full overflow-hidden" style="background:var(--bg)">
               <div id="bar-sse" class="h-full bg-blue-500 rounded-full transition-all duration-700" style="width:0%"></div>
             </div>
           </div>
 
-          <div class="p-md bg-slate-800/20 rounded-lg border border-slate-800/50">
+          <div class="service-bar">
             <div class="flex justify-between items-center mb-sm">
               <div class="flex items-center gap-sm">
-                <span class="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 text-[10px] font-bold">MEMORY</span>
-                <span class="text-sm font-medium text-slate-200">Conversation Memory</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold" style="background:rgba(168,85,247,0.1);color:#c084fc">MEMORY</span>
+                <span class="text-sm font-medium" style="color:var(--text)">Conversation Memory</span>
               </div>
-              <span id="svc-mem" class="text-xs text-slate-500">—</span>
+              <span id="svc-mem" class="text-xs" style="color:var(--text3)">—</span>
             </div>
-            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <div class="w-full h-1.5 rounded-full overflow-hidden" style="background:var(--bg)">
               <div id="bar-mem" class="h-full bg-purple-500 rounded-full transition-all duration-700" style="width:0%"></div>
             </div>
           </div>
@@ -251,16 +257,16 @@
       </div>
     </div>
 
-    <!-- Right: Recent Logs -->
+    <!-- Right: System Log -->
     <div class="col-span-12 lg:col-span-4">
-      <div class="glass-card border-subtle rounded-xl flex flex-col h-full min-h-[500px]">
-        <div class="p-lg border-b border-slate-800/50 flex justify-between items-center">
-          <h3 class="font-h3 text-slate-100">System Log</h3>
-          <button onclick="clearLog()" class="text-slate-500 hover:text-indigo-400 transition-colors text-xs">Clear</button>
+      <div class="rounded-xl border flex flex-col min-h-[500px]" style="background:var(--bg2);border-color:var(--border)">
+        <div class="p-lg border-b flex justify-between items-center" style="border-color:var(--border)">
+          <h3 class="font-semibold text-base font-h3" style="color:var(--text)">System Log</h3>
+          <button onclick="clearLog()" class="text-xs hover:text-indigo-400 transition-colors" style="color:var(--text3)">Clear</button>
         </div>
         <div id="log-list" class="flex-1 overflow-y-auto p-md space-y-md"></div>
-        <div class="p-md border-t border-slate-800/50">
-          <button onclick="refreshHealth()" class="w-full text-center text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors uppercase tracking-widest">
+        <div class="p-md border-t" style="border-color:var(--border)">
+          <button onclick="refreshHealth()" class="w-full text-center text-xs font-bold hover:text-indigo-400 transition-colors uppercase tracking-widest" style="color:var(--accent)">
             Refresh Status
           </button>
         </div>
@@ -269,82 +275,82 @@
   </div>
 
   <!-- Agent Performance -->
-  <section class="glass-card border-subtle rounded-xl p-lg mt-gutter">
+  <section class="rounded-xl border p-lg mt-lg" style="background:var(--bg2);border-color:var(--border)">
     <div class="flex justify-between items-center mb-xl">
-      <h3 class="font-h3 text-slate-100">Agent Performance</h3>
+      <h3 class="font-semibold text-base font-h3" style="color:var(--text)">Agent Performance</h3>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-      <div class="bg-slate-800/20 rounded-xl p-md border border-slate-800/50 hover:border-indigo-500/30 transition-all">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+      <div class="perf-card">
         <div class="flex items-center gap-md mb-md">
-          <div class="w-12 h-12 rounded-lg bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
+          <div class="w-12 h-12 rounded-lg flex items-center justify-center border" style="background:rgba(99,102,241,0.1);border-color:rgba(99,102,241,0.2)">
             <span class="material-symbols-outlined text-indigo-400">smart_toy</span>
           </div>
           <div>
-            <h4 class="font-bold text-slate-100">ARIA Core</h4>
-            <p class="text-xs text-slate-500">Primary Intelligence</p>
+            <h4 class="font-bold text-sm" style="color:var(--text)">ARIA Core</h4>
+            <p class="text-xs" style="color:var(--text3)">Primary Intelligence</p>
           </div>
         </div>
         <div class="space-y-sm">
           <div class="flex justify-between items-end">
-            <span class="text-xs text-slate-400">Availability</span>
+            <span class="text-xs" style="color:var(--text3)">Availability</span>
             <span id="perf-avail" class="text-sm font-bold text-indigo-400">—</span>
           </div>
-          <div class="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+          <div class="w-full h-1 rounded-full overflow-hidden" style="background:var(--bg)">
             <div id="perf-avail-bar" class="h-full bg-indigo-500 rounded-full transition-all duration-700" style="width:0%"></div>
           </div>
           <div class="flex justify-between items-end pt-xs">
-            <span class="text-xs text-slate-400">Last Response</span>
-            <span id="perf-last" class="text-sm font-bold text-slate-200">—</span>
+            <span class="text-xs" style="color:var(--text3)">Last Response</span>
+            <span id="perf-last" class="text-sm font-bold" style="color:var(--text2)">—</span>
           </div>
         </div>
       </div>
 
-      <div class="bg-slate-800/20 rounded-xl p-md border border-slate-800/50 hover:border-blue-500/30 transition-all">
+      <div class="perf-card">
         <div class="flex items-center gap-md mb-md">
-          <div class="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+          <div class="w-12 h-12 rounded-lg flex items-center justify-center border" style="background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.2)">
             <span class="material-symbols-outlined text-blue-400">notifications_active</span>
           </div>
           <div>
-            <h4 class="font-bold text-slate-100">Proactive Agent</h4>
-            <p class="text-xs text-slate-500">Scheduled Briefings</p>
+            <h4 class="font-bold text-sm" style="color:var(--text)">Proactive Agent</h4>
+            <p class="text-xs" style="color:var(--text3)">Scheduled Briefings</p>
           </div>
         </div>
         <div class="space-y-sm">
           <div class="flex justify-between items-end">
-            <span class="text-xs text-slate-400">Scheduler</span>
+            <span class="text-xs" style="color:var(--text3)">Scheduler</span>
             <span class="text-sm font-bold text-blue-400">Active</span>
           </div>
-          <div class="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+          <div class="w-full h-1 rounded-full overflow-hidden" style="background:var(--bg)">
             <div class="h-full bg-blue-500 rounded-full" style="width:100%"></div>
           </div>
           <div class="flex justify-between items-end pt-xs">
-            <span class="text-xs text-slate-400">Mode</span>
-            <span class="text-sm font-bold text-slate-200">Daily Reports</span>
+            <span class="text-xs" style="color:var(--text3)">Mode</span>
+            <span class="text-sm font-bold" style="color:var(--text2)">Daily Reports</span>
           </div>
         </div>
       </div>
 
-      <div class="bg-slate-800/20 rounded-xl p-md border border-slate-800/50 hover:border-purple-500/30 transition-all">
+      <div class="perf-card">
         <div class="flex items-center gap-md mb-md">
-          <div class="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
+          <div class="w-12 h-12 rounded-lg flex items-center justify-center border" style="background:rgba(168,85,247,0.1);border-color:rgba(168,85,247,0.2)">
             <span class="material-symbols-outlined text-purple-400">memory</span>
           </div>
           <div>
-            <h4 class="font-bold text-slate-100">Memory Layer</h4>
-            <p class="text-xs text-slate-500">Conversation Context</p>
+            <h4 class="font-bold text-sm" style="color:var(--text)">Memory Layer</h4>
+            <p class="text-xs" style="color:var(--text3)">Conversation Context</p>
           </div>
         </div>
         <div class="space-y-sm">
           <div class="flex justify-between items-end">
-            <span class="text-xs text-slate-400">Provider</span>
+            <span class="text-xs" style="color:var(--text3)">Provider</span>
             <span id="mem-provider" class="text-sm font-bold text-purple-400">—</span>
           </div>
-          <div class="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+          <div class="w-full h-1 rounded-full overflow-hidden" style="background:var(--bg)">
             <div class="h-full bg-purple-500 rounded-full" style="width:75%"></div>
           </div>
           <div class="flex justify-between items-end pt-xs">
-            <span class="text-xs text-slate-400">Status</span>
-            <span id="mem-status" class="text-sm font-bold text-slate-200">—</span>
+            <span class="text-xs" style="color:var(--text3)">Status</span>
+            <span id="mem-status" class="text-sm font-bold" style="color:var(--text2)">—</span>
           </div>
         </div>
       </div>
@@ -356,13 +362,38 @@
 (function() {
   'use strict';
 
+  if (!localStorage.getItem('aria_auth')) { window.location.replace('/login.html'); return; }
+
   const API = '';
 
-  // Auth guard
-  if (!localStorage.getItem('aria_auth')) {
-    window.location.replace('/login.html');
-    return;
+  // Theme
+  function applyTheme(t) {
+    document.documentElement.classList.toggle('dark', t === 'dark');
+    document.documentElement.classList.toggle('light', t === 'light');
+    var icon = t === 'dark' ? 'light_mode' : 'dark_mode';
+    document.querySelectorAll('#theme-icon,#theme-icon-header').forEach(function(el) { el.textContent = icon; });
+    var hdr = document.querySelector('header');
+    if (hdr) hdr.style.background = t === 'light' ? 'rgba(244,246,251,0.95)' : 'rgba(11,19,38,0.85)';
   }
+  window.toggleTheme = function() {
+    var isLight = document.documentElement.classList.contains('light');
+    var next = isLight ? 'dark' : 'light';
+    localStorage.setItem('aria_theme', next);
+    applyTheme(next);
+  };
+  applyTheme(localStorage.getItem('aria_theme') || 'dark');
+
+  // Sidebar
+  var _sb = document.getElementById('sidebar');
+  var _bd = document.getElementById('mob-backdrop');
+  window.openSidebar = function() { _sb.style.display = 'flex'; _bd.style.display = 'block'; };
+  window.closeSidebar = function() { _sb.style.display = 'none'; _bd.style.display = 'none'; };
+  document.addEventListener('click', function(e) {
+    if (_sb.style.display === 'flex' && !_sb.contains(e.target)) closeSidebar();
+  }, true);
+
+  // Logout
+  window.doLogout = function() { localStorage.removeItem('aria_auth'); window.location.replace('/login.html'); };
 
   // Track session start
   const sessionStart = new Date();
@@ -380,7 +411,6 @@
   }
 
   let callCount = 0;
-  let lastLatency = null;
 
   function animateChart(isOnline) {
     bars.forEach((bar, i) => {
@@ -407,24 +437,18 @@
     item.innerHTML = `
       <div class="flex flex-col items-center flex-shrink-0">
         <div class="w-2 h-2 rounded-full mt-1.5" style="background:${c}"></div>
-        <div class="w-px flex-1 bg-slate-800 my-1"></div>
+        <div class="w-px flex-1 my-1" style="background:var(--border)"></div>
       </div>
-      <div class="flex-1 pb-3">
-        <p class="text-[10px] font-bold text-slate-500 uppercase">${time} · ${label}</p>
-        <p class="text-sm mt-1" style="color:${color==='red'?'#fca5a5':color==='amber'?'#fcd34d':'#dae2fd'}">${msg}</p>
+      <div class="flex-1 pb-sm">
+        <p class="text-[10px] font-bold uppercase" style="color:var(--text3)">${time} · ${label}</p>
+        <p class="text-sm mt-1" style="color:${color==='red'?'#fca5a5':color==='amber'?'#fcd34d':'var(--text)'}">${msg}</p>
       </div>`;
     list.insertBefore(item, list.firstChild);
-    // Keep max 20 items
     while (list.children.length > 20) list.removeChild(list.lastChild);
   }
 
   window.clearLog = function() {
     document.getElementById('log-list').innerHTML = '';
-  };
-
-  window.doLogout = function() {
-    localStorage.removeItem('aria_auth');
-    window.location.replace('/login.html');
   };
 
   window.refreshHealth = checkHealth;
@@ -434,7 +458,6 @@
     try {
       const res = await fetch(`${API}/health`);
       const latency = Date.now() - t0;
-      lastLatency = latency;
 
       if (res.ok) {
         setOnline(true, latency);
@@ -462,11 +485,10 @@
     if (online) {
       dot.className = 'w-2 h-2 rounded-full bg-green-500 animate-pulse';
       label.textContent = 'Healthy';
-      label.className = 'font-h2 text-green-400';
+      label.style.color = '#4ade80';
       sub.textContent = 'All systems operational';
-      pip.className = 'w-2 h-2 rounded-full bg-green-500';
+      pip.className = 'relative w-2 h-2 rounded-full bg-green-500';
       latLabel.textContent = latency + 'ms';
-      latLabel.className = 'font-h2 text-on-background';
       latSub.textContent = 'Last check · ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
       document.getElementById('stat-uptime').textContent = 'Online';
       document.getElementById('stat-status').textContent = 'OK';
@@ -486,9 +508,9 @@
     } else {
       dot.className = 'w-2 h-2 rounded-full bg-red-500';
       label.textContent = 'Offline';
-      label.className = 'font-h2 text-error';
+      label.style.color = '#f87171';
       sub.textContent = 'Cannot reach server';
-      pip.className = 'w-2 h-2 rounded-full bg-red-500';
+      pip.className = 'relative w-2 h-2 rounded-full bg-red-500';
       latLabel.textContent = '—';
       document.getElementById('stat-uptime').textContent = 'Offline';
       document.getElementById('stat-status').textContent = 'DOWN';
@@ -509,15 +531,6 @@
   setInterval(checkHealth, 30000);
   setInterval(animateChart.bind(null, true), 4000);
 })();
-</script>
-<button onclick="openSb()" style="position:fixed;bottom:24px;right:24px;z-index:47;width:52px;height:52px;border-radius:50%;background:#4f46e5;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(79,70,229,0.5)" title="Menu">
-  <span class="material-symbols-outlined" style="font-size:24px">menu</span>
-</button>
-<script>
-var _sb=document.getElementById("nav-sidebar"),_bd=document.getElementById("sb-backdrop");
-function openSb(){_sb.style.display="flex";_bd.style.display="block";}
-function closeSb(){_sb.style.display="none";_bd.style.display="none";}
-document.addEventListener("click",function(e){if(_sb.style.display==="flex"&&!_sb.contains(e.target))closeSb();},true);
 </script>
 </body>
 </html>
