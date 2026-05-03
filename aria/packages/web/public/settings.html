@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>Settings | ARIA</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+  :root { --bg:#0b1326;--bg2:#171f33;--bg3:#222a3d;--border:rgba(144,143,160,0.15);--text:#dae2fd;--text2:#c7c4d7;--text3:#908fa0;--accent:#8083ff; }
+  html.light { --bg:#f4f6fb;--bg2:#ffffff;--bg3:#e8ecf5;--border:rgba(0,0,0,0.1);--text:#1a1d2e;--text2:#3d4166;--text3:#7b7fa8;--accent:#4f52d9; }
+  body { background:var(--bg);color:var(--text);font-family:Inter,sans-serif; }
+  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;vertical-align:middle; }
+  .card { background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px; }
+  .input-field { background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);width:100%;outline:none;font-size:14px;transition:border-color .15s; }
+  .input-field:focus { border-color:var(--accent); }
+  .btn-primary { background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:600;font-size:14px;cursor:pointer;transition:opacity .15s; }
+  .btn-primary:hover { opacity:.85; }
+  .btn-secondary { background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 20px;font-weight:600;font-size:14px;cursor:pointer;transition:all .15s; }
+  .btn-secondary:hover { border-color:var(--accent);color:var(--accent); }
+  .toggle { position:relative;width:44px;height:24px;cursor:pointer; }
+  .toggle input { opacity:0;width:0;height:0; }
+  .toggle-track { position:absolute;inset:0;background:var(--bg3);border:1px solid var(--border);border-radius:12px;transition:.2s; }
+  .toggle input:checked + .toggle-track { background:var(--accent);border-color:var(--accent); }
+  .toggle-thumb { position:absolute;left:3px;top:50%;transform:translateY(-50%);width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s;pointer-events:none; }
+  .toggle input:checked ~ .toggle-thumb { left:23px; }
+  @media (max-width:768px) { aside { display:none; } main { margin-left:0 !important; } }
+</style>
+</head>
+<body>
+<aside class="fixed left-0 top-0 h-full z-40 w-64 border-r flex flex-col shadow-2xl" style="background:var(--bg2);border-color:var(--border)">
+  <div class="p-6 flex items-center gap-3">
+    <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center">
+      <span class="material-symbols-outlined text-white" style="font-size:18px">hub</span>
+    </div>
+    <div><div class="font-bold text-sm" style="color:var(--text)">Agent Orchestrator</div>
+    <div class="text-[10px] uppercase tracking-widest text-indigo-400 font-bold">ARIA</div></div>
+  </div>
+  <div class="px-4 mb-4">
+    <a href="/" class="block w-full py-2 px-4 rounded-lg bg-indigo-500 text-white font-semibold text-sm text-center hover:bg-indigo-400 transition-all">
+      <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">add</span> New Session
+    </a>
+  </div>
+  <nav class="flex-1 px-3 space-y-1 text-sm">
+    <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">chat</span>Chat</a>
+    <a href="/agents.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">account_tree</span>Agents</a>
+    <a href="/workflows.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">device_hub</span>Workflows</a>
+    <a href="/knowledge.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">auto_stories</span>Knowledge Base</a>
+    <a href="/dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">monitoring</span>Performance</a>
+    <a href="/settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg border-r-2 border-indigo-500" style="background:rgba(99,102,241,0.1);color:#a5b4fc"><span class="material-symbols-outlined" style="font-size:18px">settings</span>Settings</a>
+  </nav>
+  <div class="p-4 border-t flex items-center justify-between" style="border-color:var(--border)">
+    <span class="text-xs" style="color:var(--text3)">v0.1.0</span>
+    <button onclick="doLogout()" class="text-red-400 hover:text-red-300 text-xs flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">logout</span>Sign out</button>
+  </div>
+</aside>
+
+<main class="ml-64 min-h-screen p-8" style="background:var(--bg)">
+  <header class="sticky top-0 z-30 -mx-8 -mt-8 px-8 pt-8 pb-4 mb-8" style="background:var(--bg)">
+    <h1 class="text-2xl font-bold" style="color:var(--text);font-family:Manrope,sans-serif">Settings</h1>
+    <p class="text-sm mt-1" style="color:var(--text3)">Configure your ARIA experience</p>
+  </header>
+
+  <div class="max-w-2xl space-y-6">
+
+    <!-- Appearance -->
+    <div class="card">
+      <h2 class="font-semibold text-base mb-4 flex items-center gap-2" style="color:var(--text);font-family:Manrope,sans-serif">
+        <span class="material-symbols-outlined text-indigo-400">palette</span> Appearance
+      </h2>
+      <div class="flex items-center justify-between py-3 border-b" style="border-color:var(--border)">
+        <div>
+          <div class="text-sm font-medium" style="color:var(--text)">Theme</div>
+          <div class="text-xs mt-0.5" style="color:var(--text3)">Switch between dark and light mode</div>
+        </div>
+        <div class="flex gap-2">
+          <button id="btn-dark" onclick="setTheme('dark')" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all" style="background:var(--accent);color:#fff;border-color:var(--accent)">Dark</button>
+          <button id="btn-light" onclick="setTheme('light')" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all" style="background:var(--bg3);color:var(--text2);border-color:var(--border)">Light</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile -->
+    <div class="card">
+      <h2 class="font-semibold text-base mb-4 flex items-center gap-2" style="color:var(--text);font-family:Manrope,sans-serif">
+        <span class="material-symbols-outlined text-indigo-400">person</span> Profile
+      </h2>
+      <div class="space-y-4">
+        <div>
+          <label class="text-xs font-semibold uppercase tracking-wider mb-2 block" style="color:var(--text3)">User ID</label>
+          <input id="uid-inp" class="input-field" type="text" placeholder="user-1"/>
+          <p class="text-xs mt-1" style="color:var(--text3)">Used to associate your chat history and memory.</p>
+        </div>
+        <div>
+          <label class="text-xs font-semibold uppercase tracking-wider mb-2 block" style="color:var(--text3)">Display Name</label>
+          <input id="name-inp" class="input-field" type="text" placeholder="Your name (optional)"/>
+        </div>
+        <button onclick="saveProfile()" class="btn-primary">Save Profile</button>
+      </div>
+    </div>
+
+    <!-- ARIA Intelligence -->
+    <div class="card">
+      <h2 class="font-semibold text-base mb-4 flex items-center gap-2" style="color:var(--text);font-family:Manrope,sans-serif">
+        <span class="material-symbols-outlined text-indigo-400">psychology</span> Intelligence
+      </h2>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between py-3 border-b" style="border-color:var(--border)">
+          <div>
+            <div class="text-sm font-medium" style="color:var(--text)">AI Brain</div>
+            <div class="text-xs mt-0.5" style="color:var(--text3)">Current model provider</div>
+          </div>
+          <span id="brain-val" class="text-sm font-semibold text-indigo-400">Loading…</span>
+        </div>
+        <div class="flex items-center justify-between py-3 border-b" style="border-color:var(--border)">
+          <div>
+            <div class="text-sm font-medium" style="color:var(--text)">Model</div>
+            <div class="text-xs mt-0.5" style="color:var(--text3)">Active model ID</div>
+          </div>
+          <span id="model-val" class="text-sm font-semibold text-indigo-400 font-mono text-xs">Loading…</span>
+        </div>
+        <div class="p-3 rounded-lg text-xs" style="background:rgba(99,102,241,0.08);color:var(--text2)">
+          To change the brain, update <code class="bg-black/20 px-1 rounded">ARIA_BRAIN</code> and <code class="bg-black/20 px-1 rounded">ARIA_MODEL</code> in your <code class="bg-black/20 px-1 rounded">.env</code> on the VPS, then run <code class="bg-black/20 px-1 rounded">pm2 restart aria-server --update-env</code>.
+        </div>
+      </div>
+    </div>
+
+    <!-- Data & Privacy -->
+    <div class="card">
+      <h2 class="font-semibold text-base mb-4 flex items-center gap-2" style="color:var(--text);font-family:Manrope,sans-serif">
+        <span class="material-symbols-outlined text-indigo-400">shield</span> Data & Privacy
+      </h2>
+      <div class="space-y-3">
+        <div class="flex items-center justify-between py-3 border-b" style="border-color:var(--border)">
+          <div>
+            <div class="text-sm font-medium" style="color:var(--text)">Chat History</div>
+            <div class="text-xs mt-0.5" style="color:var(--text3)">Stored locally in your browser</div>
+          </div>
+          <div class="text-right">
+            <span id="history-count" class="text-sm font-semibold" style="color:var(--text2)">—</span>
+            <div class="text-xs" style="color:var(--text3)">sessions</div>
+          </div>
+        </div>
+        <div class="flex gap-3 pt-1">
+          <button onclick="clearHistory()" class="btn-secondary flex-1">
+            <span class="material-symbols-outlined mr-1" style="font-size:15px;vertical-align:middle">delete_sweep</span>
+            Clear Chat History
+          </button>
+          <button onclick="exportHistory()" class="btn-secondary flex-1">
+            <span class="material-symbols-outlined mr-1" style="font-size:15px;vertical-align:middle">download</span>
+            Export History
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Server -->
+    <div class="card">
+      <h2 class="font-semibold text-base mb-4 flex items-center gap-2" style="color:var(--text);font-family:Manrope,sans-serif">
+        <span class="material-symbols-outlined text-indigo-400">dns</span> Server
+      </h2>
+      <div class="space-y-3">
+        <div class="flex items-center justify-between py-3 border-b" style="border-color:var(--border)">
+          <div class="text-sm font-medium" style="color:var(--text)">Status</div>
+          <div id="srv-status" class="flex items-center gap-2 text-xs"><div class="w-2 h-2 rounded-full bg-slate-500"></div><span style="color:var(--text3)">Checking…</span></div>
+        </div>
+        <div class="flex items-center justify-between py-3 border-b" style="border-color:var(--border)">
+          <div class="text-sm font-medium" style="color:var(--text)">Uptime</div>
+          <span id="srv-uptime" class="text-sm" style="color:var(--text2)">—</span>
+        </div>
+        <div class="flex items-center justify-between py-3" style="">
+          <div class="text-sm font-medium" style="color:var(--text)">Password Protected</div>
+          <span id="srv-pw" class="text-sm" style="color:var(--text2)">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="card" style="border-color:rgba(239,68,68,0.2)">
+      <h2 class="font-semibold text-base mb-4 flex items-center gap-2 text-red-400" style="font-family:Manrope,sans-serif">
+        <span class="material-symbols-outlined">warning</span> Danger Zone
+      </h2>
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sm font-medium" style="color:var(--text)">Sign Out</div>
+          <div class="text-xs mt-0.5" style="color:var(--text3)">Clear session and return to login</div>
+        </div>
+        <button onclick="doLogout()" class="px-4 py-2 rounded-lg text-sm font-semibold border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all">Sign Out</button>
+      </div>
+    </div>
+
+    <div id="save-toast" class="hidden fixed bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-xl" style="background:var(--accent)">Saved!</div>
+  </div>
+</main>
+
+<script>
+(function() {
+  if (!localStorage.getItem('aria_auth')) { window.location.replace('/login.html'); return; }
+
+  function applyTheme(t) {
+    document.documentElement.classList.toggle('dark', t === 'dark');
+    document.documentElement.classList.toggle('light', t === 'light');
+    document.getElementById('btn-dark').style.cssText = t === 'dark' ? 'background:var(--accent);color:#fff;border-color:var(--accent)' : 'background:var(--bg3);color:var(--text2);border-color:var(--border)';
+    document.getElementById('btn-light').style.cssText = t === 'light' ? 'background:var(--accent);color:#fff;border-color:var(--accent)' : 'background:var(--bg3);color:var(--text2);border-color:var(--border)';
+  }
+
+  const savedTheme = localStorage.getItem('aria_theme') || 'dark';
+  applyTheme(savedTheme);
+
+  window.setTheme = function(t) { localStorage.setItem('aria_theme', t); applyTheme(t); };
+
+  // Load saved profile
+  document.getElementById('uid-inp').value = localStorage.getItem('aria_uid') || 'user-1';
+  document.getElementById('name-inp').value = localStorage.getItem('aria_name') || '';
+
+  window.saveProfile = function() {
+    const uid = document.getElementById('uid-inp').value.trim() || 'user-1';
+    const name = document.getElementById('name-inp').value.trim();
+    localStorage.setItem('aria_uid', uid);
+    if (name) localStorage.setItem('aria_name', name);
+    showToast();
+  };
+
+  function showToast() {
+    const t = document.getElementById('save-toast');
+    t.classList.remove('hidden');
+    setTimeout(() => t.classList.add('hidden'), 2000);
+  }
+
+  // History stats
+  const sessions = JSON.parse(localStorage.getItem('aria_sessions') || '[]');
+  document.getElementById('history-count').textContent = sessions.length;
+
+  window.clearHistory = function() {
+    if (!confirm('Clear all chat history?')) return;
+    localStorage.removeItem('aria_sessions');
+    document.getElementById('history-count').textContent = '0';
+    showToast();
+  };
+
+  window.exportHistory = function() {
+    const data = localStorage.getItem('aria_sessions') || '[]';
+    const blob = new Blob([data], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `aria-history-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+  };
+
+  window.doLogout = function() { localStorage.removeItem('aria_auth'); window.location.replace('/login.html'); };
+
+  // Fetch server status
+  fetch('/api/aria/status')
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById('brain-val').textContent = d.brain;
+      document.getElementById('model-val').textContent = d.model;
+      const h = Math.floor(d.uptime / 3600), m = Math.floor((d.uptime % 3600) / 60);
+      document.getElementById('srv-uptime').textContent = `${h}h ${m}m`;
+      document.getElementById('srv-pw').textContent = d.passwordProtected ? 'Yes' : 'No (open access)';
+      document.getElementById('srv-status').innerHTML = '<div class="w-2 h-2 rounded-full bg-green-500"></div><span style="color:#86efac">Online</span>';
+    })
+    .catch(() => {
+      document.getElementById('srv-status').innerHTML = '<div class="w-2 h-2 rounded-full bg-red-500"></div><span style="color:#fca5a5">Offline</span>';
+    });
+})();
+</script>
+</body>
+</html>

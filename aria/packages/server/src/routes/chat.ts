@@ -83,7 +83,12 @@ chatRouter.post('/', async (req, res) => {
   } catch (err) {
     const e = err as Error & { cause?: Error };
     console.error('[chat] error:', e.message, '| cause:', e.cause?.message);
-    res.json({ reply: "I've noted that down." });
+    const hint = e.message?.includes('API key') || e.message?.includes('auth')
+      ? ' Check your API key in .env.'
+      : e.message?.includes('network') || e.message?.includes('ECONNREFUSED')
+      ? ' Check server connectivity.'
+      : '';
+    res.status(500).json({ error: true, reply: `⚠️ ${e.message || 'Unknown error'}${hint}` });
   }
 });
 

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>Knowledge Base | ARIA</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+  :root { --bg:#0b1326;--bg2:#171f33;--bg3:#222a3d;--border:rgba(144,143,160,0.15);--text:#dae2fd;--text2:#c7c4d7;--text3:#908fa0;--accent:#8083ff; }
+  html.light { --bg:#f4f6fb;--bg2:#ffffff;--bg3:#e8ecf5;--border:rgba(0,0,0,0.1);--text:#1a1d2e;--text2:#3d4166;--text3:#7b7fa8;--accent:#4f52d9; }
+  body { background:var(--bg);color:var(--text);font-family:Inter,sans-serif; }
+  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;vertical-align:middle; }
+  .mem-card { background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;transition:all .15s; }
+  .mem-card:hover { border-color:rgba(128,131,255,0.3); }
+  @media (max-width:768px) { aside{display:none}main{margin-left:0!important} }
+</style>
+</head>
+<body>
+<aside class="fixed left-0 top-0 h-full z-40 w-64 border-r flex flex-col shadow-2xl" style="background:var(--bg2);border-color:var(--border)">
+  <div class="p-6 flex items-center gap-3">
+    <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center">
+      <span class="material-symbols-outlined text-white" style="font-size:18px">hub</span>
+    </div>
+    <div><div class="font-bold text-sm" style="color:var(--text)">Agent Orchestrator</div>
+    <div class="text-[10px] uppercase tracking-widest text-indigo-400 font-bold">ARIA</div></div>
+  </div>
+  <div class="px-4 mb-4">
+    <a href="/" class="block w-full py-2 px-4 rounded-lg bg-indigo-500 text-white font-semibold text-sm text-center hover:bg-indigo-400 transition-all">
+      <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">add</span> New Session
+    </a>
+  </div>
+  <nav class="flex-1 px-3 space-y-1 text-sm">
+    <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-lg" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">chat</span>Chat</a>
+    <a href="/agents.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">account_tree</span>Agents</a>
+    <a href="/workflows.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">device_hub</span>Workflows</a>
+    <a href="/knowledge.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg border-r-2 border-indigo-500" style="background:rgba(99,102,241,0.1);color:#a5b4fc"><span class="material-symbols-outlined" style="font-size:18px">auto_stories</span>Knowledge Base</a>
+    <a href="/dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">monitoring</span>Performance</a>
+    <a href="/settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">settings</span>Settings</a>
+  </nav>
+  <div class="p-4 border-t" style="border-color:var(--border)">
+    <button onclick="doLogout()" class="text-red-400 hover:text-red-300 text-xs flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">logout</span>Sign out</button>
+  </div>
+</aside>
+
+<main class="ml-64 min-h-screen p-8" style="background:var(--bg)">
+  <div class="max-w-3xl">
+    <div class="flex items-end justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold mb-1" style="color:var(--text);font-family:Manrope,sans-serif">Knowledge Base</h1>
+        <p class="text-sm" style="color:var(--text3)">ARIA's memory — insights extracted from your conversations.</p>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="loadMemory()" class="flex items-center gap-1 px-3 py-2 rounded-lg text-sm border transition-all" style="background:var(--bg3);color:var(--text2);border-color:var(--border)">
+          <span class="material-symbols-outlined" style="font-size:16px">refresh</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="relative mb-6">
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2" style="font-size:18px;color:var(--text3)">search</span>
+      <input id="search-inp" type="text" placeholder="Search memories…" class="w-full rounded-xl border pl-10 pr-4 py-3 text-sm outline-none transition-all" style="background:var(--bg2);border-color:var(--border);color:var(--text)" oninput="filterMemory(this.value)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="rounded-xl border p-4" style="background:var(--bg2);border-color:var(--border)">
+        <div class="text-[10px] uppercase tracking-wider font-bold mb-1" style="color:var(--text3)">Total Memories</div>
+        <div id="mem-total" class="text-2xl font-bold" style="color:var(--text);font-family:Manrope,sans-serif">—</div>
+      </div>
+      <div class="rounded-xl border p-4" style="background:var(--bg2);border-color:var(--border)">
+        <div class="text-[10px] uppercase tracking-wider font-bold mb-1" style="color:var(--text3)">Showing</div>
+        <div id="mem-showing" class="text-2xl font-bold" style="color:var(--text);font-family:Manrope,sans-serif">—</div>
+      </div>
+      <div class="rounded-xl border p-4" style="background:var(--bg2);border-color:var(--border)">
+        <div class="text-[10px] uppercase tracking-wider font-bold mb-1" style="color:var(--text3)">Storage</div>
+        <div class="text-xl font-bold text-green-400" style="font-family:Manrope,sans-serif">Supabase</div>
+      </div>
+    </div>
+
+    <!-- Memory list -->
+    <div id="mem-list" class="space-y-3">
+      <div class="text-center py-12" style="color:var(--text3)">
+        <span class="material-symbols-outlined" style="font-size:40px">hourglass_empty</span>
+        <p class="mt-2 text-sm">Loading memories…</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function() {
+  if (!localStorage.getItem('aria_auth')) { window.location.replace('/login.html'); return; }
+  const t = localStorage.getItem('aria_theme') || 'dark';
+  document.documentElement.classList.toggle('dark', t === 'dark');
+  document.documentElement.classList.toggle('light', t === 'light');
+  window.doLogout = function() { localStorage.removeItem('aria_auth'); window.location.replace('/login.html'); };
+
+  const UID = localStorage.getItem('aria_uid') || 'user-1';
+  let allMemories = [];
+
+  window.loadMemory = function() {
+    fetch(`/api/aria/memory?userId=${encodeURIComponent(UID)}`)
+      .then(r => r.json())
+      .then(data => {
+        allMemories = data.memories || [];
+        document.getElementById('mem-total').textContent = allMemories.length;
+        renderMemory(allMemories);
+      })
+      .catch(() => {
+        document.getElementById('mem-list').innerHTML = `<div class="text-center py-12" style="color:var(--text3)"><span class="material-symbols-outlined text-red-400" style="font-size:40px">error</span><p class="mt-2 text-sm">Memory service unavailable. Check SUPABASE_URL is set.</p></div>`;
+      });
+  };
+
+  window.filterMemory = function(q) {
+    const filtered = q.trim()
+      ? allMemories.filter(m => m.content.toLowerCase().includes(q.toLowerCase()))
+      : allMemories;
+    renderMemory(filtered);
+  };
+
+  function renderMemory(list) {
+    document.getElementById('mem-showing').textContent = list.length;
+    const el = document.getElementById('mem-list');
+    if (!list.length) {
+      el.innerHTML = `<div class="text-center py-12" style="color:var(--text3)"><span class="material-symbols-outlined" style="font-size:40px">psychology_alt</span><p class="mt-2 text-sm">No memories found. Chat with ARIA to build up your knowledge base.</p></div>`;
+      return;
+    }
+    el.innerHTML = list.map(m => {
+      const date = new Date(m.created_at).toLocaleDateString([], {month:'short',day:'numeric',year:'numeric'});
+      const time = new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      return `
+        <div class="mem-card">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex items-start gap-3 flex-1 min-w-0">
+              <span class="material-symbols-outlined text-indigo-400 flex-shrink-0 mt-0.5" style="font-size:16px">psychology</span>
+              <p class="text-sm leading-relaxed" style="color:var(--text)">${escHtml(m.content)}</p>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <span class="text-[10px]" style="color:var(--text3)">${date} ${time}</span>
+              <button onclick="deleteMemory('${m.id}', this)" class="hover:text-red-400 transition-colors" style="color:var(--text3)" title="Delete">
+                <span class="material-symbols-outlined" style="font-size:14px">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  window.deleteMemory = function(id, btn) {
+    fetch(`/api/aria/memory/${id}`, {method:'DELETE'})
+      .then(r => r.json())
+      .then(() => {
+        allMemories = allMemories.filter(m => m.id !== id);
+        document.getElementById('mem-total').textContent = allMemories.length;
+        renderMemory(allMemories);
+      })
+      .catch(() => alert('Failed to delete memory'));
+  };
+
+  function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  loadMemory();
+})();
+</script>
+</body>
+</html>

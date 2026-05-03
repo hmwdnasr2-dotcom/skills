@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>Workflows | ARIA</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+  :root { --bg:#0b1326;--bg2:#171f33;--bg3:#222a3d;--border:rgba(144,143,160,0.15);--text:#dae2fd;--text2:#c7c4d7;--text3:#908fa0;--accent:#8083ff; }
+  html.light { --bg:#f4f6fb;--bg2:#ffffff;--bg3:#e8ecf5;--border:rgba(0,0,0,0.1);--text:#1a1d2e;--text2:#3d4166;--text3:#7b7fa8;--accent:#4f52d9; }
+  body { background:var(--bg);color:var(--text);font-family:Inter,sans-serif; }
+  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;vertical-align:middle; }
+  /* Flow diagram */
+  .flow-node { background:var(--bg2);border:1px solid var(--border);border-radius:12px;transition:all .2s; }
+  .flow-node:hover { border-color:var(--accent);box-shadow:0 0 20px rgba(128,131,255,0.15); }
+  .flow-node.active { border-color:#22c55e;box-shadow:0 0 15px rgba(34,197,94,0.15); }
+  .flow-node.inactive { opacity:.5; }
+  .flow-connector { stroke:var(--border);stroke-width:1.5;fill:none; }
+  .flow-connector.active { stroke:rgba(128,131,255,0.4); }
+  @keyframes flow-pulse { 0%,100%{opacity:.3} 50%{opacity:1} }
+  .flow-dot { animation:flow-pulse 2s ease infinite; }
+  @media (max-width:768px) { aside{display:none}main{margin-left:0!important} }
+</style>
+</head>
+<body>
+<aside class="fixed left-0 top-0 h-full z-40 w-64 border-r flex flex-col shadow-2xl" style="background:var(--bg2);border-color:var(--border)">
+  <div class="p-6 flex items-center gap-3">
+    <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center">
+      <span class="material-symbols-outlined text-white" style="font-size:18px">hub</span>
+    </div>
+    <div><div class="font-bold text-sm" style="color:var(--text)">Agent Orchestrator</div>
+    <div class="text-[10px] uppercase tracking-widest text-indigo-400 font-bold">ARIA</div></div>
+  </div>
+  <div class="px-4 mb-4">
+    <a href="/" class="block w-full py-2 px-4 rounded-lg bg-indigo-500 text-white font-semibold text-sm text-center hover:bg-indigo-400 transition-all">
+      <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">add</span> New Session
+    </a>
+  </div>
+  <nav class="flex-1 px-3 space-y-1 text-sm">
+    <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-lg" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">chat</span>Chat</a>
+    <a href="/agents.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">account_tree</span>Agents</a>
+    <a href="/workflows.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg border-r-2 border-indigo-500" style="background:rgba(99,102,241,0.1);color:#a5b4fc"><span class="material-symbols-outlined" style="font-size:18px">device_hub</span>Workflows</a>
+    <a href="/knowledge.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">auto_stories</span>Knowledge Base</a>
+    <a href="/dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">monitoring</span>Performance</a>
+    <a href="/settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg" style="color:var(--text3)" onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:18px">settings</span>Settings</a>
+  </nav>
+  <div class="p-4 border-t" style="border-color:var(--border)">
+    <button onclick="doLogout()" class="text-red-400 hover:text-red-300 text-xs flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">logout</span>Sign out</button>
+  </div>
+</aside>
+
+<main class="ml-64 min-h-screen p-8" style="background:var(--bg)">
+  <div class="max-w-5xl">
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold mb-1" style="color:var(--text);font-family:Manrope,sans-serif">Agent Workflows</h1>
+      <p class="text-sm" style="color:var(--text3)">How your agents connect and communicate. Green = active connector.</p>
+    </div>
+
+    <!-- Workflow Diagram -->
+    <div class="relative rounded-2xl border p-8 mb-8 overflow-hidden" style="background:var(--bg2);border-color:var(--border);min-height:520px">
+      <!-- SVG connector lines -->
+      <svg id="flow-svg" class="absolute inset-0 w-full h-full pointer-events-none" style="z-index:0"></svg>
+
+      <!-- Core row -->
+      <div class="relative z-10 flex flex-col items-center gap-6">
+
+        <!-- Input sources -->
+        <div class="flex gap-6 justify-center w-full">
+          <div id="node-web" class="flow-node px-4 py-3 flex items-center gap-2 text-sm">
+            <span class="material-symbols-outlined text-indigo-400" style="font-size:18px">language</span>
+            <span style="color:var(--text)">Web App</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-green-500 ml-1"></span>
+          </div>
+          <div id="node-tg" class="flow-node px-4 py-3 flex items-center gap-2 text-sm">
+            <span class="material-symbols-outlined text-blue-400" style="font-size:18px">send</span>
+            <span style="color:var(--text)">Telegram</span>
+            <span id="tg-dot" class="w-1.5 h-1.5 rounded-full bg-slate-500 ml-1"></span>
+          </div>
+          <div id="node-scheduler" class="flow-node px-4 py-3 flex items-center gap-2 text-sm">
+            <span class="material-symbols-outlined text-purple-400" style="font-size:18px">schedule</span>
+            <span style="color:var(--text)">Scheduler</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-green-500 flow-dot ml-1"></span>
+          </div>
+        </div>
+
+        <!-- Arrow down -->
+        <div class="flex flex-col items-center gap-1 opacity-40">
+          <div class="w-px h-6" style="background:var(--accent)"></div>
+          <div class="w-2 h-2 rotate-45 border-r-2 border-b-2" style="border-color:var(--accent)"></div>
+        </div>
+
+        <!-- ARIA Core (center) -->
+        <div id="node-core" class="flow-node active px-8 py-4 text-center" style="background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(59,130,246,0.1));min-width:200px">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center mx-auto mb-2">
+            <span class="material-symbols-outlined text-white">hub</span>
+          </div>
+          <div class="font-bold text-sm" style="color:var(--text)">ARIA Core</div>
+          <div id="core-model" class="text-[10px] uppercase tracking-wider mt-0.5" style="color:var(--text3)">Loading…</div>
+          <div class="flex items-center justify-center gap-1 mt-2">
+            <div class="w-1.5 h-1.5 rounded-full bg-green-500 flow-dot"></div>
+            <span class="text-[10px]" style="color:#86efac">Online</span>
+          </div>
+        </div>
+
+        <!-- Arrow down -->
+        <div class="flex flex-col items-center gap-1 opacity-40">
+          <div class="w-px h-6" style="background:var(--accent)"></div>
+          <div class="w-2 h-2 rotate-45 border-r-2 border-b-2" style="border-color:var(--accent)"></div>
+        </div>
+
+        <!-- Output connectors grid -->
+        <div id="connectors-grid" class="grid grid-cols-3 md:grid-cols-4 gap-4 w-full max-w-3xl">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Workflow detail cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+      <div class="rounded-xl border p-5" style="background:var(--bg2);border-color:var(--border)">
+        <h3 class="font-semibold text-sm mb-3 flex items-center gap-2" style="color:var(--text);font-family:Manrope,sans-serif">
+          <span class="material-symbols-outlined text-indigo-400" style="font-size:18px">chat</span>
+          Chat Workflow
+        </h3>
+        <ol class="space-y-2 text-xs" style="color:var(--text2)">
+          <li class="flex gap-2"><span class="text-indigo-400 font-bold">1.</span> User sends message via Web App or Telegram</li>
+          <li class="flex gap-2"><span class="text-indigo-400 font-bold">2.</span> Intent router classifies request (task / email / research / general)</li>
+          <li class="flex gap-2"><span class="text-indigo-400 font-bold">3.</span> Context builder pulls memory + relevant data</li>
+          <li class="flex gap-2"><span class="text-indigo-400 font-bold">4.</span> ARIA Core generates response using active connectors as tools</li>
+          <li class="flex gap-2"><span class="text-indigo-400 font-bold">5.</span> Memory layer saves insight for future context</li>
+          <li class="flex gap-2"><span class="text-indigo-400 font-bold">6.</span> Response delivered back to user</li>
+        </ol>
+      </div>
+
+      <div class="rounded-xl border p-5" style="background:var(--bg2);border-color:var(--border)">
+        <h3 class="font-semibold text-sm mb-3 flex items-center gap-2" style="color:var(--text);font-family:Manrope,sans-serif">
+          <span class="material-symbols-outlined text-purple-400" style="font-size:18px">schedule</span>
+          Proactive Workflow
+        </h3>
+        <ol class="space-y-2 text-xs" style="color:var(--text2)">
+          <li class="flex gap-2"><span class="text-purple-400 font-bold">1.</span> Scheduler fires on cron (morning, evening, reminders)</li>
+          <li class="flex gap-2"><span class="text-purple-400 font-bold">2.</span> Builds context from pending tasks + reminders</li>
+          <li class="flex gap-2"><span class="text-purple-400 font-bold">3.</span> ARIA generates proactive briefing or nudge</li>
+          <li class="flex gap-2"><span class="text-purple-400 font-bold">4.</span> Pushed via SSE to open web sessions</li>
+          <li class="flex gap-2"><span class="text-purple-400 font-bold">5.</span> Sent to Telegram if configured</li>
+        </ol>
+      </div>
+
+      <div class="rounded-xl border p-5" style="background:var(--bg2);border-color:var(--border)">
+        <h3 class="font-semibold text-sm mb-3 flex items-center gap-2" style="color:var(--text);font-family:Manrope,sans-serif">
+          <span class="material-symbols-outlined text-blue-400" style="font-size:18px">attach_file</span>
+          File Processing Workflow
+        </h3>
+        <ol class="space-y-2 text-xs" style="color:var(--text2)">
+          <li class="flex gap-2"><span class="text-blue-400 font-bold">1.</span> User attaches file (PDF, Excel, CSV, image, doc)</li>
+          <li class="flex gap-2"><span class="text-blue-400 font-bold">2.</span> Upload endpoint stores file, returns fileId</li>
+          <li class="flex gap-2"><span class="text-blue-400 font-bold">3.</span> Chat sends message + fileIds to ARIA</li>
+          <li class="flex gap-2"><span class="text-blue-400 font-bold">4.</span> File handler extracts text / parses data</li>
+          <li class="flex gap-2"><span class="text-blue-400 font-bold">5.</span> ARIA analyzes content with user's prompt</li>
+          <li class="flex gap-2"><span class="text-blue-400 font-bold">6.</span> Optional: generate Excel/PDF report as output</li>
+        </ol>
+      </div>
+
+      <div class="rounded-xl border p-5" style="background:var(--bg2);border-color:var(--border)">
+        <h3 class="font-semibold text-sm mb-3 flex items-center gap-2" style="color:var(--text);font-family:Manrope,sans-serif">
+          <span class="material-symbols-outlined text-green-400" style="font-size:18px">memory</span>
+          Memory Workflow
+        </h3>
+        <ol class="space-y-2 text-xs" style="color:var(--text2)">
+          <li class="flex gap-2"><span class="text-green-400 font-bold">1.</span> After each ARIA response, insight is extracted</li>
+          <li class="flex gap-2"><span class="text-green-400 font-bold">2.</span> Saved to Supabase <code class="px-1 rounded" style="background:var(--bg3)">aria_memory</code> table</li>
+          <li class="flex gap-2"><span class="text-green-400 font-bold">3.</span> On next message, recent memories loaded as context</li>
+          <li class="flex gap-2"><span class="text-green-400 font-bold">4.</span> If OpenAI key set: vector embeddings for semantic search</li>
+          <li class="flex gap-2"><span class="text-green-400 font-bold">5.</span> Search memories from chat header search bar</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function() {
+  if (!localStorage.getItem('aria_auth')) { window.location.replace('/login.html'); return; }
+
+  const t = localStorage.getItem('aria_theme') || 'dark';
+  document.documentElement.classList.toggle('dark', t === 'dark');
+  document.documentElement.classList.toggle('light', t === 'light');
+
+  window.doLogout = function() { localStorage.removeItem('aria_auth'); window.location.replace('/login.html'); };
+
+  const ICON_MAP = {
+    core:'hub', scheduler:'schedule', memory:'memory', tasks:'task_alt',
+    projects:'folder', reminders:'alarm', ideas:'lightbulb', workspace:'corporate_fare',
+    gmail:'mail', telegram:'send', search:'travel_explore', n8n:'account_tree',
+    documents:'description', reports:'analytics', openai:'hub'
+  };
+  const COLOR_MAP = {
+    core:'text-indigo-400', scheduler:'text-purple-400', memory:'text-green-400',
+    tasks:'text-blue-400', projects:'text-blue-400', reminders:'text-yellow-400',
+    ideas:'text-yellow-400', workspace:'text-orange-400', gmail:'text-red-400',
+    telegram:'text-blue-400', search:'text-cyan-400', n8n:'text-purple-400',
+    documents:'text-slate-400', reports:'text-indigo-400', openai:'text-green-400'
+  };
+
+  fetch('/api/aria/status')
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('core-model').textContent = `${data.brain} / ${data.model.split('-').slice(-2).join('-')}`;
+
+      // Update telegram dot
+      const tgConn = data.connectors.find(c => c.key === 'telegram');
+      if (tgConn?.active) document.getElementById('tg-dot').className = 'w-1.5 h-1.5 rounded-full bg-green-500 flow-dot ml-1';
+
+      // Render connector grid (skip core/scheduler which are in header)
+      const grid = document.getElementById('connectors-grid');
+      const connectors = data.connectors.filter(c => !['core','scheduler'].includes(c.key));
+      grid.innerHTML = connectors.map(c => `
+        <div class="flow-node ${c.active ? 'active' : 'inactive'} p-3 flex flex-col items-center text-center gap-1.5">
+          <span class="material-symbols-outlined ${COLOR_MAP[c.key] || 'text-slate-400'}" style="font-size:20px">${ICON_MAP[c.key] || 'extension'}</span>
+          <div class="text-xs font-medium" style="color:var(--text)">${c.name}</div>
+          <div class="flex items-center gap-1">
+            <div class="w-1.5 h-1.5 rounded-full ${c.active ? 'bg-green-500' : 'bg-slate-500'} ${c.active ? 'flow-dot' : ''}"></div>
+            <span class="text-[10px]" style="color:${c.active ? '#86efac' : 'var(--text3)'}">${c.active ? 'Active' : 'Inactive'}</span>
+          </div>
+        </div>`).join('');
+    })
+    .catch(() => {
+      document.getElementById('core-model').textContent = 'Offline';
+    });
+})();
+</script>
+</body>
+</html>

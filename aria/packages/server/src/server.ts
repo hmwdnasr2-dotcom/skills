@@ -117,6 +117,42 @@ app.use('/api/auth', authRouter);
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
+// ─── Status — which connectors are active ─────────────────────────────────────
+
+app.get('/api/aria/status', (_req, res) => {
+  const supabase = !!(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
+  const gmail    = !!(process.env.GMAIL_CLIENT_ID && process.env.GMAIL_CLIENT_SECRET && process.env.GMAIL_REFRESH_TOKEN);
+  const telegram = !!(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID);
+  const brave    = !!process.env.BRAVE_SEARCH_API_KEY;
+  const perplexity = !!process.env.PERPLEXITY_API_KEY;
+  const n8n      = !!process.env.N8N_RESEARCH_WEBHOOK_URL;
+  const openai   = !!process.env.OPENAI_API_KEY;
+
+  res.json({
+    brain: process.env.ARIA_BRAIN ?? 'claude',
+    model: process.env.ARIA_MODEL ?? 'claude-haiku-4-5-20251001',
+    uptime: process.uptime(),
+    passwordProtected: !!process.env.ARIA_PASSWORD,
+    connectors: [
+      { key: 'core',      name: 'ARIA Core',        icon: 'hub',              active: true,     tools: ['chat', 'stream'],                          category: 'core' },
+      { key: 'scheduler', name: 'Proactive Agent',  icon: 'schedule',         active: true,     tools: ['morning_briefing', 'reminders'],           category: 'core' },
+      { key: 'memory',    name: 'Memory',           icon: 'memory',           active: supabase, tools: ['save_memory', 'recall'],                   category: 'core' },
+      { key: 'tasks',     name: 'Task Manager',     icon: 'task_alt',         active: supabase, tools: ['add_task', 'list_tasks', 'complete_task'],  category: 'productivity' },
+      { key: 'projects',  name: 'Projects',         icon: 'folder',           active: supabase, tools: ['create_project', 'list_projects'],          category: 'productivity' },
+      { key: 'reminders', name: 'Reminders',        icon: 'alarm',            active: supabase, tools: ['set_reminder', 'list_reminders'],           category: 'productivity' },
+      { key: 'ideas',     name: 'Ideas Vault',      icon: 'lightbulb',        active: supabase, tools: ['save_idea', 'list_ideas'],                  category: 'productivity' },
+      { key: 'workspace', name: 'Workspace',        icon: 'corporate_fare',   active: supabase, tools: ['log_achievement', 'get_follow_ups'],        category: 'productivity' },
+      { key: 'gmail',     name: 'Gmail',            icon: 'mail',             active: gmail,    tools: ['gmail_list', 'gmail_get', 'gmail_send'],    category: 'integrations' },
+      { key: 'telegram',  name: 'Telegram',         icon: 'send',             active: telegram, tools: ['telegram_notify'],                          category: 'integrations' },
+      { key: 'search',    name: 'Web Search',       icon: 'travel_explore',   active: brave || perplexity, tools: ['web_search'],                   category: 'intelligence', provider: brave ? 'Brave' : perplexity ? 'Perplexity' : null },
+      { key: 'n8n',       name: 'n8n Research',     icon: 'account_tree',     active: n8n,      tools: ['research'],                               category: 'intelligence' },
+      { key: 'documents', name: 'Documents',        icon: 'description',      active: supabase, tools: ['create_excel', 'create_pdf'],              category: 'outputs' },
+      { key: 'reports',   name: 'Reports',          icon: 'analytics',        active: supabase, tools: ['generate_report'],                         category: 'outputs' },
+      { key: 'openai',    name: 'Vector Memory',    icon: 'hub',              active: openai,   tools: ['embed', 'semantic_recall'],                category: 'intelligence' },
+    ],
+  });
+});
+
 // ─── Serve React frontend (must be after all API routes) ──────────────────────
 
 app.use(express.static(WEB_DIST, {
