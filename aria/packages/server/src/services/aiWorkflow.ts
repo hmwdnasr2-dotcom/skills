@@ -97,31 +97,65 @@ export function extractReportData(
     if (!m) return [];
     return m[1]
       .split('\n')
-      .map(l => l.replace(/^[-*•\d.]+\s*/, '').trim())
+      .map(l => l.replace(/^[-*•·\d.]+\s*/, '').replace(/\*\*/g, '').trim())
       .filter(l => l.length > 5)
       .slice(0, 6);
   }
 
-  const risks           = extractSection(aiReply, 'risk|concern|challenge|issue');
-  const recommendations = extractSection(aiReply, 'recommend|suggest|next step|action item');
+  // Extract bullet points as insights (anything that looks like a list item)
+  function extractInsights(text: string): string[] {
+    return text
+      .split('\n')
+      .filter(l => /^\s*[-*•·▸]|\s*\d+[).]\s/.test(l))
+      .map(l => l.replace(/^\s*[-*•·▸\d).]+\s*/, '').replace(/\*\*/g, '').trim())
+      .filter(l => l.length > 10 && !/^#/.test(l))
+      .slice(0, 8);
+  }
 
+  const risks           = extractSection(aiReply, 'risk|concern|challenge|issue|blocker');
+  const recommendations = extractSection(aiReply, 'recommend|suggest|next step|action item|priority');
+  const insights        = extractInsights(aiReply);
+
+  // Use first substantive paragraph as summary
   const summary = aiReply
     .split('\n\n')
-    .find(p => p.trim().length > 20 && !p.startsWith('#')) ?? aiReply.slice(0, 300);
+    .find(p => p.trim().length > 30 && !p.trim().startsWith('#') && !p.trim().startsWith('```'))
+    ?? aiReply.slice(0, 400);
 
+  // Smart title from message context
   const primaryDoc = docs[0];
   const title = primaryDoc
     ? primaryDoc.fileName.replace(/\.[^.]+$/, '')
-    : userMessage.slice(0, 60);
+    : inferTitle(userMessage);
 
   return {
     title,
-    subtitle: userMessage.slice(0, 80),
+    subtitle: userMessage.length > 80 ? userMessage.slice(0, 77) + '…' : userMessage,
     summary: summary.trim(),
+    insights,
     tasks: allTasks,
     milestones: allMilestones,
-    risks:           risks.length           > 0 ? risks           : ['No specific risks identified'],
-    recommendations: recommendations.length > 0 ? recommendations : ['Review document for action items'],
-    generatedAt: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    risks,
+    recommendations,
+    generatedAt: new Date().toLocaleString('en-GB', {
+      day: 'numeric', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    }),
   };
+}
+
+function inferTitle(msg: string): string {
+  const m = msg.toLowerCase();
+  if (/open task|my task|todo/i.test(m))       return 'Open Tasks Report';
+  if (/project/i.test(m))                       return 'Project Status Report';
+  if (/email/i.test(m))                         return 'Email Activity Report';
+  if (/reminder|deadline/i.test(m))             return 'Reminders & Deadlines';
+  if (/performance|metric|kpi/i.test(m))        return 'Performance Report';
+  if (/weekly/i.test(m))                        return 'Weekly Summary Report';
+  if (/daily/i.test(m))                         return 'Daily Activity Report';
+  if (/monthly/i.test(m))                       return 'Monthly Overview Report';
+  const cleaned = msg.replace(/generate|create|make|write|pdf|report|for me/gi, '').trim();
+  return cleaned.length > 6
+    ? cleaned.slice(0, 1).toUpperCase() + cleaned.slice(1, 50)
+    : 'Intelligence Report';
 }
