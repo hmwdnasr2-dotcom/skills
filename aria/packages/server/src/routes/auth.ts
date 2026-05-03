@@ -8,7 +8,9 @@ authRouter.post('/login', (req, res) => {
   const expected = process.env.ARIA_PASSWORD;
 
   if (!expected) {
-    res.status(503).json({ ok: false, error: 'ARIA_PASSWORD not set on server' });
+    // No password configured — allow open access
+    console.warn('[auth] ARIA_PASSWORD not set; login open to anyone');
+    res.json({ ok: true });
     return;
   }
 
