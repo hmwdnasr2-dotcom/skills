@@ -266,6 +266,38 @@ textarea#inp::placeholder { color: var(--tx-stone); }
   font-family: var(--sans); font-size: 11px; color: var(--tx-stone); letter-spacing: .1px;
 }
 
+#attach-btn {
+  width: 32px; height: 32px; border-radius: 8px; border: none;
+  background: transparent; color: var(--tx-stone); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: color .15s, background .15s;
+}
+#attach-btn:hover { color: var(--tx); background: var(--warm-sand); }
+
+#attach-chips {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  max-width: 700px; margin: 0 auto;
+  padding-bottom: 6px;
+}
+#attach-chips:empty { display: none; }
+
+.attach-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 20px;
+  background: var(--warm-sand); box-shadow: 0 0 0 1px var(--ring-warm);
+  font-family: var(--sans); font-size: 12px; color: var(--tx-charcoal);
+  max-width: 200px;
+}
+.attach-chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attach-chip-remove {
+  flex-shrink: 0; width: 14px; height: 14px; border-radius: 50%; border: none;
+  background: var(--tx-stone); color: var(--ivory);
+  font-size: 9px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.attach-chip-remove:hover { background: var(--terracotta); }
+
 @media (max-width: 600px) {
   header { padding: 0 16px; }
   .feed { padding: 0 16px 20px; }
@@ -311,7 +343,14 @@ textarea#inp::placeholder { color: var(--tx-stone); }
 
   <div id="input-area">
     <div class="input-wrap">
+      <div id="attach-chips"></div>
       <div class="input-shell">
+        <input type="file" id="file-input" multiple style="display:none">
+        <button id="attach-btn" type="button" title="Attach file">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.41 17.41a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+          </svg>
+        </button>
         <textarea id="inp" rows="1" placeholder="Ask ARIA to plan, track, or follow up…" autocomplete="off" spellcheck="true"></textarea>
         <button id="send-btn" disabled>
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -334,15 +373,57 @@ textarea#inp::placeholder { color: var(--tx-stone); }
         $inp=document.getElementById('inp'),
         $btn=document.getElementById('send-btn'),
         $pip=document.getElementById('pip'),
-        $stxt=document.getElementById('status-txt');
+        $stxt=document.getElementById('status-txt'),
+        $fileInput=document.getElementById('file-input'),
+        $attachBtn=document.getElementById('attach-btn'),
+        $chips=document.getElementById('attach-chips');
 
   marked.setOptions({breaks:true,gfm:true});
   let busy=false, started=false;
 
+  // ── Attachment state ──────────────────────────────────────────────────────
+  let attachments=[];   // [{name, type, dataUrl}]
+
+  $attachBtn.addEventListener('click',()=>$fileInput.click());
+
+  $fileInput.addEventListener('change',()=>{
+    const files=Array.from($fileInput.files||[]);
+    if(!files.length)return;
+    files.forEach(file=>{
+      // Prevent duplicates by name
+      if(attachments.find(a=>a.name===file.name))return;
+      const reader=new FileReader();
+      reader.onload=function(ev){
+        attachments.push({name:file.name,type:file.type,dataUrl:ev.target.result});
+        renderChips();
+        updateSendBtn();
+      };
+      reader.readAsDataURL(file);
+    });
+    $fileInput.value='';   // reset so the same file can be re-selected
+  });
+
+  function renderChips(){
+    $chips.innerHTML='';
+    attachments.forEach((a,i)=>{
+      const chip=document.createElement('div'); chip.className='attach-chip';
+      const name=document.createElement('span'); name.className='attach-chip-name'; name.textContent=a.name;
+      const rm=document.createElement('button'); rm.className='attach-chip-remove'; rm.type='button'; rm.textContent='×';
+      rm.addEventListener('click',()=>{attachments.splice(i,1); renderChips(); updateSendBtn();});
+      chip.appendChild(name); chip.appendChild(rm);
+      $chips.appendChild(chip);
+    });
+  }
+
+  // ── Input helpers ─────────────────────────────────────────────────────────
+  function updateSendBtn(){
+    $btn.disabled=(!$inp.value.trim()&&attachments.length===0)||busy;
+  }
+
   $inp.addEventListener('input',()=>{
     $inp.style.height='auto';
     $inp.style.height=Math.min($inp.scrollHeight,160)+'px';
-    $btn.disabled=!$inp.value.trim()||busy;
+    updateSendBtn();
   });
   $inp.addEventListener('keydown',e=>{
     if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!$btn.disabled)submit();}
@@ -354,11 +435,28 @@ textarea#inp::placeholder { color: var(--tx-stone); }
     $inp.value=text; $inp.dispatchEvent(new Event('input')); $inp.focus();
   };
 
-  function addUser(text){
+  // ── Message rendering ─────────────────────────────────────────────────────
+  function addUser(text,files){
     ensureStarted();
     const d=document.createElement('div'); d.className='msg user-msg';
-    const b=document.createElement('div'); b.className='user-bubble'; b.textContent=text;
-    d.appendChild(b); $list.appendChild(d); scroll();
+    const wrap=document.createElement('div'); wrap.style.display='flex'; wrap.style.flexDirection='column'; wrap.style.alignItems='flex-end'; wrap.style.gap='6px';
+    if(files&&files.length){
+      files.forEach(f=>{
+        if(f.type.startsWith('image/')){
+          const img=document.createElement('img');
+          img.src=f.dataUrl; img.alt=f.name;
+          img.style.cssText='max-width:260px;max-height:180px;border-radius:10px;display:block;';
+          wrap.appendChild(img);
+        }else{
+          const chip=document.createElement('div'); chip.className='attach-chip';
+          chip.style.maxWidth='none';
+          chip.textContent=f.name;
+          wrap.appendChild(chip);
+        }
+      });
+    }
+    if(text){const b=document.createElement('div'); b.className='user-bubble'; b.textContent=text; wrap.appendChild(b);}
+    d.appendChild(wrap); $list.appendChild(d); scroll();
   }
 
   function addAria(){
@@ -389,20 +487,30 @@ textarea#inp::placeholder { color: var(--tx-stone); }
     scroll();
   }
 
+  // ── Submit ────────────────────────────────────────────────────────────────
   async function submit(){
-    const text=$inp.value.trim(); if(!text||busy)return;
-    busy=true; $btn.disabled=true; $inp.value=''; $inp.style.height='auto';
-    addUser(text);
+    const text=$inp.value.trim();
+    if((!text&&attachments.length===0)||busy)return;
+
+    busy=true; $btn.disabled=true;
+    $inp.value=''; $inp.style.height='auto';
+
+    const sentFiles=attachments.slice();
+    attachments=[]; renderChips();
+
+    addUser(text,sentFiles);
     const body=addAria(); showThinking(body); setStatus(true);
     try{
-      const r=await fetch(`${API}/api/aria/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:UID,message:text})});
+      const payload={userId:UID,message:text};
+      if(sentFiles.length) payload.attachments=sentFiles.map(f=>({name:f.name,type:f.type,dataUrl:f.dataUrl}));
+      const r=await fetch(`${API}/api/aria/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
       if(!r.ok)throw new Error('HTTP '+r.status);
       const{reply}=await r.json();
       await typeReply(body,reply||"I've noted that down.");
     }catch(e){
       await typeReply(body,`_Could not reach ARIA — ${e.message}_`);
     }finally{
-      busy=false; setStatus(false); $inp.focus();
+      busy=false; updateSendBtn(); setStatus(false); $inp.focus();
     }
   }
 
@@ -421,9 +529,11 @@ textarea#inp::placeholder { color: var(--tx-stone); }
   }
   window.clearChat=function(){
     started=false; $list.innerHTML='';
+    attachments=[]; renderChips();
     document.querySelectorAll('.date-sep').forEach(el=>el.remove());
     $welcome.style.display='';
   };
+
   // Subscribe to server-sent proactive events (reminders, briefings, nudges)
   (function connectSSE(){
     const es=new EventSource(`${API}/api/aria/events?userId=${UID}`);
