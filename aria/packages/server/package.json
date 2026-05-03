@@ -13,6 +13,7 @@
     "@aria/core": "*",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
+    "exceljs": "^4.4.0",
     "express": "^4.19.2",
     "googleapis": "^140.0.0",
     "mammoth": "^1.8.0",

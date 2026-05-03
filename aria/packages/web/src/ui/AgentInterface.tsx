@@ -259,11 +259,12 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [online, setOnline]           = useState<boolean | null>(null);
 
-  const bottomRef  = useRef<HTMLDivElement>(null);
-  const inputRef   = useRef<HTMLTextAreaElement>(null);
-  const fileRef    = useRef<HTMLInputElement>(null);
-  const searchRef  = useRef<HTMLInputElement>(null);
-  const timerRefs  = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const bottomRef      = useRef<HTMLDivElement>(null);
+  const inputRef       = useRef<HTMLTextAreaElement>(null);
+  const fileRef        = useRef<HTMLInputElement>(null);
+  const searchRef      = useRef<HTMLInputElement>(null);
+  const timerRefs      = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const fileInputCache = useRef<Map<string, File>>(new Map());
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'instant' });
@@ -467,18 +468,35 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
     const form = new FormData();
     form.append('files', file);
     form.append('sessionId', userId);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 30_000);
     try {
-      const res = await fetch(`${apiBase}/api/aria/upload`, { method: 'POST', body: form });
-      if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+      const res = await fetch(`${apiBase}/api/aria/upload`, {
+        method: 'POST',
+        body: form,
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
       const data = await res.json() as { files?: Array<{ fileId: string }> };
       const fileId = data.files?.[0]?.fileId;
-      if (!fileId) throw new Error('No fileId returned');
+      if (!fileId) throw new Error('No file ID returned');
       setAttachments((prev) => prev.map((a) => a.id === attId ? { ...a, uploading: false, fileId } : a));
     } catch (err) {
+      clearTimeout(timer);
+      const msg = (err as Error).name === 'AbortError' ? 'Upload timed out — retry' : (err as Error).message;
       setAttachments((prev) => prev.map((a) =>
-        a.id === attId ? { ...a, uploading: false, uploadError: (err as Error).message } : a
+        a.id === attId ? { ...a, uploading: false, uploadError: msg } : a
       ));
     }
+  }
+
+  async function retryUpload(attId: string) {
+    const att = attachments.find((a) => a.id === attId);
+    if (!att || !att.name) return;
+    setAttachments((prev) => prev.map((a) => a.id === attId ? { ...a, uploading: true, uploadError: undefined } : a));
+    const stored = fileInputCache.current.get(attId);
+    if (stored) uploadBinaryFile(stored, attId);
   }
 
   async function handleFileAttach(e: React.ChangeEvent<HTMLInputElement>) {
@@ -492,6 +510,7 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
       if (BINARY_EXTS.has(ext)) {
         att.kind = 'binary';
         att.uploading = true;
+        fileInputCache.current.set(att.id, file);
         setAttachments((prev) => [...prev, att]);
         uploadBinaryFile(file, att.id);
         continue;
@@ -723,8 +742,15 @@ export function AgentInterface({ userId, apiBase = '' }: AgentInterfaceProps) {
                   }
                   <span className="attach-name">{a.name}</span>
                   <span className="attach-size">
-                    {a.uploading ? 'uploading…' : a.uploadError ? 'failed' : formatSize(a.size)}
+                    {a.uploading ? 'uploading…' : a.uploadError ? a.uploadError : formatSize(a.size)}
                   </span>
+                  {a.uploadError && (
+                    <button
+                      className="attach-retry"
+                      onClick={() => retryUpload(a.id)}
+                      title="Retry upload"
+                    >↺</button>
+                  )}
                   <button
                     className="attach-remove"
                     onClick={() => setAttachments((prev) => prev.filter((x) => x.id !== a.id))}

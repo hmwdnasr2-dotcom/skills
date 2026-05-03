@@ -657,6 +657,29 @@ body {
 
 .attach-remove:hover { color: var(--red); }
 
+.attach-retry {
+  background: none;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 4px;
+  font-size: 13px;
+  padding: 1px 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+  line-height: 1.4;
+  transition: background 0.12s, color 0.12s;
+}
+.attach-retry:hover { background: var(--accent); color: #fff; }
+
+.attach-chip--error .attach-size {
+  color: var(--red);
+  font-size: 10px;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .attach-chip--error {
   border-color: var(--red);
   opacity: 0.8;

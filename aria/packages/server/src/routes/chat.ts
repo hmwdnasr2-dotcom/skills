@@ -12,6 +12,7 @@ import {
   generatePPTX,
 } from '../services/reportGenerator.js';
 import type { ReportResult } from '../services/reportGenerator.js';
+import { reportRegistry } from './download.js';
 import { processFiles } from '../core/fileHandler.js';
 
 export const chatRouter = Router();
@@ -62,6 +63,16 @@ chatRouter.post('/', async (req, res) => {
     }
 
     scheduleNudgeIfNeeded(userId, answer).catch(() => {});
+
+    // Scan the answer for any download URLs produced by create_excel / create_pdf tool calls
+    const urlMatches = [...answer.matchAll(/\/api\/aria\/download\/([a-f0-9-]{36})/g)];
+    for (const m of urlMatches) {
+      const fileId = m[1];
+      if (reportRegistry.has(fileId) && !downloads.find(d => d.fileId === fileId)) {
+        const rec = reportRegistry.get(fileId)!;
+        downloads.push({ fileId: rec.fileId, fileName: rec.fileName, type: rec.type, size: rec.size, url: `/api/aria/download/${rec.fileId}` });
+      }
+    }
 
     res.json({
       reply:     answer,

@@ -13,6 +13,7 @@ import { buildWorkspaceAdapters } from './connectors/workspace.js';
 import { buildReminderAdapters } from './connectors/reminders.js';
 import { buildReportAdapters } from './connectors/reports.js';
 import { buildIdeasAdapters } from './connectors/ideas.js';
+import { buildDocumentAdapters } from './connectors/documents.js';
 import { startScheduler } from './proactive/scheduler.js';
 import { authRouter } from './routes/auth.js';
 import { chatRouter } from './routes/chat.js';
@@ -94,6 +95,13 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
   }
   claw.use(ideasBridge);
   console.log('[server] Ideas tools registered (save_idea, list_ideas)');
+
+  const docsBridge = new AgentBridgeConnector();
+  for (const adapter of buildDocumentAdapters()) {
+    docsBridge.register(adapter.name, adapter);
+  }
+  claw.use(docsBridge);
+  console.log('[server] Document tools registered (create_excel, create_pdf)');
 } else {
   console.log('[server] Task tools skipped — SUPABASE_URL / SUPABASE_ANON_KEY not set');
 }
