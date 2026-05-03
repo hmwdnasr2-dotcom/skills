@@ -1,4 +1,4 @@
--- ─── Migration 007: Report Templates ─────────────────────────────────────────
+-- Migration 007: Report Templates
 -- Stores user-defined report formats so ARIA can recreate them on demand.
 -- Covers: monthly reports, minutes of meeting, custom layouts, etc.
 
