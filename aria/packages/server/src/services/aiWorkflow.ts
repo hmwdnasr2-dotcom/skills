@@ -102,13 +102,18 @@ export function extractReportData(
       .slice(0, 6);
   }
 
-  // Extract bullet points as insights (anything that looks like a list item)
+  // Extract bullet points as insights — skip questions and offers
   function extractInsights(text: string): string[] {
     return text
       .split('\n')
       .filter(l => /^\s*[-*•·▸]|\s*\d+[).]\s/.test(l))
-      .map(l => l.replace(/^\s*[-*•·▸\d).]+\s*/, '').replace(/\*\*/g, '').trim())
-      .filter(l => l.length > 10 && !/^#/.test(l))
+      .map(l => l.replace(/^\s*[-*•·▸\d).]+\s*/, '').trim())
+      .filter(l =>
+        l.length > 10 &&
+        !l.endsWith('?') &&
+        !l.endsWith(':') &&
+        !/want me to|tell me|let me know|let's build|i can help|feel free|i'll:/i.test(l)
+      )
       .slice(0, 8);
   }
 

@@ -28,31 +28,23 @@ export interface ReportResult {
   url: string;
 }
 
-// ── Color palette ─────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-const NAVY   = '#1a1d2e';
-const INDIGO = '#4f52d9';
-const ACCENT = '#8083ff';
-const DARK   = '#1a1d2e';
-const MID    = '#3d4166';
-const GRAY   = '#6b6f8a';
-const LIGHT  = '#c7c4d7';
-const PAGE_BG = '#ffffff';
-const STRIPE  = '#f4f6fb';
-const LINE    = '#e2e6f0';
-const GREEN  = '#16a34a';
-const RED    = '#dc2626';
-const AMBER  = '#d97706';
-const BLUE   = '#2563eb';
+function stripMd(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/`(.+?)`/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^\s*[-*•]\s+/gm, '')
+    .trim();
+}
 
-// Fallback used by Excel/PPTX (no hash prefix)
-const TERRA  = 'c96442';
-const CREAM  = 'f5f4ed';
-const IVORY  = 'faf9f5';
-const DARK_P = '141413';
-const GRAY_P = '5e5d59';
-
-// ── Task helpers ──────────────────────────────────────────────────────────────
+function isConversational(text: string): boolean {
+  return /want me to|tell me what|let me know|let's build|feel free|i can help|shall i|should i/i.test(text)
+    || text.trim().endsWith('?')
+    || text.trim().endsWith("I'll:");
+}
 
 function taskStats(tasks: ParsedTask[]) {
   const total   = tasks.length;
@@ -67,24 +59,11 @@ function taskStats(tasks: ParsedTask[]) {
   return { total, done, open, blocked, overdue };
 }
 
-function statusChip(status: string): { bg: string; fg: string } {
-  if (/complet|done|finish/i.test(status))  return { bg: '#dcfce7', fg: '#15803d' };
-  if (/progress|active|ongoing/i.test(status)) return { bg: '#dbeafe', fg: '#1d4ed8' };
-  if (/block|stuck|hold/i.test(status))     return { bg: '#fee2e2', fg: '#b91c1c' };
-  if (/cancel/i.test(status))               return { bg: '#f3f4f6', fg: '#6b7280' };
-  return { bg: '#fef3c7', fg: '#b45309' };
-}
-
-// ── Strip markdown for plain PDF text ─────────────────────────────────────────
-
-function stripMd(text: string): string {
-  return text
-    .replace(/\*\*(.+?)\*\*/g, '$1')
-    .replace(/\*(.+?)\*/g, '$1')
-    .replace(/`(.+?)`/g, '$1')
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/^\s*[-*•]\s+/gm, '')
-    .trim();
+function statusColor(status: string): string {
+  if (/complet|done|finish/i.test(status))   return '#2e7d32';
+  if (/progress|active|ongoing/i.test(status)) return '#1565c0';
+  if (/block|stuck|hold/i.test(status))      return '#c62828';
+  return '#e65100';
 }
 
 // ── Excel ─────────────────────────────────────────────────────────────────────
@@ -120,33 +99,27 @@ export async function generateExcel(
 
   const taskHeaders = ['#', 'Task', 'Owner', 'Due Date', 'Status', 'Priority', 'Dependencies'];
   const taskRows: (string | number)[][] = data.tasks.map((t, i) => [
-    i + 1,
-    t.title,
-    t.owner        ?? '',
-    t.deadline     ?? '',
-    t.status       ?? 'Not started',
-    t.priority     ?? 'Medium',
-    t.dependencies ?? '',
+    i + 1, t.title, t.owner ?? '', t.deadline ?? '',
+    t.status ?? 'Not started', t.priority ?? 'Medium', t.dependencies ?? '',
   ]);
   const wsTasks = xlsx.utils.aoa_to_sheet([taskHeaders, ...taskRows]);
   wsTasks['!cols'] = [
-    { wch: 4 }, { wch: 42 }, { wch: 20 },
-    { wch: 14 }, { wch: 14 }, { wch: 10 }, { wch: 20 },
+    { wch: 4 }, { wch: 42 }, { wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 10 }, { wch: 20 },
   ];
   xlsx.utils.book_append_sheet(wb, wsTasks, 'Tasks');
 
   if (doc?.dates?.length || data.milestones.length) {
     const dates = doc?.dates ?? [];
-    const timelineHeaders = ['Milestone / Event', 'Date'];
-    const timelineRows = data.milestones.map((m, i) => [m, dates[i] ?? '']);
-    const wsTimeline = xlsx.utils.aoa_to_sheet([timelineHeaders, ...timelineRows]);
+    const wsTimeline = xlsx.utils.aoa_to_sheet([
+      ['Milestone / Event', 'Date'],
+      ...data.milestones.map((m, i) => [m, dates[i] ?? '']),
+    ]);
     wsTimeline['!cols'] = [{ wch: 44 }, { wch: 18 }];
     xlsx.utils.book_append_sheet(wb, wsTimeline, 'Timeline');
   }
 
-  if (doc?.tableData && doc.tableData.length > 0) {
-    const wsRaw = xlsx.utils.json_to_sheet(doc.tableData);
-    xlsx.utils.book_append_sheet(wb, wsRaw, 'Source Data');
+  if (doc?.tableData?.length) {
+    xlsx.utils.book_append_sheet(wb, xlsx.utils.json_to_sheet(doc.tableData), 'Source Data');
   }
 
   const fileId   = crypto.randomUUID();
@@ -154,7 +127,6 @@ export async function generateExcel(
   const filePath = path.join(REPORT_DIR, `${fileId}.xlsx`);
   xlsx.writeFile(wb, filePath);
   const size = fs.statSync(filePath).size;
-
   reportRegistry.set(fileId, { fileId, fileName, filePath, type: 'xlsx', size, createdAt: new Date().toISOString() });
   return { fileId, fileName, type: 'xlsx', size, url: `/api/aria/download/${fileId}` };
 }
@@ -170,219 +142,277 @@ export async function generatePDF(data: ReportData): Promise<ReportResult> {
   const filePath = path.join(REPORT_DIR, `${fileId}.pdf`);
 
   await new Promise<void>((resolve, reject) => {
-    const doc = new PDFDocument({
-      margin: 0,
-      size: 'A4',
-      bufferPages: true,
-      info: {
-        Title: data.title,
-        Author: 'ARIA Intelligence',
-        Subject: data.subtitle ?? '',
-        Creator: 'ARIA Agent Orchestrator',
-      },
-    });
+    const doc = new PDFDocument({ margin: 0, size: 'A4', bufferPages: true });
     const stream = fs.createWriteStream(filePath);
     doc.pipe(stream);
     stream.on('finish', resolve);
     stream.on('error', reject);
 
-    const W  = doc.page.width;  // 595.28
-    const H  = doc.page.height; // 841.89
-    const M  = 48;              // margin
-    const CW = W - M * 2;       // content width
+    const W  = doc.page.width;   // 595
+    const H  = doc.page.height;  // 842
+    const M  = 56;
+    const CW = W - M * 2;
 
-    // ── HEADER ──────────────────────────────────────────────────────────────
-    doc.rect(0, 0, W, 92).fill(NAVY);
-    doc.rect(0, 88, W, 4).fill(INDIGO);
+    // Palette — matches the image (professional blue report style)
+    const BLUE    = '#1565c0';
+    const TEXT    = '#1a1a1a';
+    const BODY    = '#333333';
+    const MUTED   = '#666666';
+    const SUBTEXT = '#888888';
+    const GLITE   = '#e8f0fe';
+    const GLINE   = '#d0d0d0';
+    const GREEN   = '#2e7d32';
+    const RED     = '#c62828';
+    const AMBER   = '#e65100';
 
-    // ARIA wordmark
-    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(30)
-       .text('ARIA', M, 24, { lineBreak: false });
+    let y = M;
+    let secN = 0;
+    let subN = 0;
 
-    // Accent dot after wordmark
-    doc.circle(M + 65, 34, 4).fill(ACCENT);
+    function newPageIfNeeded(needed = 120) {
+      if (y + needed > H - 50) { doc.addPage(); y = M; }
+    }
 
-    // Report type label
-    doc.fillColor(LIGHT).font('Helvetica').fontSize(10)
-       .text('Intelligence Report', M, 29, { width: CW, align: 'right', lineBreak: false });
+    // ── Page header (only first page) ────────────────────────────────────────
+    // Top blue stripe
+    doc.rect(0, 0, W, 6).fill(BLUE);
+    y = 20;
 
-    // Date
-    doc.fillColor(GRAY).fontSize(8.5)
-       .text(data.generatedAt, M, 58, { width: CW, align: 'right', lineBreak: false });
+    // ARIA wordmark + date
+    doc.fillColor(BLUE).font('Helvetica-Bold').fontSize(16)
+       .text('ARIA', M, y, { lineBreak: false });
+    doc.fillColor(SUBTEXT).font('Helvetica').fontSize(8.5)
+       .text(data.generatedAt, M, y + 3, { width: CW, align: 'right', lineBreak: false });
+    y += 20;
 
-    // ── TITLE BLOCK ──────────────────────────────────────────────────────────
-    let y = 112;
-
-    doc.fillColor(DARK).font('Helvetica-Bold').fontSize(20)
+    // Bold title
+    doc.fillColor(TEXT).font('Helvetica-Bold').fontSize(16)
        .text(data.title, M, y, { width: CW });
-    y = doc.y + 4;
+    y = doc.y + 3;
 
     if (data.subtitle && data.subtitle !== data.title) {
-      doc.fillColor(GRAY).font('Helvetica').fontSize(10.5)
+      doc.fillColor(MUTED).font('Helvetica').fontSize(9.5)
          .text(data.subtitle, M, y, { width: CW });
-      y = doc.y + 8;
+      y = doc.y + 3;
     }
 
-    doc.rect(M, y, CW, 1).fill(LINE);
-    y += 16;
+    // Title underline
+    doc.rect(M, y, CW, 1.5).fill(BLUE);
+    y += 14;
 
-    // ── STATS CARDS (when tasks present) ────────────────────────────────────
-    if (data.tasks.length > 0) {
-      const stats = taskStats(data.tasks);
-      const cards = [
-        { label: 'Total',     value: stats.total,   color: INDIGO },
-        { label: 'Open',      value: stats.open,    color: AMBER  },
-        { label: 'Completed', value: stats.done,    color: GREEN  },
-        { label: 'Overdue',   value: stats.overdue, color: stats.overdue > 0 ? RED : GRAY },
-      ];
-      const bw = (CW - 9) / 4;
-      const bh = 54;
+    // ── Layout helpers ────────────────────────────────────────────────────────
 
-      cards.forEach((c, i) => {
-        const bx = M + i * (bw + 3);
-        doc.rect(bx, y, bw, bh).fill(STRIPE);
-        doc.rect(bx, y, 3, bh).fill(c.color);
-        doc.fillColor(c.color).font('Helvetica-Bold').fontSize(26)
-           .text(String(c.value), bx + 10, y + 6, { width: bw - 14, lineBreak: false });
-        doc.fillColor(GRAY).font('Helvetica').fontSize(7.5)
-           .text(c.label.toUpperCase(), bx + 10, y + 36, { width: bw - 14, lineBreak: false });
-      });
-
-      y += bh + 20;
+    function sectionHeading(title: string) {
+      newPageIfNeeded(60);
+      secN++;
+      subN = 0;
+      doc.fillColor(BLUE).font('Helvetica-Bold').fontSize(13)
+         .text(`${secN}. ${title}`, M, y, { width: CW });
+      y = doc.y + 3;
+      doc.rect(M, y, CW, 1.5).fill(BLUE);
+      y += 10;
     }
 
-    // ── SECTION HELPER ───────────────────────────────────────────────────────
-    function sectionHeader(title: string, color: string) {
-      if (y > H - 180) { doc.addPage(); y = M; }
-      doc.rect(M, y, 3, 16).fill(color);
-      doc.fillColor(DARK).font('Helvetica-Bold').fontSize(12.5)
-         .text(title, M + 11, y + 1, { lineBreak: false });
-      y += 26;
+    function subHeading(title: string) {
+      newPageIfNeeded(50);
+      subN++;
+      doc.fillColor(BLUE).font('Helvetica-Bold').fontSize(11)
+         .text(`${secN}.${subN} ${title}`, M, y, { width: CW });
+      y = doc.y + 6;
     }
 
-    // ── EXECUTIVE SUMMARY ────────────────────────────────────────────────────
-    sectionHeader('Executive Summary', ACCENT);
-
-    const summaryText = stripMd(data.summary);
-    const sumBoxH = doc.heightOfString(summaryText, { width: CW - 26, fontSize: 10.5 }) + 22;
-    doc.rect(M, y, CW, sumBoxH).fill(STRIPE);
-    doc.rect(M, y, 3, sumBoxH).fill(INDIGO);
-    doc.fillColor(MID).font('Helvetica').fontSize(10.5)
-       .text(summaryText, M + 14, y + 11, { width: CW - 26, lineGap: 2 });
-    y = doc.y + 18;
-
-    // ── KEY INSIGHTS ─────────────────────────────────────────────────────────
-    if (data.insights.length > 0) {
-      sectionHeader('Key Insights', ACCENT);
-      data.insights.forEach(ins => {
-        if (y + 20 > H - 60) { doc.addPage(); y = M; }
-        doc.circle(M + 5, y + 5, 3).fill(INDIGO);
-        doc.fillColor(MID).font('Helvetica').fontSize(10.5)
-           .text(stripMd(ins), M + 16, y, { width: CW - 20, lineGap: 1.5 });
-        y = doc.y + 6;
-      });
-      y += 6;
+    function prose(text: string) {
+      newPageIfNeeded(30);
+      doc.fillColor(BODY).font('Helvetica').fontSize(10)
+         .text(stripMd(text), M, y, { width: CW, align: 'justify', lineGap: 1.5 });
+      y = doc.y + 10;
     }
 
-    // ── TASK TABLE ───────────────────────────────────────────────────────────
-    if (data.tasks.length > 0) {
-      sectionHeader('Task Overview', ACCENT);
+    // Bullet with optional bold lead: **Bold part** rest of text
+    function bulletItem(raw: string) {
+      newPageIfNeeded(24);
+      const boldMatch = raw.match(/^\*\*(.+?)\*\*\s*[–—-]?\s*([\s\S]*)/);
+      if (boldMatch) {
+        const lead = boldMatch[1].trim();
+        const rest = boldMatch[2].trim();
+        doc.fillColor(TEXT).font('Helvetica-Bold').fontSize(10)
+           .text(`• ${lead} – `, M, y, { continued: true, width: CW });
+        doc.font('Helvetica').fillColor(BODY)
+           .text(rest, { align: 'justify' });
+      } else {
+        doc.fillColor(BODY).font('Helvetica').fontSize(10)
+           .text(`• ${stripMd(raw)}`, M, y, { width: CW, align: 'justify' });
+      }
+      y = doc.y + 3;
+    }
 
-      const cols = [
-        { label: 'Task',     w: 210 },
-        { label: 'Owner',    w: 88  },
-        { label: 'Due',      w: 78  },
-        { label: 'Status',   w: 75  },
-        { label: 'Priority', w: 64  },
-      ];
-      const ROW_H = 22;
+    // Two-column table (Achievement / Status style from image)
+    function table2(header: [string, string], rows: [string, string][]) {
+      const C1 = 160;
+      const C2 = CW - C1;
+      const PAD = 7;
+      const HROW = 20;
+
+      newPageIfNeeded(HROW * (Math.min(rows.length, 5) + 2));
 
       // Header row
-      doc.rect(M, y, CW, ROW_H).fill(NAVY);
-      let cx = M + 8;
-      doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(8);
-      cols.forEach(col => {
-        doc.text(col.label, cx, y + 7, { width: col.w - 8, lineBreak: false });
-        cx += col.w;
+      doc.rect(M, y, CW, HROW).fill(BLUE);
+      doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(9)
+         .text(header[0], M + PAD, y + 6, { width: C1 - PAD, lineBreak: false });
+      doc.text(header[1], M + C1 + PAD, y + 6, { width: C2 - PAD * 2, lineBreak: false });
+      y += HROW;
+
+      rows.forEach((row, i) => {
+        const h1 = doc.heightOfString(row[0], { width: C1 - PAD * 2, fontSize: 9 });
+        const h2 = doc.heightOfString(row[1], { width: C2 - PAD * 2, fontSize: 9 });
+        const rh = Math.max(HROW, Math.max(h1, h2) + PAD * 2);
+
+        newPageIfNeeded(rh + 4);
+
+        if (i % 2 === 1) doc.rect(M, y, CW, rh).fill('#f5f7ff');
+        // Bottom border
+        doc.rect(M, y + rh - 0.5, CW, 0.5).fill(GLINE);
+        // Vertical divider
+        doc.rect(M + C1, y, 0.5, rh).fill(GLINE);
+
+        doc.fillColor(TEXT).font('Helvetica-Bold').fontSize(9)
+           .text(row[0], M + PAD, y + PAD, { width: C1 - PAD * 2 });
+        doc.fillColor(BODY).font('Helvetica').fontSize(9)
+           .text(row[1], M + C1 + PAD, y + PAD, { width: C2 - PAD * 2 });
+        y += rh;
       });
-      y += ROW_H;
 
-      doc.font('Helvetica').fontSize(8.5);
-      data.tasks.slice(0, 25).forEach((t, idx) => {
-        if (y + ROW_H > H - 60) { doc.addPage(); y = M; }
-
-        doc.rect(M, y, CW, ROW_H).fill(idx % 2 === 0 ? PAGE_BG : STRIPE);
-        doc.rect(M, y + ROW_H - 0.5, CW, 0.5).fill(LINE);
-
-        cx = M + 8;
-        // Task
-        doc.fillColor(DARK).text(t.title.slice(0, 40), cx, y + 7, { width: cols[0].w - 8, lineBreak: false });
-        cx += cols[0].w;
-        // Owner
-        doc.fillColor(GRAY).text((t.owner ?? '—').slice(0, 14), cx, y + 7, { width: cols[1].w - 8, lineBreak: false });
-        cx += cols[1].w;
-        // Due
-        doc.text((t.deadline ?? '—').slice(0, 12), cx, y + 7, { width: cols[2].w - 8, lineBreak: false });
-        cx += cols[2].w;
-        // Status badge
-        const status = (t.status ?? 'Pending').slice(0, 12);
-        const chip = statusChip(status);
-        const bw = Math.min(60, cols[3].w - 10);
-        doc.rect(cx, y + 5, bw, 12).fill(chip.bg);
-        doc.fillColor(chip.fg).font('Helvetica-Bold').fontSize(7)
-           .text(status, cx + 3, y + 8, { width: bw - 6, lineBreak: false });
-        doc.font('Helvetica').fontSize(8.5);
-        cx += cols[3].w;
-        // Priority
-        const pri = t.priority ?? 'Medium';
-        const priColor = /high/i.test(pri) ? RED : /low/i.test(pri) ? GREEN : AMBER;
-        doc.fillColor(priColor).text(pri, cx, y + 7, { width: cols[4].w - 8, lineBreak: false });
-        y += ROW_H;
-      });
-      y += 20;
+      doc.rect(M, y, CW, 0.5).fill(GLINE);
+      y += 14;
     }
 
-    // ── MILESTONES ───────────────────────────────────────────────────────────
-    if (data.milestones.length > 0) {
-      sectionHeader('Key Milestones', ACCENT);
-      data.milestones.slice(0, 8).forEach(m => {
-        if (y + 18 > H - 60) { doc.addPage(); y = M; }
-        doc.rect(M, y + 3, 10, 10).fill(STRIPE);
-        doc.fillColor(INDIGO).font('Helvetica-Bold').fontSize(8).text('+', M + 2.5, y + 5, { lineBreak: false });
-        doc.fillColor(MID).font('Helvetica').fontSize(10.5)
-           .text(stripMd(m), M + 18, y, { width: CW - 22, lineGap: 1 });
-        y = doc.y + 6;
+    // Task table
+    function taskTable(tasks: ParsedTask[]) {
+      const cols = [
+        { h: 'Task',     w: 200 },
+        { h: 'Owner',    w: 83  },
+        { h: 'Due Date', w: 73  },
+        { h: 'Status',   w: 68  },
+        { h: 'Priority', w: 59  },
+      ];
+      const PAD = 5;
+      const HROW = 20;
+
+      newPageIfNeeded(HROW * 3);
+
+      doc.rect(M, y, CW, HROW).fill(BLUE);
+      let cx = M + PAD;
+      doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(8.5);
+      cols.forEach(c => {
+        doc.text(c.h, cx, y + 6, { width: c.w - PAD, lineBreak: false });
+        cx += c.w;
       });
+      y += HROW;
+
+      tasks.slice(0, 30).forEach((t, i) => {
+        newPageIfNeeded(HROW);
+        if (i % 2 === 1) doc.rect(M, y, CW, HROW).fill('#f5f7ff');
+        doc.rect(M, y + HROW - 0.5, CW, 0.5).fill(GLINE);
+
+        cx = M + PAD;
+        const sc = statusColor(t.status ?? '');
+
+        doc.fillColor(TEXT).font('Helvetica-Bold').fontSize(8.5)
+           .text(t.title.slice(0, 40), cx, y + 6, { width: cols[0].w - PAD, lineBreak: false });
+        cx += cols[0].w;
+
+        doc.fillColor(MUTED).font('Helvetica').fontSize(8.5)
+           .text(t.owner ?? '—', cx, y + 6, { width: cols[1].w - PAD, lineBreak: false });
+        cx += cols[1].w;
+
+        doc.text(t.deadline ?? '—', cx, y + 6, { width: cols[2].w - PAD, lineBreak: false });
+        cx += cols[2].w;
+
+        doc.fillColor(sc).font('Helvetica-Bold').fontSize(8.5)
+           .text((t.status ?? 'Pending').slice(0, 12), cx, y + 6, { width: cols[3].w - PAD, lineBreak: false });
+        cx += cols[3].w;
+
+        const pc = /high/i.test(t.priority ?? '') ? RED : /low/i.test(t.priority ?? '') ? GREEN : AMBER;
+        doc.fillColor(pc).font('Helvetica-Bold').fontSize(8.5)
+           .text(t.priority ?? 'Medium', cx, y + 6, { width: cols[4].w - PAD, lineBreak: false });
+
+        y += HROW;
+      });
+
+      doc.rect(M, y, CW, 0.5).fill(GLINE);
+      y += 14;
+    }
+
+    // ── SECTION 1: Executive Summary ─────────────────────────────────────────
+    sectionHeading('Executive Summary');
+
+    // 1.1 Summary prose
+    subHeading('Management Summary');
+    prose(data.summary);
+
+    // 1.2 Key Takeaways (bullet list with bold leads from AI insights)
+    const cleanInsights = data.insights.filter(i => !isConversational(i) && i.length > 12);
+    if (cleanInsights.length > 0) {
+      subHeading('Key Takeaways');
+      cleanInsights.forEach(ins => bulletItem(ins));
       y += 6;
     }
 
-    // ── RISKS ────────────────────────────────────────────────────────────────
-    const realRisks = data.risks.filter(r => !/no specific risk|no risk identified/i.test(r));
+    // 1.3 Status Overview table (when tasks exist)
+    if (data.tasks.length > 0) {
+      const stats = taskStats(data.tasks);
+      subHeading('Status Overview');
+      const rows: [string, string][] = [
+        ['Total Tasks',       String(stats.total)],
+        ['Open / In Progress', String(stats.open)],
+        ['Completed',         String(stats.done)],
+        ['Blocked',           String(stats.blocked)],
+        ['Overdue',           String(stats.overdue)],
+      ];
+      if (data.milestones.length > 0) rows.push(['Milestones Tracked', String(data.milestones.length)]);
+      table2(['Metric', 'Value'], rows);
+    }
+
+    // ── SECTION 2: Task Details ───────────────────────────────────────────────
+    if (data.tasks.length > 0) {
+      sectionHeading('Task Overview');
+      taskTable(data.tasks);
+    }
+
+    // ── SECTION 3: Key Milestones ─────────────────────────────────────────────
+    if (data.milestones.length > 0) {
+      sectionHeading('Key Milestones');
+      table2(
+        ['Milestone', 'Description'],
+        data.milestones.slice(0, 12).map((m, i): [string, string] => [
+          `Milestone ${i + 1}`, stripMd(m),
+        ])
+      );
+    }
+
+    // ── SECTION 4: Risks & Blockers ───────────────────────────────────────────
+    const realRisks = data.risks.filter(r =>
+      !/no specific risk|no risk identified/i.test(r) && !isConversational(r)
+    );
     if (realRisks.length > 0) {
-      sectionHeader('Risks & Blockers', RED);
-      realRisks.slice(0, 6).forEach(r => {
-        if (y + 18 > H - 60) { doc.addPage(); y = M; }
-        doc.rect(M, y, 18, 16).fill('#fff1f1');
-        doc.fillColor(RED).font('Helvetica-Bold').fontSize(9).text('!', M + 6, y + 4, { lineBreak: false });
-        doc.fillColor(MID).font('Helvetica').fontSize(10.5)
-           .text(stripMd(r), M + 24, y, { width: CW - 28, lineGap: 1 });
-        y = doc.y + 8;
-      });
+      sectionHeading('Risks & Blockers');
+      realRisks.slice(0, 8).forEach(r => bulletItem(r));
       y += 4;
     }
 
-    // ── RECOMMENDATIONS ──────────────────────────────────────────────────────
-    const realRecs = data.recommendations.filter(r => !/review document for action/i.test(r));
+    // ── SECTION 5: Recommendations ───────────────────────────────────────────
+    const realRecs = data.recommendations.filter(r =>
+      !/review document for action/i.test(r) && !isConversational(r) && r.length > 12
+    );
     if (realRecs.length > 0) {
-      sectionHeader('Recommendations', GREEN);
-      realRecs.slice(0, 6).forEach((r, i) => {
-        if (y + 18 > H - 60) { doc.addPage(); y = M; }
-        doc.rect(M, y, 18, 16).fill('#f0fdf4');
-        doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(9)
-           .text(String(i + 1), M + 5, y + 4, { lineBreak: false });
-        doc.fillColor(MID).font('Helvetica').fontSize(10.5)
-           .text(stripMd(r), M + 24, y, { width: CW - 28, lineGap: 1 });
-        y = doc.y + 8;
+      sectionHeading('Recommendations & Next Steps');
+      realRecs.slice(0, 8).forEach((r, i) => {
+        newPageIfNeeded(24);
+        doc.fillColor(BLUE).font('Helvetica-Bold').fontSize(10)
+           .text(`${i + 1}.`, M, y, { lineBreak: false, width: 18 });
+        doc.fillColor(BODY).font('Helvetica').fontSize(10)
+           .text(stripMd(r), M + 20, y, { width: CW - 20, align: 'justify' });
+        y = doc.y + 6;
       });
     }
 
@@ -390,13 +420,17 @@ export async function generatePDF(data: ReportData): Promise<ReportResult> {
     const range = doc.bufferedPageRange();
     for (let i = 0; i < range.count; i++) {
       doc.switchToPage(range.start + i);
-      doc.rect(0, H - 30, W, 30).fill(STRIPE);
-      doc.rect(0, H - 31, W, 1).fill(LINE);
-      doc.fillColor(GRAY).font('Helvetica').fontSize(8)
-         .text(`ARIA Intelligence  ·  ${data.generatedAt}`, M, H - 18, {
+      // Top stripe on continuation pages
+      if (i > 0) {
+        doc.rect(0, 0, W, 6).fill(BLUE);
+      }
+      // Footer rule
+      doc.rect(M, H - 30, CW, 0.5).fill(GLINE);
+      doc.fillColor(SUBTEXT).font('Helvetica').fontSize(7.5)
+         .text('ARIA Intelligence Report  ·  Confidential', M, H - 22, {
            width: CW / 2, lineBreak: false,
          });
-      doc.text(`Page ${i + 1} of ${range.count}`, M, H - 18, {
+      doc.text(`Page ${i + 1} of ${range.count}`, M, H - 22, {
         width: CW, align: 'right', lineBreak: false,
       });
     }
@@ -417,101 +451,90 @@ export async function generatePPTX(data: ReportData): Promise<ReportResult> {
   const pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_WIDE';
 
+  const BLUE_P = '1565c0';
+  const DARK_P = '1a1a1a';
+  const GRAY_P = '555555';
+  const LITE_P = 'e8f0fe';
+
   const s1 = pptx.addSlide();
-  s1.background = { color: DARK_P.replace('#','') };
-  s1.addText('ARIA', { x: 0.6, y: 0.6, w: 5, h: 1.1, fontSize: 52, bold: true, color: 'FFFFFF', fontFace: 'Georgia' });
-  s1.addText(data.title, { x: 0.6, y: 1.9, w: 9, h: 0.9, fontSize: 26, color: 'FFFFFF', fontFace: 'Georgia', wrap: true });
+  s1.background = { color: BLUE_P };
+  s1.addText('ARIA', { x: 0.6, y: 0.6, w: 5, h: 1.0, fontSize: 44, bold: true, color: 'FFFFFF' });
+  s1.addText(data.title, { x: 0.6, y: 1.8, w: 9, h: 0.9, fontSize: 24, color: 'FFFFFF', wrap: true });
   if (data.subtitle) {
-    s1.addText(data.subtitle, { x: 0.6, y: 2.9, w: 9, h: 0.5, fontSize: 13, color: 'c7c4d7' });
+    s1.addText(data.subtitle, { x: 0.6, y: 2.8, w: 9, h: 0.5, fontSize: 12, color: 'b3c6e6' });
   }
-  s1.addText(data.generatedAt, { x: 0.6, y: 7.0, w: 9, h: 0.3, fontSize: 9, color: '6b6f8a', align: 'right' });
+  s1.addText(data.generatedAt, { x: 0.6, y: 7.0, w: 9, h: 0.3, fontSize: 9, color: 'b3c6e6', align: 'right' });
 
   const s2 = pptx.addSlide();
   s2.background = { color: 'FFFFFF' };
-  addSlideTitle(pptx, s2, 'Executive Summary');
+  addSlideTitle(pptx, s2, '1. Executive Summary', BLUE_P);
   s2.addText(stripMd(data.summary), {
-    x: 0.6, y: 1.6, w: 9, h: 4.5, fontSize: 14, color: GRAY_P, valign: 'top', wrap: true,
+    x: 0.6, y: 1.6, w: 9, h: 4.5, fontSize: 13, color: GRAY_P, valign: 'top', wrap: true,
   });
 
   if (data.tasks.length > 0) {
     const s3 = pptx.addSlide();
     s3.background = { color: 'FFFFFF' };
-    addSlideTitle(pptx, s3, 'Project Tasks');
-    const taskTableRows = [
-      makeHeaderRow(['Task', 'Owner', 'Due Date', 'Status', 'Priority']),
+    addSlideTitle(pptx, s3, '2. Task Overview', BLUE_P);
+    const taskRows = [
+      makeHeaderRow(['Task', 'Owner', 'Due Date', 'Status', 'Priority'], BLUE_P),
       ...data.tasks.slice(0, 14).map((t, i) =>
         makeDataRow([
           t.title.slice(0, 42), t.owner ?? '—', t.deadline ?? '—',
           t.status ?? 'Pending', t.priority ?? 'Medium',
-        ], i % 2 === 1)
+        ], i % 2 === 1, LITE_P)
       ),
     ];
-    s3.addTable(taskTableRows, {
-      x: 0.6, y: 1.6, w: 9.2, h: 5.2,
-      fontSize: 9,
-      border: { type: 'solid', color: 'E8E6DC', pt: 0.5 },
-      color: GRAY_P,
+    s3.addTable(taskRows, {
+      x: 0.6, y: 1.6, w: 9.2, h: 5.2, fontSize: 9,
+      border: { type: 'solid', color: 'd0d0d0', pt: 0.5 },
+      color: DARK_P,
     });
   }
 
-  if (data.milestones.length > 0) {
+  const cleanRecs = data.recommendations.filter(r => !isConversational(r) && r.length > 12);
+  if (cleanRecs.length > 0) {
     const s4 = pptx.addSlide();
-    s4.background = { color: 'FFFFFF' };
-    addSlideTitle(pptx, s4, 'Key Milestones');
-    data.milestones.slice(0, 8).forEach((m, i) => {
-      const yp = 1.65 + i * 0.72;
-      s4.addShape(pptx.ShapeType.ellipse, { x: 0.55, y: yp + 0.08, w: 0.28, h: 0.28, fill: { color: TERRA } });
-      s4.addText(m, { x: 1.05, y: yp, w: 8.5, h: 0.5, fontSize: 13, color: GRAY_P });
+    s4.background = { color: BLUE_P };
+    s4.addText('Recommendations & Next Steps', {
+      x: 0.6, y: 0.5, w: 9, h: 0.9, fontSize: 28, bold: true, color: 'FFFFFF',
     });
-  }
-
-  if (data.risks.filter(r => !/no specific risk/i.test(r)).length > 0) {
-    const s5 = pptx.addSlide();
-    s5.background = { color: 'FFFFFF' };
-    addSlideTitle(pptx, s5, 'Risks & Blockers');
-    data.risks.slice(0, 7).forEach((r, i) => {
-      s5.addText(`⚠  ${r}`, { x: 0.6, y: 1.65 + i * 0.82, w: 9.2, h: 0.65, fontSize: 13, color: 'b53333' });
+    cleanRecs.slice(0, 5).forEach((r, i) => {
+      s4.addText(`${i + 1}.  ${r}`, {
+        x: 0.6, y: 1.6 + i * 0.95, w: 9, h: 0.75, fontSize: 14, color: 'FFFFFF',
+      });
     });
+    s4.addText('Generated by ARIA', { x: 0.6, y: 7.1, w: 9, h: 0.3, fontSize: 9, color: 'b3c6e6', align: 'right' });
   }
-
-  const s6 = pptx.addSlide();
-  s6.background = { color: TERRA };
-  s6.addText('Next Steps', { x: 0.6, y: 0.5, w: 9, h: 0.9, fontSize: 30, bold: true, color: 'FFFFFF', fontFace: 'Georgia' });
-  data.recommendations.filter(r => !/review document/i.test(r)).slice(0, 5).forEach((r, i) => {
-    s6.addText(`${i + 1}.  ${r}`, { x: 0.6, y: 1.6 + i * 0.95, w: 9, h: 0.75, fontSize: 14, color: 'FFFFFF' });
-  });
-  s6.addText('Generated by ARIA', { x: 0.6, y: 7.1, w: 9, h: 0.3, fontSize: 9, color: 'FFD5C5', align: 'right' });
 
   const fileId   = crypto.randomUUID();
   const fileName = `ARIA_Presentation_${Date.now()}.pptx`;
   const filePath = path.join(REPORT_DIR, `${fileId}.pptx`);
-
   await pptx.writeFile({ fileName: filePath });
   const size = fs.statSync(filePath).size;
-
   reportRegistry.set(fileId, { fileId, fileName, filePath, type: 'pptx', size, createdAt: new Date().toISOString() });
   return { fileId, fileName, type: 'pptx', size, url: `/api/aria/download/${fileId}` };
 }
 
 // ── PowerPoint helpers ────────────────────────────────────────────────────────
 
-function addSlideTitle(pptx: any, slide: any, text: string) {
+function addSlideTitle(pptx: any, slide: any, text: string, color: string) {
   slide.addText(text, {
-    x: 0.6, y: 0.4, w: 9, h: 0.8, fontSize: 26, bold: true, color: DARK_P, fontFace: 'Georgia',
+    x: 0.6, y: 0.35, w: 9, h: 0.75, fontSize: 22, bold: true, color,
   });
   slide.addShape(pptx.ShapeType.line, {
-    x: 0.6, y: 1.3, w: 9.2, h: 0, line: { color: TERRA, width: 2 },
+    x: 0.6, y: 1.2, w: 9.2, h: 0, line: { color, width: 2 },
   });
 }
 
-function makeHeaderRow(cells: string[]) {
+function makeHeaderRow(cells: string[], bg: string) {
   return cells.map(text => ({
-    text, options: { bold: true, fill: { color: CREAM }, color: DARK_P, fontSize: 9 },
+    text, options: { bold: true, fill: { color: bg }, color: 'FFFFFF', fontSize: 9 },
   }));
 }
 
-function makeDataRow(cells: string[], shade: boolean) {
+function makeDataRow(cells: string[], shade: boolean, liteBg: string) {
   return cells.map(text => ({
-    text, options: { fill: { color: shade ? IVORY : 'FFFFFF' }, color: GRAY_P, fontSize: 9 },
+    text, options: { fill: { color: shade ? liteBg : 'FFFFFF' }, color: '333333', fontSize: 9 },
   }));
 }
