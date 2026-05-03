@@ -29,7 +29,9 @@ export class BraveSearchAdapter implements BridgeAdapter {
 
   async call({ query, count = 5 }: { query: string; count?: number }): Promise<string> {
     const n = Math.min(Math.max(count, 1), 10);
-    const url = `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=${n}&search_lang=en`;
+    // Brave API limit: 50 words max
+    const safeQuery = query.split(/\s+/).slice(0, 48).join(' ');
+    const url = `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(safeQuery)}&count=${n}&search_lang=en`;
 
     const res = await fetch(url, {
       headers: {
