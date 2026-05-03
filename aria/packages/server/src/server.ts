@@ -48,8 +48,8 @@ app.use(express.json({ limit: '10mb' }));
     gmailBridge.register(adapter.name, adapter);
   }
   claw.use(gmailBridge);
-  const gmailReady = !!(process.env.GMAIL_CLIENT_ID && process.env.GMAIL_CLIENT_SECRET && process.env.GMAIL_REFRESH_TOKEN);
-  console.log(`[server] Gmail connector registered (gmail_list, gmail_get, gmail_send, gmail_draft) — credentials ${gmailReady ? 'present' : 'MISSING — calls will fail'}`);
+  const gmailReady = !!(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
+  console.log(`[server] Gmail connector registered (gmail_send) — credentials ${gmailReady ? 'present ✓' : 'MISSING — add GMAIL_USER + GMAIL_APP_PASSWORD to .env'}`);
 }
 
 // ─── Wire task tools ──────────────────────────────────────────────────────────
@@ -115,7 +115,7 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 
 app.get('/api/aria/status', (_req, res) => {
   const supabase = !!(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
-  const gmail    = !!(process.env.GMAIL_CLIENT_ID && process.env.GMAIL_CLIENT_SECRET && process.env.GMAIL_REFRESH_TOKEN);
+  const gmail    = !!(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
   const telegram = !!(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID);
   const brave    = !!process.env.BRAVE_SEARCH_API_KEY;
   const perplexity = !!process.env.PERPLEXITY_API_KEY;
