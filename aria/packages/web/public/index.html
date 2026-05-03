@@ -91,13 +91,12 @@
 
   /* ── Mobile ── */
   @media (max-width: 768px) {
-    .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; display: flex !important; }
-    .sidebar.mob-open { transform: translateX(0); }
+    .sidebar { display: none !important; }
+    .sidebar.mob-open { display: flex !important; }
     .main-offset { margin-left: 0 !important; }
     .header-offset { margin-left: 0 !important; }
   }
-  .mob-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45; }
-  .mob-backdrop.mob-open { display: block; }
+  .mob-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 49; }
   #mob-menu-btn { display: none; }
   #mob-close-btn { display: none; }
   @media (max-width: 768px) {
@@ -670,11 +669,11 @@
   // ── Mobile sidebar ──
   window.openSidebar = function() {
     document.getElementById('sidebar').classList.add('mob-open');
-    document.getElementById('mob-backdrop').classList.add('mob-open');
+    document.getElementById('mob-backdrop').style.display = 'block';
   };
   window.closeSidebar = function() {
     document.getElementById('sidebar').classList.remove('mob-open');
-    document.getElementById('mob-backdrop').classList.remove('mob-open');
+    document.getElementById('mob-backdrop').style.display = 'none';
   };
 
   // ── Logout ──
