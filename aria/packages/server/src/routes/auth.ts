@@ -3,6 +3,22 @@ import { google } from 'googleapis';
 
 export const authRouter = Router();
 
+authRouter.post('/login', (req, res) => {
+  const { password } = req.body as { password?: string };
+  const expected = process.env.ARIA_PASSWORD;
+
+  if (!expected) {
+    res.status(503).json({ ok: false, error: 'ARIA_PASSWORD not set on server' });
+    return;
+  }
+
+  if (password === expected) {
+    res.json({ ok: true });
+  } else {
+    res.status(401).json({ ok: false, error: 'Incorrect password' });
+  }
+});
+
 const SCOPES = [
   'https://www.googleapis.com/auth/gmail.modify',   // read + archive + labels
   'https://www.googleapis.com/auth/gmail.compose',  // create drafts

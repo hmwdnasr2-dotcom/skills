@@ -159,19 +159,19 @@
   </div>
 
   <nav class="flex-1 px-sm mt-xl space-y-xs">
-    <a class="flex items-center space-x-md px-md py-sm rounded-lg bg-indigo-500/10 text-indigo-400 border-r-2 border-indigo-500 transition-all duration-200" href="#">
+    <a class="flex items-center space-x-md px-md py-sm rounded-lg bg-indigo-500/10 text-indigo-400 border-r-2 border-indigo-500 transition-all duration-200" href="/">
       <span class="material-symbols-outlined">chat</span>
       <span class="text-sm font-medium">Chat</span>
     </a>
-    <a class="flex items-center space-x-md px-md py-sm rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition-all duration-200" href="#">
+    <a class="flex items-center space-x-md px-md py-sm rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition-all duration-200" href="/agents.html">
       <span class="material-symbols-outlined">account_tree</span>
-      <span class="text-sm font-medium">Agent Workflows</span>
+      <span class="text-sm font-medium">Background Agents</span>
     </a>
     <a class="flex items-center space-x-md px-md py-sm rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition-all duration-200" href="#">
       <span class="material-symbols-outlined">folder_shared</span>
       <span class="text-sm font-medium">Knowledge Base</span>
     </a>
-    <a class="flex items-center space-x-md px-md py-sm rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition-all duration-200" href="#">
+    <a class="flex items-center space-x-md px-md py-sm rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition-all duration-200" href="/dashboard.html">
       <span class="material-symbols-outlined">analytics</span>
       <span class="text-sm font-medium">Performance</span>
     </a>
@@ -189,6 +189,10 @@
       </div>
       <div id="status-pip" class="w-2 h-2 rounded-full bg-slate-600"></div>
     </div>
+    <button onclick="doLogout()" class="flex items-center space-x-md px-md py-sm rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/40 transition-all w-full text-sm">
+      <span class="material-symbols-outlined" style="font-size:18px">logout</span>
+      <span>Sign out</span>
+    </button>
   </div>
 </aside>
 
@@ -308,6 +312,11 @@
 
   const API = '';
   const UID = 'user-1';
+
+  window.doLogout = function() {
+    localStorage.removeItem('aria_auth');
+    window.location.replace('/login.html');
+  };
 
   let busy = false;
   let msgCount = 0;
