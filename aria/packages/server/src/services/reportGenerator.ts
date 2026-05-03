@@ -61,10 +61,10 @@ export async function generateExcel(
     ...data.milestones.map(m => ['•', m]),
     ['', ''],
     ['Risks & Blockers', ''],
-    ...data.risks.map(r => ['⚠', r]),
+    ...data.risks.map(r => ['[!]', r]),
     ['', ''],
     ['Recommendations', ''],
-    ...data.recommendations.map(r => ['→', r]),
+    ...data.recommendations.map(r => ['>>', r]),
   ];
   const wsSummary = xlsx.utils.aoa_to_sheet(summaryAoa);
   wsSummary['!cols'] = [{ wch: 22 }, { wch: 90 }];
@@ -208,7 +208,7 @@ export async function generatePDF(data: ReportData): Promise<ReportResult> {
       doc.fillColor('#141413').font('Helvetica-Bold').fontSize(13).text('Key Milestones');
       doc.moveDown(0.3);
       data.milestones.slice(0, 8).forEach(m => {
-        doc.fillColor('#c96442').font('Helvetica-Bold').fontSize(11).text('●  ', { continued: true });
+        doc.fillColor('#c96442').font('Helvetica-Bold').fontSize(11).text('[+]  ', { continued: true });
         doc.fillColor('#5e5d59').font('Helvetica').text(m);
       });
       doc.moveDown(0.8);
@@ -220,7 +220,7 @@ export async function generatePDF(data: ReportData): Promise<ReportResult> {
       doc.fillColor('#141413').font('Helvetica-Bold').fontSize(13).text('Risks & Blockers');
       doc.moveDown(0.3);
       data.risks.slice(0, 6).forEach(r => {
-        doc.fillColor('#b53333').font('Helvetica-Bold').fontSize(11).text('⚠  ', { continued: true });
+        doc.fillColor('#b53333').font('Helvetica-Bold').fontSize(11).text('[!]  ', { continued: true });
         doc.fillColor('#5e5d59').font('Helvetica').text(r);
       });
       doc.moveDown(0.8);
@@ -232,7 +232,7 @@ export async function generatePDF(data: ReportData): Promise<ReportResult> {
       doc.fillColor('#141413').font('Helvetica-Bold').fontSize(13).text('Recommendations');
       doc.moveDown(0.3);
       data.recommendations.slice(0, 6).forEach(r => {
-        doc.fillColor('#3d9e6e').font('Helvetica-Bold').fontSize(11).text('→  ', { continued: true });
+        doc.fillColor('#3d9e6e').font('Helvetica-Bold').fontSize(11).text('>>  ', { continued: true });
         doc.fillColor('#5e5d59').font('Helvetica').text(r);
       });
     }

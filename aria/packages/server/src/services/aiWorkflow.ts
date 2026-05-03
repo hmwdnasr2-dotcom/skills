@@ -122,6 +122,6 @@ export function extractReportData(
     milestones: allMilestones,
     risks:           risks.length           > 0 ? risks           : ['No specific risks identified'],
     recommendations: recommendations.length > 0 ? recommendations : ['Review document for action items'],
-    generatedAt: new Date().toISOString(),
+    generatedAt: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
   };
 }

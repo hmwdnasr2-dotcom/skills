@@ -1,15 +1,30 @@
 /**
- * Document Agent — create_excel and create_pdf tools.
+ * Document Agent — create_excel, create_pdf, generate_project_report,
+ * create_mom, save_report_template, list_report_templates tools.
  *
  * The AI calls these tools with structured data and gets back a download link.
- * This gives ARIA full control over document content instead of relying on
- * regex-based detection from the chat response text.
+ * This gives ARIA full control over document content and design.
  */
 import fs from 'fs';
 import path from 'path';
 import ExcelJS from 'exceljs';
+import { createClient } from '@supabase/supabase-js';
 import type { BridgeAdapter } from '@aria/core';
 import { reportRegistry } from '../routes/download.js';
+
+function db() {
+  return createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_ANON_KEY!,
+  );
+}
+
+function fmtDate(d: Date) {
+  return d.toLocaleString('en-GB', {
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
 
 const OUT_DIR = '/tmp/aria-generated';
 fs.mkdirSync(OUT_DIR, { recursive: true });
@@ -539,6 +554,290 @@ export function buildDocumentAdapters(): BridgeAdapter[] {
         const result = await buildPDF(input as unknown as PdfInput);
         const parsed = JSON.parse(result);
         return `${parsed.message}\n\nDownload: ${parsed.url}`;
+      },
+    },
+
+    // ── generate_project_report ──────────────────────────────────────────────
+    {
+      name: 'generate_project_report',
+      description:
+        'Fetch real project + task data from the database and generate a professional PDF ' +
+        'report with stats, task table, milestones, and your AI summary. ' +
+        'Use when user asks for a project report, status update, or PDF about a specific project. ' +
+        'This tool queries Supabase automatically — you just provide the project name and a summary.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          user_id:      { type: 'string' },
+          project_name: { type: 'string', description: 'Name or partial name of the project' },
+          summary:      { type: 'string', description: 'Your 2-4 sentence executive summary of the project status' },
+          period:       { type: 'string', description: 'Optional period label e.g. "May 2026" or "Q2 2026"' },
+        },
+        required: ['user_id', 'project_name', 'summary'],
+      },
+      async call(input) {
+        const { user_id, project_name, summary, period } = input as {
+          user_id: string; project_name: string; summary: string; period?: string;
+        };
+
+        const sb = db();
+        const now = new Date();
+
+        // Find the project
+        const { data: projects } = await sb
+          .from('aria_projects')
+          .select('*')
+          .eq('user_id', user_id)
+          .ilike('name', `%${project_name}%`)
+          .limit(1);
+
+        const project = projects?.[0];
+        const projId  = project?.id;
+        const title   = project?.name ?? project_name;
+        const goal    = project?.goal ?? project?.description ?? '';
+
+        // Fetch tasks
+        const taskQuery = sb.from('aria_tasks').select('*').eq('user_id', user_id);
+        if (projId) taskQuery.eq('project_id', projId);
+        const { data: rawTasks } = await taskQuery.limit(100);
+        const tasks: any[] = rawTasks ?? [];
+
+        const total    = tasks.length;
+        const done     = tasks.filter((t: any) => t.status === 'completed').length;
+        const active   = tasks.filter((t: any) => t.status === 'in_progress').length;
+        const overdue  = tasks.filter((t: any) =>
+          t.due_date && new Date(t.due_date) < now && t.status !== 'completed'
+        ).length;
+        const donePct  = total > 0 ? Math.round((done / total) * 100) : 0;
+
+        const sections: PdfSection[] = [
+          {
+            type: 'stats',
+            items: [
+              { label: 'Total Tasks',  value: String(total) },
+              { label: `Done (${donePct}%)`, value: String(done),   color: 'FF3A9E6E' },
+              { label: 'In Progress',  value: String(active),        color: 'FF7C6AF4' },
+              { label: 'Overdue',      value: String(overdue),       color: overdue > 0 ? 'FFB53333' : 'FF3A9E6E' },
+            ],
+          },
+          { type: 'text', heading: 'Executive Summary', content: summary },
+        ];
+
+        if (tasks.length > 0) {
+          sections.push({
+            type: 'table',
+            heading: 'Task Overview',
+            headers: ['Task', 'Status', 'Priority', 'Due Date'],
+            rows: tasks.slice(0, 30).map((t: any) => [
+              t.title ?? '',
+              (t.status ?? 'pending').replace(/_/g, ' '),
+              t.priority ?? 'medium',
+              t.due_date ? new Date(t.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—',
+            ]),
+          });
+        }
+
+        const completedRecent = tasks
+          .filter((t: any) => t.status === 'completed' && t.completed_at)
+          .sort((a: any, b: any) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())
+          .slice(0, 8)
+          .map((t: any) => t.title);
+
+        if (completedRecent.length > 0) {
+          sections.push({ type: 'list', heading: 'Recently Completed', items: completedRecent });
+        }
+
+        const upcoming = tasks
+          .filter((t: any) => t.status !== 'completed' && t.due_date)
+          .sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+          .slice(0, 6)
+          .map((t: any) => `${t.title} — due ${new Date(t.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`);
+
+        if (upcoming.length > 0) {
+          sections.push({ type: 'list', heading: 'Upcoming Deadlines', items: upcoming });
+        }
+
+        const pdfInput: PdfInput = {
+          title: `${title}${period ? ` — ${period}` : ''}`,
+          subtitle: goal || undefined,
+          sections,
+          generated_at: fmtDate(now),
+        };
+
+        const result = await buildPDF(pdfInput);
+        const parsed = JSON.parse(result);
+        return `Project report for "${title}" generated.\n${parsed.message}\n\nDownload: ${parsed.url}`;
+      },
+    },
+
+    // ── create_mom ───────────────────────────────────────────────────────────
+    {
+      name: 'create_mom',
+      description:
+        'Create a professional Minutes of Meeting (MOM) PDF document. ' +
+        'Call when user wants to document a meeting, record meeting notes, or create MOM/meeting minutes.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          title:        { type: 'string', description: 'Meeting title or project name' },
+          date:         { type: 'string', description: 'Meeting date and time' },
+          location:     { type: 'string', description: 'Meeting location or platform (e.g. Zoom, Office)' },
+          chair:        { type: 'string', description: 'Meeting chairperson/facilitator' },
+          attendees:    { type: 'array', items: { type: 'string' }, description: 'List of attendees (name + role)' },
+          agenda:       { type: 'array', items: { type: 'string' }, description: 'Agenda items discussed' },
+          discussion:   { type: 'array', items: { type: 'string' }, description: 'Key discussion points and notes' },
+          decisions:    { type: 'array', items: { type: 'string' }, description: 'Decisions made in the meeting' },
+          action_items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                item:  { type: 'string' },
+                owner: { type: 'string' },
+                due:   { type: 'string' },
+              },
+            },
+            description: 'Action items with owner and due date',
+          },
+          next_meeting: { type: 'string', description: 'Next meeting date/time (optional)' },
+        },
+        required: ['title', 'date', 'attendees'],
+      },
+      async call(input) {
+        const {
+          title, date, location, chair, attendees = [],
+          agenda = [], discussion = [], decisions = [],
+          action_items = [], next_meeting,
+        } = input as {
+          title: string; date: string; location?: string; chair?: string;
+          attendees: string[]; agenda: string[]; discussion: string[];
+          decisions: string[]; action_items: Array<{ item: string; owner: string; due: string }>;
+          next_meeting?: string;
+        };
+
+        const sections: PdfSection[] = [];
+
+        // Meeting meta as a text block
+        const meta = [
+          `Date: ${date}`,
+          location ? `Location: ${location}` : '',
+          chair    ? `Chaired by: ${chair}` : '',
+        ].filter(Boolean).join('\n');
+
+        sections.push({ type: 'text', heading: 'Meeting Details', content: meta });
+        sections.push({ type: 'list', heading: 'Attendees', items: attendees });
+
+        if (agenda.length > 0) {
+          sections.push({ type: 'list', heading: 'Agenda', items: agenda });
+        }
+        if (discussion.length > 0) {
+          sections.push({ type: 'list', heading: 'Discussion Points', items: discussion });
+        }
+        if (decisions.length > 0) {
+          sections.push({ type: 'list', heading: 'Decisions Made', items: decisions });
+        }
+        if (action_items.length > 0) {
+          sections.push({
+            type: 'table',
+            heading: 'Action Items',
+            headers: ['Action Item', 'Owner', 'Due Date'],
+            rows: action_items.map(a => [a.item, a.owner || '—', a.due || '—']),
+          });
+        }
+        if (next_meeting) {
+          sections.push({ type: 'text', heading: 'Next Meeting', content: next_meeting });
+        }
+
+        const pdfInput: PdfInput = {
+          title: `Minutes of Meeting — ${title}`,
+          subtitle: date,
+          sections,
+          generated_at: fmtDate(new Date()),
+        };
+
+        const result = await buildPDF(pdfInput);
+        const parsed = JSON.parse(result);
+        return `MOM document created.\n${parsed.message}\n\nDownload: ${parsed.url}`;
+      },
+    },
+
+    // ── save_report_template ──────────────────────────────────────────────────
+    {
+      name: 'save_report_template',
+      description:
+        'Save a report template so ARIA can recreate it on demand. ' +
+        'Use when user says "remember this format", "save this as my monthly report template", ' +
+        '"learn my MOM format", or "use this structure next time". ' +
+        'The template captures what sections, headings, and structure the user wants.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          user_id:     { type: 'string' },
+          name:        { type: 'string', description: 'Template name e.g. "Monthly Report", "Minutes of Meeting"' },
+          description: { type: 'string', description: 'What this template is for' },
+          sections: {
+            type: 'array',
+            description: 'Ordered list of section specs the user wants',
+            items: {
+              type: 'object',
+              properties: {
+                heading: { type: 'string' },
+                type:    { type: 'string', enum: ['stats', 'text', 'list', 'table'] },
+                notes:   { type: 'string', description: 'What content goes here' },
+              },
+            },
+          },
+          sample:      { type: 'string', description: 'User-provided sample text/description of the format' },
+        },
+        required: ['user_id', 'name', 'sections'],
+      },
+      async call(input) {
+        const { user_id, name, description, sections, sample } = input as {
+          user_id: string; name: string; description?: string;
+          sections: Array<{ heading?: string; type: string; notes?: string }>;
+          sample?: string;
+        };
+
+        const { error } = await db()
+          .from('aria_report_templates')
+          .upsert({
+            user_id,
+            name,
+            description,
+            template_json: { sections },
+            sample,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'user_id,name' });
+
+        if (error) throw new Error(error.message);
+        return `Template "${name}" saved. I'll use this format whenever you ask for a ${name}.`;
+      },
+    },
+
+    // ── list_report_templates ─────────────────────────────────────────────────
+    {
+      name: 'list_report_templates',
+      description:
+        'List saved report templates for this user. ' +
+        'Use when user asks "what report formats do I have", "show my templates", ' +
+        'or before generating a report to check if there is a saved format to follow.',
+      inputSchema: {
+        type: 'object',
+        properties: { user_id: { type: 'string' } },
+        required: ['user_id'],
+      },
+      async call(input) {
+        const { user_id } = input as { user_id: string };
+        const { data, error } = await db()
+          .from('aria_report_templates')
+          .select('name, description, created_at, updated_at')
+          .eq('user_id', user_id)
+          .order('updated_at', { ascending: false });
+
+        if (error) throw new Error(error.message);
+        if (!data || data.length === 0) return 'No report templates saved yet.';
+
+        return data.map((t: any) => `• ${t.name}${t.description ? ` — ${t.description}` : ''}`).join('\n');
       },
     },
   ];
