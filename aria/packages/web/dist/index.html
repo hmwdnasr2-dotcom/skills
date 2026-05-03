@@ -435,6 +435,21 @@ textarea#inp::placeholder { color: var(--tx-stone); }
     document.querySelectorAll('.date-sep').forEach(el=>el.remove());
     $welcome.style.display='';
   };
+  // Subscribe to server-sent proactive events (reminders, briefings, nudges)
+  (function connectSSE(){
+    const es=new EventSource(`${API}/api/aria/events?userId=${UID}`);
+    es.onmessage=function(e){
+      try{
+        const data=JSON.parse(e.data);
+        if(data.content){const body=addAria();body.innerHTML='<div class="prose">'+marked.parse(data.content)+'</div>';}
+      }catch(_){}
+    };
+    es.onerror=function(){
+      es.close();
+      setTimeout(connectSSE,5000);
+    };
+  })();
+
   setTimeout(()=>$inp.focus(),150);
 })();
 </script>
