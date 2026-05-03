@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<aside class="fixed left-0 top-0 h-full z-40 w-64 border-r flex flex-col shadow-2xl" style="background:var(--bg2);border-color:var(--border)">
+<aside id="nav-sidebar" class="fixed left-0 top-0 h-full z-40 w-64 border-r flex flex-col shadow-2xl" style="display:none;background:var(--bg2);border-color:var(--border)">
   <div class="p-6 flex items-center gap-3">
     <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center">
       <span class="material-symbols-outlined text-white" style="font-size:18px">hub</span>
@@ -48,8 +48,9 @@
     <button onclick="doLogout()" class="text-red-400 hover:text-red-300 text-xs flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">logout</span>Sign out</button>
   </div>
 </aside>
+<script>if(window.innerWidth>=768){document.getElementById("nav-sidebar").style.display="flex";document.getElementById("page-main").style.marginLeft="256px"}</script>
 
-<main class="ml-64 min-h-screen p-8" style="background:var(--bg)">
+<main id="page-main" class="min-h-screen p-8" style="background:var(--bg)">
   <div class="max-w-5xl">
     <div class="mb-8">
       <h1 class="text-2xl font-bold mb-1" style="color:var(--text);font-family:Manrope,sans-serif">Agent Workflows</h1>
