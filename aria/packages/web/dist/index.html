@@ -89,21 +89,41 @@
   .file-chip { animation: chip-in 0.2s ease both; }
   @keyframes chip-in { from{opacity:0;transform:scale(0.8)} to{opacity:1;transform:scale(1)} }
 
-  @media (max-width: 768px) { .sidebar { display: none; } .main-offset { margin-left: 0 !important; } .header-offset { margin-left: 0 !important; } }
+  /* ── Mobile ── */
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; display: flex !important; }
+    .sidebar.mob-open { transform: translateX(0); }
+    .main-offset { margin-left: 0 !important; }
+    .header-offset { margin-left: 0 !important; }
+  }
+  .mob-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45; }
+  .mob-backdrop.mob-open { display: block; }
+  #mob-menu-btn { display: none; }
+  #mob-close-btn { display: none; }
+  @media (max-width: 768px) {
+    #mob-menu-btn { display: flex; }
+    #mob-close-btn { display: flex; }
+  }
 </style>
 </head>
-<body class="font-body-md antialiased overflow-hidden" style="background:var(--bg);color:var(--text)">
+<body class="font-body-md antialiased" style="background:var(--bg);color:var(--text);overflow:hidden;height:100svh;height:100dvh">
+
+<!-- Mobile backdrop -->
+<div id="mob-backdrop" class="mob-backdrop" onclick="closeSidebar()"></div>
 
 <!-- Sidebar -->
-<aside class="sidebar fixed left-0 top-0 h-full z-40 w-64 border-r flex flex-col shadow-2xl shadow-black/20" style="background:var(--sidebar-bg);border-color:var(--border);backdrop-filter:blur(20px)">
+<aside id="sidebar" class="sidebar fixed left-0 top-0 h-full z-50 w-64 border-r flex flex-col shadow-2xl shadow-black/20" style="background:var(--sidebar-bg);border-color:var(--border);backdrop-filter:blur(20px)">
   <div class="p-xl flex items-center space-x-sm">
     <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center flex-shrink-0">
       <span class="material-symbols-outlined text-white" style="font-size:18px">hub</span>
     </div>
-    <div class="flex flex-col">
+    <div class="flex flex-col flex-1">
       <span class="text-base font-bold tracking-wide" style="color:var(--text)">Agent Orchestrator</span>
       <span class="text-[10px] uppercase tracking-widest font-bold text-indigo-400">ARIA</span>
     </div>
+    <button id="mob-close-btn" onclick="closeSidebar()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors" style="color:var(--text3)">
+      <span class="material-symbols-outlined" style="font-size:20px">close</span>
+    </button>
   </div>
 
   <div class="px-md mt-md">
@@ -166,10 +186,13 @@
 </aside>
 
 <!-- Main -->
-<main class="main-offset ml-64 h-screen flex flex-col relative overflow-hidden" style="background:var(--bg)">
+<main class="main-offset ml-64 flex flex-col relative overflow-hidden" style="background:var(--bg);height:100svh;height:100dvh">
 
   <!-- Header -->
-  <header id="main-header" class="flex items-center justify-end px-xl h-12 w-full sticky top-0 z-30 border-b flex-shrink-0" style="background:rgba(11,19,38,0.85);border-color:var(--border);backdrop-filter:blur(12px)">
+  <header id="main-header" class="flex items-center justify-between px-md h-12 w-full sticky top-0 z-30 border-b flex-shrink-0" style="background:rgba(11,19,38,0.85);border-color:var(--border);backdrop-filter:blur(12px)">
+    <button id="mob-menu-btn" onclick="openSidebar()" class="w-9 h-9 flex items-center justify-center rounded-lg transition-colors hover:bg-indigo-500/20" style="color:var(--text2)" aria-label="Menu">
+      <span class="material-symbols-outlined" style="font-size:22px">menu</span>
+    </button>
     <div class="flex items-center space-x-md">
       <button onclick="toggleTheme()" class="hover:text-white transition-colors" style="color:var(--text3)" title="Toggle theme">
         <span id="theme-icon-header" class="material-symbols-outlined" style="font-size:20px">light_mode</span>
@@ -187,7 +210,7 @@
       <p class="text-lg max-w-md mx-auto" style="color:var(--text2)">How can I help you today?</p>
     </div>
 
-    <div class="grid grid-cols-2 gap-gutter w-full max-w-2xl px-xl">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter w-full max-w-2xl px-xl">
       <button onclick="useAction('Analyze the following and give me key insights:\n')" class="glass-card p-xl rounded-xl flex flex-col items-start text-left group hover:border-indigo-500/30 transition-all duration-300">
         <div class="w-12 h-12 rounded-lg flex items-center justify-center text-indigo-400 mb-md group-hover:scale-110 transition-transform" style="background:rgba(99,102,241,0.1)">
           <span class="material-symbols-outlined text-2xl">query_stats</span>
@@ -234,7 +257,7 @@
   </div>
 
   <!-- Input area -->
-  <footer class="flex-shrink-0 px-xl pb-4 pt-2" style="background:linear-gradient(to top,var(--bg) 80%,transparent)">
+  <footer class="flex-shrink-0 px-xl pt-2" style="background:linear-gradient(to top,var(--bg) 80%,transparent);padding-bottom:max(16px,env(safe-area-inset-bottom))">
     <div class="max-w-3xl mx-auto relative group">
       <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-xl blur opacity-0 group-focus-within:opacity-30 transition-opacity"></div>
       <div class="relative flex items-center rounded-xl border shadow-2xl p-xs" style="background:var(--bg3);border-color:var(--border)">
@@ -642,6 +665,16 @@
     if (!matches.length) { addMessage('system', `No memories matching "${query}".`); return; }
     const lines = matches.map(m => `• ${m.content.slice(0, 100)}…`).join('\n');
     addMessage('aria', `**Memory search results for "${query}":**\n\n${lines}`);
+  };
+
+  // ── Mobile sidebar ──
+  window.openSidebar = function() {
+    document.getElementById('sidebar').classList.add('mob-open');
+    document.getElementById('mob-backdrop').classList.add('mob-open');
+  };
+  window.closeSidebar = function() {
+    document.getElementById('sidebar').classList.remove('mob-open');
+    document.getElementById('mob-backdrop').classList.remove('mob-open');
   };
 
   // ── Logout ──
