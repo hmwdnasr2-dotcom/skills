@@ -174,6 +174,26 @@
       </div>
     </div>
 
+    <!-- User Management (admin only) -->
+    <div class="card" id="user-mgmt-section" style="display:none">
+      <h2 class="font-semibold text-base mb-4 flex items-center gap-2" style="color:var(--text);font-family:Manrope,sans-serif">
+        <span class="material-symbols-outlined text-indigo-400">group</span> User Management
+      </h2>
+      <p class="text-xs mb-4" style="color:var(--text3)">Create access codes for testers. Codes give chat-only access and are lost when the server restarts.</p>
+
+      <!-- Create code form -->
+      <div class="flex gap-3 mb-6">
+        <input id="tester-name" class="input-field flex-1" type="text" placeholder="Tester name (e.g. John)"/>
+        <input id="tester-code" class="input-field w-36" type="text" placeholder="Code (auto if blank)"/>
+        <button onclick="createTester()" class="btn-primary whitespace-nowrap">Create Code</button>
+      </div>
+
+      <!-- Tester list -->
+      <div id="tester-list" class="space-y-2">
+        <p class="text-xs" style="color:var(--text3)">Loading…</p>
+      </div>
+    </div>
+
     <!-- Danger Zone -->
     <div class="card" style="border-color:rgba(239,68,68,0.2)">
       <h2 class="font-semibold text-base mb-4 flex items-center gap-2 text-red-400" style="font-family:Manrope,sans-serif">
@@ -247,6 +267,72 @@
   };
 
   window.doLogout = function() { localStorage.removeItem('aria_auth'); window.location.replace('/login.html'); };
+
+  // ── User Management (admin only) ──────────────────────────────────────────
+  const role = localStorage.getItem('aria_role');
+  const adminPw = sessionStorage.getItem('aria_admin_pw');
+
+  if (role === 'admin' && adminPw) {
+    document.getElementById('user-mgmt-section').style.display = '';
+    loadTesters();
+  }
+
+  function loadTesters() {
+    fetch('/api/auth/testers', { headers: { 'x-admin-password': adminPw } })
+      .then(r => r.json())
+      .then(d => renderTesters(d.testers || []))
+      .catch(() => {
+        document.getElementById('tester-list').innerHTML = '<p class="text-xs text-red-400">Failed to load testers.</p>';
+      });
+  }
+
+  function renderTesters(testers) {
+    const el = document.getElementById('tester-list');
+    if (!testers.length) {
+      el.innerHTML = '<p class="text-xs" style="color:var(--text3)">No tester codes yet.</p>';
+      return;
+    }
+    el.innerHTML = testers.map(t => `
+      <div class="flex items-center justify-between p-3 rounded-lg border" style="background:var(--bg3);border-color:var(--border)">
+        <div>
+          <span class="text-sm font-semibold" style="color:var(--text)">${escHtml(t.name)}</span>
+          <code class="ml-3 text-xs px-2 py-0.5 rounded font-mono" style="background:rgba(128,131,255,0.15);color:var(--accent)">${escHtml(t.code)}</code>
+        </div>
+        <button onclick="deleteTester('${escHtml(t.code)}')" class="text-xs text-red-400 hover:text-red-300 transition-colors flex items-center gap-1">
+          <span class="material-symbols-outlined" style="font-size:14px">delete</span>Revoke
+        </button>
+      </div>`).join('');
+  }
+
+  function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  window.createTester = async function() {
+    const name = document.getElementById('tester-name').value.trim();
+    const code = document.getElementById('tester-code').value.trim();
+    if (!name) { alert('Enter a tester name.'); return; }
+    const res = await fetch('/api/auth/testers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminPassword: adminPw, name, code: code || undefined })
+    }).catch(() => null);
+    if (!res?.ok) { alert('Failed to create tester code.'); return; }
+    const d = await res.json();
+    document.getElementById('tester-name').value = '';
+    document.getElementById('tester-code').value = '';
+    showToast();
+    loadTesters();
+    // Show the generated code to admin
+    if (d.code) setTimeout(() => alert(`Code created: ${d.code}\nShare this with ${d.name}`), 100);
+  };
+
+  window.deleteTester = async function(code) {
+    if (!confirm(`Revoke access for code: ${code}?`)) return;
+    await fetch(`/api/auth/testers/${encodeURIComponent(code)}`, {
+      method: 'DELETE',
+      headers: { 'x-admin-password': adminPw }
+    }).catch(() => {});
+    loadTesters();
+  };
 
   // Fetch server status
   fetch('/api/aria/status')

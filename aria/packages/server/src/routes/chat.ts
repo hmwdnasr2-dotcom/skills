@@ -81,12 +81,16 @@ chatRouter.post('/', async (req, res) => {
   } catch (err) {
     const e = err as Error & { cause?: Error };
     console.error('[chat] error:', e.message, '| cause:', e.cause?.message);
-    const hint = e.message?.includes('API key') || e.message?.includes('auth')
+    const cause   = e.cause as Error | undefined;
+    const display = cause?.message ?? e.message ?? 'Unknown error';
+    const hint = display.includes('API key') || display.includes('Unauthorized') || display.includes('401') || display.includes('auth')
       ? ' Check your API key in .env.'
-      : e.message?.includes('network') || e.message?.includes('ECONNREFUSED')
+      : display.includes('ECONNREFUSED') || display.includes('fetch failed') || display.includes('network')
       ? ' Check server connectivity.'
+      : display.includes('timed out')
+      ? ' The request took too long — try again.'
       : '';
-    res.status(500).json({ error: true, reply: `⚠️ ${e.message || 'Unknown error'}${hint}` });
+    res.status(500).json({ error: true, reply: `⚠️ ${display}${hint}` });
   }
 });
 

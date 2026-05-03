@@ -1,19 +1,688 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="theme-color" content="#f5f4ed" />
-  <title>ARIA</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <script type="module" crossorigin src="/assets/index-H_Wp04EL.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-DEqcnXWL.css">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#0b1326"/>
+<title>ARIA | Agent Orchestrator</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: { extend: {
+      colors: {
+        "background": "#0b1326", "surface": "#0b1326",
+        "surface-container": "#171f33", "surface-container-low": "#131b2e",
+        "surface-container-lowest": "#060e20", "surface-container-high": "#222a3d",
+        "on-background": "#dae2fd", "on-surface": "#dae2fd",
+        "on-surface-variant": "#c7c4d7", "outline": "#908fa0",
+        "outline-variant": "#464554", "primary": "#c0c1ff",
+        "primary-container": "#8083ff", "secondary": "#ddb7ff",
+        "secondary-container": "#6f00be", "tertiary": "#89ceff",
+        "error": "#ffb4ab", "error-container": "#93000a"
+      },
+      borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+      spacing: { "xs": "4px", "sm": "8px", "md": "16px", "lg": "24px", "xl": "32px", "gutter": "24px", "margin": "32px", "2xl": "48px", "base": "4px" },
+      fontFamily: { "h1": ["Manrope","sans-serif"], "h2": ["Manrope","sans-serif"], "h3": ["Manrope","sans-serif"], "body-md": ["Inter","sans-serif"], "body-sm": ["Inter","sans-serif"] },
+      fontSize: {
+        "h1": ["40px",{"lineHeight":"1.2","letterSpacing":"-0.02em","fontWeight":"700"}],
+        "h2": ["32px",{"lineHeight":"1.3","letterSpacing":"-0.01em","fontWeight":"600"}],
+        "h3": ["24px",{"lineHeight":"1.4","fontWeight":"600"}],
+        "body-md": ["16px",{"lineHeight":"1.5","fontWeight":"400"}],
+        "body-sm": ["14px",{"lineHeight":"1.5","fontWeight":"400"}]
+      }
+    }}
+  }
+</script>
+<style>
+  /* ── Dark theme (default) ── */
+  :root {
+    --bg: #0b1326; --bg2: #171f33; --bg3: #222a3d;
+    --border: rgba(144,143,160,0.15); --border-strong: rgba(192,193,255,0.2);
+    --text: #dae2fd; --text2: #c7c4d7; --text3: #908fa0;
+    --accent: #8083ff; --accent2: #c0c1ff;
+    --user-bubble: #222a3d; --sidebar-bg: rgba(10,15,30,0.92);
+  }
+  /* ── Light theme ── */
+  html.light {
+    --bg: #f4f6fb; --bg2: #ffffff; --bg3: #e8ecf5;
+    --border: rgba(0,0,0,0.1); --border-strong: rgba(99,102,241,0.3);
+    --text: #1a1d2e; --text2: #3d4166; --text3: #7b7fa8;
+    --accent: #4f52d9; --accent2: #6366f1;
+    --user-bubble: #e8ecf5; --sidebar-bg: rgba(248,249,255,0.95);
+  }
+  html.light body { background: var(--bg); }
+  html.light .prose-dark { color: var(--text); }
+  html.light .prose-dark strong { color: #0a0c1a; }
+  html.light .prose-dark code { background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.2); color: #4338ca; }
+  html.light .prose-dark pre { background: #f0f2ff; }
+  html.light .prose-dark pre code { color: #4338ca; background: none; border: none; }
+
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; vertical-align: middle; }
+  .glass-card { background: rgba(45,52,73,0.4); backdrop-filter: blur(12px); border: 1px solid var(--border); }
+  html.light .glass-card { background: rgba(255,255,255,0.7); }
+
+  .prose-dark { color: var(--text); line-height: 1.7; }
+  .prose-dark p { margin: 0 0 10px; }
+  .prose-dark p:last-child { margin-bottom: 0; }
+  .prose-dark strong { color: #fff; font-weight: 600; }
+  .prose-dark ul, .prose-dark ol { padding-left: 20px; margin: 8px 0; }
+  .prose-dark li { margin: 4px 0; }
+  .prose-dark code { font-family: monospace; font-size: 13px; background: rgba(192,193,255,0.12); border: 1px solid rgba(192,193,255,0.2); border-radius: 4px; padding: 1px 5px; }
+  .prose-dark pre { background: #060e20; border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin: 10px 0; }
+  .prose-dark pre code { background: none; border: none; padding: 0; color: #c0c1ff; }
+  .prose-dark h1,.prose-dark h2,.prose-dark h3 { font-family: Manrope,sans-serif; font-weight: 700; color: #fff; margin: 16px 0 8px; }
+  .prose-dark h2 { font-size: 18px; } .prose-dark h3 { font-size: 16px; }
+
+  .cursor-blink { display: inline-block; animation: blink 1s step-end infinite; color: var(--accent2); }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .msg-in { animation: msg-appear 0.2s ease both; }
+  @keyframes msg-appear { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #2d3449; border-radius: 2px; }
+  html.light ::-webkit-scrollbar-thumb { background: #c5cae9; }
+
+  .session-item:hover .session-del { opacity: 1; }
+  .session-del { opacity: 0; transition: opacity 0.15s; }
+  .file-chip { animation: chip-in 0.2s ease both; }
+  @keyframes chip-in { from{opacity:0;transform:scale(0.8)} to{opacity:1;transform:scale(1)} }
+
+  @media (max-width: 768px) { .sidebar { display: none; } .main-offset { margin-left: 0 !important; } .header-offset { margin-left: 0 !important; } }
+</style>
 </head>
-<body>
-  <div id="root"></div>
+<body class="font-body-md antialiased overflow-hidden" style="background:var(--bg);color:var(--text)">
+
+<!-- Sidebar -->
+<aside class="sidebar fixed left-0 top-0 h-full z-40 w-64 border-r flex flex-col shadow-2xl shadow-black/20" style="background:var(--sidebar-bg);border-color:var(--border);backdrop-filter:blur(20px)">
+  <div class="p-xl flex items-center space-x-sm">
+    <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center flex-shrink-0">
+      <span class="material-symbols-outlined text-white" style="font-size:18px">hub</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-base font-bold tracking-wide" style="color:var(--text)">Agent Orchestrator</span>
+      <span class="text-[10px] uppercase tracking-widest font-bold text-indigo-400">ARIA</span>
+    </div>
+  </div>
+
+  <div class="px-md mt-md">
+    <button onclick="newSession()" class="w-full py-sm px-md rounded-lg bg-indigo-500 text-white font-semibold flex items-center justify-center space-x-sm hover:bg-indigo-400 active:scale-95 transition-all text-sm">
+      <span class="material-symbols-outlined" style="font-size:18px">add</span>
+      <span>New Session</span>
+    </button>
+  </div>
+
+  <!-- Chat History -->
+  <div class="flex-1 overflow-y-auto px-sm mt-lg">
+    <div class="px-md py-xs flex items-center justify-between mb-xs">
+      <span class="text-[10px] uppercase tracking-widest font-bold" style="color:var(--text3)">Recent Chats</span>
+      <button onclick="clearAllHistory()" class="text-[10px] hover:text-red-400 transition-colors" style="color:var(--text3)" title="Clear all history">Clear</button>
+    </div>
+    <div id="history-list" class="space-y-xs"></div>
+  </div>
+
+  <!-- Nav links -->
+  <nav class="px-sm py-sm border-t space-y-xs" style="border-color:var(--border)">
+    <a href="/agents.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all duration-200 text-sm font-medium" style="color:var(--text3)" onmouseover="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text');this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text3');this.style.background='transparent'">
+      <span class="material-symbols-outlined" style="font-size:20px">account_tree</span>
+      <span>Agents</span>
+    </a>
+    <a href="/workflows.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all duration-200 text-sm font-medium" style="color:var(--text3)" onmouseover="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text');this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text3');this.style.background='transparent'">
+      <span class="material-symbols-outlined" style="font-size:20px">device_hub</span>
+      <span>Workflows</span>
+    </a>
+    <a href="/knowledge.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all duration-200 text-sm font-medium" style="color:var(--text3)" onmouseover="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text');this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text3');this.style.background='transparent'">
+      <span class="material-symbols-outlined" style="font-size:20px">auto_stories</span>
+      <span>Knowledge Base</span>
+    </a>
+    <a href="/dashboard.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all duration-200 text-sm font-medium" style="color:var(--text3)" onmouseover="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text');this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text3');this.style.background='transparent'">
+      <span class="material-symbols-outlined" style="font-size:20px">monitoring</span>
+      <span>Performance</span>
+    </a>
+    <a href="/settings.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all duration-200 text-sm font-medium" style="color:var(--text3)" onmouseover="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text');this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text3');this.style.background='transparent'">
+      <span class="material-symbols-outlined" style="font-size:20px">settings</span>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <div class="p-md border-t flex items-center justify-between" style="border-color:var(--border)">
+    <div class="flex items-center space-x-sm">
+      <div class="relative flex items-center justify-center w-4 h-4">
+        <span id="pulse-ring" class="absolute w-3.5 h-3.5 rounded-full opacity-0" style="background:var(--accent)"></span>
+        <div id="status-pip" class="relative w-2 h-2 rounded-full bg-slate-600"></div>
+      </div>
+      <span class="text-xs font-medium" id="node-label" style="color:var(--text3)">Connecting…</span>
+    </div>
+    <div class="flex items-center gap-sm">
+      <button onclick="toggleTheme()" title="Toggle theme" class="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:bg-indigo-500/20" style="color:var(--text3)">
+        <span id="theme-icon" class="material-symbols-outlined" style="font-size:16px">light_mode</span>
+      </button>
+      <button onclick="doLogout()" title="Sign out" class="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:bg-red-500/20 text-red-400">
+        <span class="material-symbols-outlined" style="font-size:16px">logout</span>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main-offset ml-64 h-screen flex flex-col relative overflow-hidden" style="background:var(--bg)">
+
+  <!-- Header -->
+  <header id="main-header" class="flex items-center justify-end px-xl h-12 w-full sticky top-0 z-30 border-b flex-shrink-0" style="background:rgba(11,19,38,0.85);border-color:var(--border);backdrop-filter:blur(12px)">
+    <div class="flex items-center space-x-md">
+      <button onclick="toggleTheme()" class="hover:text-white transition-colors" style="color:var(--text3)" title="Toggle theme">
+        <span id="theme-icon-header" class="material-symbols-outlined" style="font-size:20px">light_mode</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Welcome state -->
+  <div id="welcome-state" class="flex-1 overflow-y-auto px-margin py-xl flex flex-col items-center justify-center space-y-2xl">
+    <div class="text-center space-y-md">
+      <div class="inline-flex items-center px-md py-xs rounded-full border mb-md" style="background:rgba(99,102,241,0.1);border-color:rgba(99,102,241,0.2)">
+        <span class="text-indigo-400 text-[10px] uppercase tracking-widest font-bold">Active Session</span>
+      </div>
+      <h1 class="font-h1 text-h1 bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">ARIA</h1>
+      <p class="text-lg max-w-md mx-auto" style="color:var(--text2)">How can I help you today?</p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-gutter w-full max-w-2xl px-xl">
+      <button onclick="useAction('Analyze the following and give me key insights:\n')" class="glass-card p-xl rounded-xl flex flex-col items-start text-left group hover:border-indigo-500/30 transition-all duration-300">
+        <div class="w-12 h-12 rounded-lg flex items-center justify-center text-indigo-400 mb-md group-hover:scale-110 transition-transform" style="background:rgba(99,102,241,0.1)">
+          <span class="material-symbols-outlined text-2xl">query_stats</span>
+        </div>
+        <h3 class="text-base font-bold mb-xs" style="color:var(--text)">Analyze</h3>
+        <p class="text-sm" style="color:var(--text3)">Deep-dive insights on any topic or data.</p>
+      </button>
+
+      <button onclick="useAction('Summarize this concisely:\n')" class="glass-card p-xl rounded-xl flex flex-col items-start text-left group hover:border-blue-500/30 transition-all duration-300">
+        <div class="w-12 h-12 rounded-lg flex items-center justify-center text-blue-400 mb-md group-hover:scale-110 transition-transform" style="background:rgba(59,130,246,0.1)">
+          <span class="material-symbols-outlined text-2xl">summarize</span>
+        </div>
+        <h3 class="text-base font-bold mb-xs" style="color:var(--text)">Summarize</h3>
+        <p class="text-sm" style="color:var(--text3)">Condense content into key insights.</p>
+      </button>
+
+      <button onclick="useAction('Create a detailed step-by-step plan for:\n')" class="glass-card p-xl rounded-xl flex flex-col items-start text-left group hover:border-cyan-500/30 transition-all duration-300">
+        <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-md group-hover:scale-110 transition-transform" style="background:rgba(34,211,238,0.1);color:#22d3ee">
+          <span class="material-symbols-outlined text-2xl">architecture</span>
+        </div>
+        <h3 class="text-base font-bold mb-xs" style="color:var(--text)">Build Plan</h3>
+        <p class="text-sm" style="color:var(--text3)">Generate structured plans and roadmaps.</p>
+      </button>
+
+      <button onclick="useAction('Generate my report for today')" class="glass-card p-xl rounded-xl flex flex-col items-start text-left group hover:border-purple-500/30 transition-all duration-300">
+        <div class="w-12 h-12 rounded-lg flex items-center justify-center text-purple-400 mb-md group-hover:scale-110 transition-transform" style="background:rgba(168,85,247,0.1)">
+          <span class="material-symbols-outlined text-2xl">event_note</span>
+        </div>
+        <h3 class="text-base font-bold mb-xs" style="color:var(--text)">Generate Report</h3>
+        <p class="text-sm" style="color:var(--text3)">Fetch consolidated operational metrics.</p>
+      </button>
+    </div>
+  </div>
+
+  <!-- Message feed -->
+  <div id="msg-feed" class="hidden flex-1 overflow-y-auto py-xl px-gutter">
+    <div id="msg-list" class="max-w-3xl mx-auto space-y-lg pb-4"></div>
+    <div id="feed-bottom"></div>
+  </div>
+
+  <!-- File attachment preview -->
+  <div id="file-preview" class="hidden flex-shrink-0 px-xl pt-2">
+    <div class="max-w-3xl mx-auto flex flex-wrap gap-sm" id="file-chips"></div>
+  </div>
+
+  <!-- Input area -->
+  <footer class="flex-shrink-0 px-xl pb-4 pt-2" style="background:linear-gradient(to top,var(--bg) 80%,transparent)">
+    <div class="max-w-3xl mx-auto relative group">
+      <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-xl blur opacity-0 group-focus-within:opacity-30 transition-opacity"></div>
+      <div class="relative flex items-center rounded-xl border shadow-2xl p-xs" style="background:var(--bg3);border-color:var(--border)">
+        <!-- Attach -->
+        <button onclick="triggerAttach()" class="p-md transition-colors hover:text-indigo-400" style="color:var(--text3)" title="Attach file">
+          <span class="material-symbols-outlined" style="font-size:20px">attach_file</span>
+        </button>
+        <input type="file" id="file-input" multiple accept=".xlsx,.xls,.pdf,.csv,.docx,.txt,.png,.jpg,.jpeg" style="display:none" onchange="handleFileSelect(this)"/>
+        <!-- Text -->
+        <input id="inp" type="text"
+          class="flex-1 bg-transparent border-none focus:ring-0 py-md text-body-md outline-none"
+          placeholder="Message ARIA…" autocomplete="off"
+          style="color:var(--text)"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submit();}"
+          oninput="document.getElementById('send-btn').disabled=!this.value.trim()&&pendingFileIds.length===0||busy;"/>
+        <div class="flex items-center space-x-sm px-sm">
+          <button id="send-btn" onclick="submit()" disabled
+            class="bg-indigo-500 text-white w-10 h-10 rounded-lg flex items-center justify-center hover:bg-indigo-400 active:scale-90 transition-all disabled:opacity-30 disabled:cursor-default">
+            <span class="material-symbols-outlined" style="font-size:20px">send</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </footer>
+</main>
+
+
+<script>
+(function () {
+  'use strict';
+
+  if (!localStorage.getItem('aria_auth')) { window.location.replace('/login.html'); return; }
+
+  const API = '';
+  const UID = localStorage.getItem('aria_uid') || 'user-1';
+
+  let busy = false;
+  let msgCount = 0;
+  let pendingFileIds = [];
+  let currentSessionId = null;
+
+  const $welcome  = document.getElementById('welcome-state');
+  const $feed     = document.getElementById('msg-feed');
+  const $list     = document.getElementById('msg-list');
+  const $bottom   = document.getElementById('feed-bottom');
+  const $inp      = document.getElementById('inp');
+  const $sendBtn  = document.getElementById('send-btn');
+  const $pip      = document.getElementById('status-pip');
+  const $nodeLabel= document.getElementById('node-label');
+  const $pulseRing= document.getElementById('pulse-ring');
+  const $filePreview = document.getElementById('file-preview');
+  const $fileChips   = document.getElementById('file-chips');
+
+  // ── Theme ──
+  function applyTheme(theme) {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.classList.toggle('light', theme === 'light');
+    const icon = theme === 'dark' ? 'light_mode' : 'dark_mode';
+    document.querySelectorAll('#theme-icon,#theme-icon-header').forEach(el => el.textContent = icon);
+    const hdr = document.getElementById('main-header');
+    if (hdr) hdr.style.background = theme === 'light' ? 'rgba(244,246,251,0.95)' : 'rgba(11,19,38,0.85)';
+  }
+
+  window.toggleTheme = function() {
+    const isLight = document.documentElement.classList.contains('light');
+    const next = isLight ? 'dark' : 'light';
+    localStorage.setItem('aria_theme', next);
+    applyTheme(next);
+  };
+
+  // Apply saved theme on load
+  applyTheme(localStorage.getItem('aria_theme') || 'dark');
+
+  // ── Chat History ──
+  function getSessions() {
+    try { return JSON.parse(localStorage.getItem('aria_sessions') || '[]'); } catch { return []; }
+  }
+  function saveSessions(s) { localStorage.setItem('aria_sessions', JSON.stringify(s)); }
+
+  function renderHistory() {
+    const sessions = getSessions().slice(0, 30);
+    const el = document.getElementById('history-list');
+    if (!sessions.length) {
+      el.innerHTML = '<p class="text-xs px-md py-sm" style="color:var(--text3)">No sessions yet</p>';
+      return;
+    }
+    el.innerHTML = sessions.map(s => `
+      <div class="session-item flex items-center group px-md py-sm rounded-lg cursor-pointer transition-all text-sm"
+           style="color:var(--text2)"
+           onclick="loadSession('${s.id}')"
+           onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')"
+           onmouseout="this.style.background='transparent'">
+        <span class="material-symbols-outlined mr-sm flex-shrink-0" style="font-size:15px;color:var(--text3)">chat_bubble</span>
+        <span class="flex-1 truncate text-xs">${escHtml(s.title)}</span>
+        <button class="session-del ml-sm flex-shrink-0 hover:text-red-400 transition-colors"
+                style="color:var(--text3)"
+                onclick="event.stopPropagation();deleteSession('${s.id}')" title="Delete">
+          <span class="material-symbols-outlined" style="font-size:14px">close</span>
+        </button>
+      </div>`).join('');
+  }
+
+  function saveCurrentSession() {
+    if (!currentSessionId || msgCount === 0) return;
+    const msgs = [...$list.querySelectorAll('[data-role]')].map(el => ({
+      role: el.dataset.role,
+      content: el.dataset.content || el.querySelector('[data-text]')?.dataset.text || '',
+    }));
+    if (!msgs.length) return;
+    const title = msgs[0]?.content?.slice(0, 50) || 'Session';
+    const sessions = getSessions();
+    const idx = sessions.findIndex(s => s.id === currentSessionId);
+    const entry = { id: currentSessionId, title, messages: msgs, updatedAt: Date.now() };
+    if (idx >= 0) sessions[idx] = entry; else sessions.unshift(entry);
+    saveSessions(sessions.slice(0, 30));
+    renderHistory();
+  }
+
+  window.loadSession = function(id) {
+    const sessions = getSessions();
+    const s = sessions.find(x => x.id === id);
+    if (!s) return;
+    clearChat();
+    currentSessionId = s.id;
+    s.messages.forEach(m => addMessage(m.role, m.content));
+  };
+
+  window.deleteSession = function(id) {
+    saveSessions(getSessions().filter(s => s.id !== id));
+    if (currentSessionId === id) clearChat();
+    renderHistory();
+  };
+
+  window.clearAllHistory = function() {
+    if (!confirm('Clear all chat history?')) return;
+    localStorage.removeItem('aria_sessions');
+    clearChat();
+    renderHistory();
+  };
+
+  // ── Scroll ──
+  function scroll() {
+    requestAnimationFrame(() => $bottom.scrollIntoView({ behavior: 'smooth', block: 'end' }));
+  }
+
+  // ── Feed transition ──
+  function showFeed() {
+    if (!$feed.classList.contains('hidden')) return;
+    $welcome.style.display = 'none';
+    $feed.classList.remove('hidden');
+    $feed.classList.add('flex', 'flex-col');
+  }
+
+  // ── Messages ──
+  function addMessage(role, content, id) {
+    showFeed();
+    msgCount++;
+    const msgId = id || ('msg-' + msgCount);
+    const wrap = document.createElement('div');
+    wrap.id = msgId;
+    wrap.className = 'msg-in';
+    wrap.dataset.role = role;
+    wrap.dataset.content = content;
+
+    if (role === 'user') {
+      wrap.innerHTML = `
+        <div class="flex justify-end">
+          <div class="max-w-[72%] rounded-2xl rounded-tr-sm px-4 py-3 text-sm leading-relaxed border" style="background:var(--user-bubble);border-color:var(--border);color:var(--text)" data-text="${escAttr(content)}">
+            ${escHtml(content)}
+          </div>
+        </div>`;
+    } else if (role === 'aria') {
+      const isLoading = content === '…';
+      wrap.innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 border" style="background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.3)">
+            <span class="material-symbols-outlined text-indigo-400" style="font-size:16px">hub</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-indigo-400 mb-1">ARIA</div>
+            <div class="prose-dark text-sm" id="${msgId}-body">${isLoading ? '<span class="cursor-blink">▌</span>' : renderMd(content)}</div>
+          </div>
+        </div>`;
+    } else if (role === 'error') {
+      wrap.innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 border border-red-500/30 bg-red-500/10">
+            <span class="material-symbols-outlined text-red-400" style="font-size:16px">error</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-red-400 mb-1">Error</div>
+            <div class="text-sm text-red-300">${escHtml(content)}</div>
+          </div>
+        </div>`;
+    } else {
+      wrap.innerHTML = `<div class="text-center text-xs italic py-1" style="color:var(--text3)">${escHtml(content)}</div>`;
+    }
+
+    $list.appendChild(wrap);
+    scroll();
+    return msgId;
+  }
+
+  function updateMessage(id, content, isError) {
+    const body = document.getElementById(id + '-body');
+    if (body) {
+      if (isError) {
+        const wrap = document.getElementById(id);
+        if (wrap) {
+          wrap.dataset.role = 'error';
+          wrap.innerHTML = `
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 border border-red-500/30 bg-red-500/10">
+                <span class="material-symbols-outlined text-red-400" style="font-size:16px">error</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-[10px] font-bold uppercase tracking-widest text-red-400 mb-1">Error</div>
+                <div class="text-sm text-red-300">${escHtml(content)}</div>
+              </div>
+            </div>`;
+        }
+      } else {
+        body.innerHTML = renderMd(content);
+        const wrap = document.getElementById(id);
+        if (wrap) wrap.dataset.content = content;
+      }
+    }
+    scroll();
+  }
+
+  // ── Markdown ──
+  function renderMd(text) {
+    if (typeof marked !== 'undefined') {
+      try { return marked.parse(text); } catch(e) {}
+    }
+    return escHtml(text).replace(/\n/g, '<br>');
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function escAttr(s) { return String(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+
+  // ── File Attachment ──
+  window.triggerAttach = function() {
+    document.getElementById('file-input').click();
+  };
+
+  window.handleFileSelect = async function(input) {
+    const files = Array.from(input.files);
+    if (!files.length) return;
+
+    // Show uploading state
+    files.forEach(f => addChip(f.name, null, true));
+
+    try {
+      const fd = new FormData();
+      files.forEach(f => fd.append('files', f));
+      fd.append('sessionId', currentSessionId || 'default');
+
+      const res = await fetch(`${API}/api/aria/upload`, { method: 'POST', body: fd });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({error: 'Upload failed'}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      const uploaded = data.files || [];
+
+      // Clear pending chips and add confirmed ones
+      $fileChips.innerHTML = '';
+      pendingFileIds = [...(pendingFileIds || []), ...uploaded.map(f => f.fileId)];
+      uploaded.forEach(f => addChip(f.name, f.fileId, false));
+      $filePreview.classList.remove('hidden');
+      $sendBtn.disabled = !$inp.value.trim() && pendingFileIds.length === 0 || busy;
+    } catch (err) {
+      $fileChips.innerHTML = '';
+      addMessage('error', `Upload failed: ${err.message}`);
+    }
+
+    input.value = '';
+  };
+
+  function addChip(name, fileId, loading) {
+    const chip = document.createElement('div');
+    chip.className = 'file-chip flex items-center gap-xs px-sm py-xs rounded-lg text-xs border transition-all';
+    chip.style.cssText = loading
+      ? 'background:rgba(99,102,241,0.1);border-color:rgba(99,102,241,0.2);color:var(--text2)'
+      : 'background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:#86efac';
+    if (fileId) chip.dataset.fileId = fileId;
+
+    const icon = loading ? 'hourglass_empty' : 'attach_file';
+    const ext = name.split('.').pop()?.toLowerCase() || '';
+    const iconMap = { pdf: 'picture_as_pdf', xlsx: 'table_chart', xls: 'table_chart', csv: 'table_rows', docx: 'description', png: 'image', jpg: 'image', jpeg: 'image', txt: 'text_snippet' };
+
+    chip.innerHTML = `
+      <span class="material-symbols-outlined" style="font-size:14px">${iconMap[ext] || (loading ? icon : 'attach_file')}</span>
+      <span class="max-w-[120px] truncate">${escHtml(name)}</span>
+      ${!loading ? `<button onclick="removeChip(this,'${fileId}')" class="hover:text-red-400 transition-colors ml-xs"><span class="material-symbols-outlined" style="font-size:12px">close</span></button>` : ''}`;
+    $fileChips.appendChild(chip);
+  }
+
+  window.removeChip = function(btn, fileId) {
+    btn.closest('.file-chip').remove();
+    pendingFileIds = pendingFileIds.filter(id => id !== fileId);
+    if (!$fileChips.children.length) $filePreview.classList.add('hidden');
+    $sendBtn.disabled = !$inp.value.trim() && pendingFileIds.length === 0;
+  };
+
+  // ── Submit ──
+  window.submit = async function() {
+    const text = $inp.value.trim();
+    if ((!text && !pendingFileIds.length) || busy) return;
+
+    if (!currentSessionId) currentSessionId = 'sess-' + Date.now();
+
+    busy = true;
+    $sendBtn.disabled = true;
+    $inp.value = '';
+    $inp.disabled = true;
+
+    const displayText = text || `[${pendingFileIds.length} file(s) attached]`;
+    addMessage('user', displayText);
+    const pendingId = addMessage('aria', '…');
+    setPulsing(true);
+
+    const fileIds = [...pendingFileIds];
+    pendingFileIds = [];
+    $fileChips.innerHTML = '';
+    $filePreview.classList.add('hidden');
+
+    try {
+      const res = await fetch(`${API}/api/aria/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: UID, message: text || 'Analyze the attached file(s)', fileIds: fileIds.length ? fileIds : undefined, autoSave: true })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        updateMessage(pendingId, data.reply || data.error || `Server error (${res.status})`, true);
+      } else {
+        updateMessage(pendingId, data.reply || '(no response)');
+
+        if (data.downloads?.length) {
+          const dlWrap = document.createElement('div');
+          dlWrap.className = 'flex flex-wrap gap-2 mt-3';
+          data.downloads.forEach(dl => {
+            const icon = dl.type === 'xlsx' ? 'table_chart' : dl.type === 'pdf' ? 'picture_as_pdf' : 'slideshow';
+            dlWrap.innerHTML += `
+              <a href="${dl.url}" download="${escHtml(dl.fileName)}"
+                 class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-80 transition-all border"
+                 style="background:rgba(99,102,241,0.1);border-color:rgba(99,102,241,0.3);color:#c0c1ff">
+                <span class="material-symbols-outlined" style="font-size:15px">${icon}</span>
+                ${escHtml(dl.fileName)}
+              </a>`;
+          });
+          document.getElementById(pendingId + '-body')?.appendChild(dlWrap);
+        }
+      }
+    } catch (err) {
+      updateMessage(pendingId, `Cannot reach server: ${err.message}`, true);
+    } finally {
+      busy = false;
+      $inp.disabled = false;
+      $sendBtn.disabled = !$inp.value.trim() && pendingFileIds.length === 0;
+      $inp.focus();
+      setPulsing(false);
+      saveCurrentSession();
+    }
+  };
+
+  // ── Action cards ──
+  window.useAction = function(prompt) {
+    $inp.value = prompt;
+    $inp.focus();
+    $sendBtn.disabled = false;
+  };
+
+  // ── Clear/New chat ──
+  window.newSession = function() {
+    saveCurrentSession();
+    clearChat();
+    currentSessionId = 'sess-' + Date.now();
+  };
+
+  window.clearChat = function() {
+    msgCount = 0; currentSessionId = null; pendingFileIds = [];
+    $list.innerHTML = '';
+    $feed.classList.add('hidden');
+    $feed.classList.remove('flex', 'flex-col');
+    $welcome.style.display = '';
+    $inp.value = ''; $sendBtn.disabled = true;
+    $fileChips.innerHTML = ''; $filePreview.classList.add('hidden');
+    renderHistory();
+  };
+
+  // ── Memory search ──
+  window.searchMemory = async function(query) {
+    if (!query.trim()) return;
+    const res = await fetch(`${API}/api/aria/memory?userId=${encodeURIComponent(UID)}`).catch(() => null);
+    if (!res?.ok) { addMessage('system', 'Memory search unavailable.'); return; }
+    const { memories } = await res.json();
+    const matches = memories.filter(m => m.content.toLowerCase().includes(query.toLowerCase())).slice(0, 5);
+    if (!matches.length) { addMessage('system', `No memories matching "${query}".`); return; }
+    const lines = matches.map(m => `• ${m.content.slice(0, 100)}…`).join('\n');
+    addMessage('aria', `**Memory search results for "${query}":**\n\n${lines}`);
+  };
+
+  // ── Logout ──
+  window.doLogout = function() {
+    localStorage.removeItem('aria_auth');
+    window.location.replace('/login.html');
+  };
+
+  // ── Status ──
+  function setOnline(online) {
+    $pip.className = `relative w-2 h-2 rounded-full ${online ? 'bg-green-500' : 'bg-red-500'}`;
+    $nodeLabel.textContent = online ? 'ARIA · Active' : 'ARIA · Offline';
+    $nodeLabel.style.color = online ? '#86efac' : '#fca5a5';
+  }
+
+  function setPulsing(on) {
+    $pulseRing.style.opacity = on ? '0.75' : '0';
+    $pulseRing.style.animation = on ? 'ping 1s cubic-bezier(0,0,0.2,1) infinite' : 'none';
+  }
+
+  // ── Health ──
+  fetch(`${API}/health`).then(r => setOnline(r.ok)).catch(() => setOnline(false));
+
+  // ── SSE ──
+  function connectSSE() {
+    const es = new EventSource(`${API}/api/aria/events?userId=${encodeURIComponent(UID)}`);
+    es.onopen = () => setOnline(true);
+    es.onmessage = e => {
+      try {
+        const { content } = JSON.parse(e.data);
+        if (content) addMessage('aria', content);
+      } catch (_) {}
+    };
+    es.onerror = () => { es.close(); setOnline(false); setTimeout(connectSSE, 6000); };
+  }
+
+  // ── Init ──
+  renderHistory();
+  connectSSE();
+  $inp.focus();
+})();
+</script>
 </body>
 </html>

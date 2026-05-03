@@ -265,7 +265,14 @@ claw.pipeline('chat', async (ctx) => {
   const system = { role: 'system' as const, content: ARIA_SYSTEM(ctx.userId) };
 
   const allMessages = [system, ...history, ...ctx.messages];
-  const reply = await ctx.brain.chat(allMessages);
+  let reply;
+  try {
+    reply = await ctx.brain.chat(allMessages);
+  } catch (e) {
+    const err = e as Error;
+    const provider = process.env.ARIA_BRAIN ?? 'claude';
+    throw new Error(`${provider} API error: ${err.message}`, { cause: err });
+  }
   try { await ctx.memory.save(ctx.userId, ctx.messages, reply); } catch { /* best-effort save */ }
   return reply.content || "I've noted that down.";
 });
