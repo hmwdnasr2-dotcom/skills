@@ -73,7 +73,7 @@ if (process.env.BRAVE_SEARCH_API_KEY) {
 
 // ─── OpenClaw instance ────────────────────────────────────────────────────────
 
-export const claw = new OpenClaw({ brain, memory });
+export const claw = new OpenClaw({ brain, memory, timeout: 45_000 });
 claw.use(bridge);
 
 // ─── Hot-register web_search (called from Telegram /setbrave) ────────────────
