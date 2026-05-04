@@ -1,12 +1,13 @@
 import cron from 'node-cron';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { claw } from '../core/index.js';
 import { connectedUserIds, pushToCommandLog } from './push.js';
 import { sendTelegram, telegramEnabled } from '../services/telegram.js';
 import { getDueReminders, markReminderSent } from '../connectors/reminders.js';
 import { sendReport } from '../services/reportScheduler.js';
-import { fetchNewEmails, imapEnabled } from '../connectors/imap.js';
+import { fetchNewEmails, getCurrentMaxUid, imapEnabled } from '../connectors/imap.js';
 import { executeWorkflow } from './workflow-engine.js';
 import type { WorkflowRecord } from '../routes/workflows.js';
 
@@ -47,15 +48,16 @@ export async function loadPersistedWorkflows(): Promise<void> {
 }
 
 // ── Email watcher state ───────────────────────────────────────────────────────
+// Stored next to .env so the path is stable regardless of pm2 cwd.
 
-const STATE_FILE = resolve(process.cwd(), '.workflow-state.json');
+const STATE_FILE = resolve(dirname(fileURLToPath(import.meta.url)), '../../../../.workflow-state.json');
 
-function loadEmailState(): { lastUid: number } {
+function loadEmailState(): { lastUid: number; initialised: boolean } {
   try { return JSON.parse(readFileSync(STATE_FILE, 'utf8')); }
-  catch { return { lastUid: 0 }; }
+  catch { return { lastUid: 0, initialised: false }; }
 }
 
-function saveEmailState(state: { lastUid: number }): void {
+function saveEmailState(state: { lastUid: number; initialised: boolean }): void {
   try { writeFileSync(STATE_FILE, JSON.stringify(state)); } catch { /* best-effort */ }
 }
 
@@ -131,7 +133,9 @@ export function startScheduler() {
   });
   console.log('[scheduler] Reminder cron registered (every minute)');
 
-  // Email watcher — every 2 minutes (polls IMAP for new emails, fires email_received workflows)
+  // Email watcher — every 2 minutes
+  // On first run we snapshot the current highest UID so we ONLY watch for
+  // emails that arrive after the server starts — never process inbox history.
   cron.schedule('*/2 * * * *', async () => {
     if (!imapEnabled()) return;
 
@@ -145,24 +149,36 @@ export function startScheduler() {
 
     try {
       const state = loadEmailState();
+
+      // First-run: record the current max UID and exit — don't fire on old mail.
+      if (!state.initialised) {
+        const currentMax = await getCurrentMaxUid();
+        saveEmailState({ lastUid: currentMax, initialised: true });
+        console.log(`[scheduler] Email watcher initialised at UID ${currentMax} — watching from now`);
+        return;
+      }
+
       const { emails, maxUid } = await fetchNewEmails(state.lastUid);
-      if (emails.length) {
-        saveEmailState({ lastUid: maxUid });
-        console.log(`[scheduler] Email watcher: ${emails.length} new email(s)`);
-        for (const email of emails) {
-          for (const wf of emailWorkflows) {
-            const { fromFilter, subjectFilter } = wf.trigger;
-            if (fromFilter && !email.from.toLowerCase().includes(fromFilter.toLowerCase())) continue;
-            if (subjectFilter && !email.subject.toLowerCase().includes(subjectFilter.toLowerCase())) continue;
-            await executeWorkflow(wf, {
-              from:    email.from,
-              subject: email.subject,
-              snippet: email.snippet,
-            }).catch(err => console.error(`[scheduler] Email workflow "${wf.name}" failed:`, err));
-          }
+
+      // Always advance the bookmark so we never re-check the same range.
+      if (maxUid > state.lastUid) {
+        saveEmailState({ lastUid: maxUid, initialised: true });
+      }
+
+      if (!emails.length) return;
+
+      console.log(`[scheduler] Email watcher: ${emails.length} new email(s)`);
+      for (const email of emails) {
+        for (const wf of emailWorkflows) {
+          const { fromFilter, subjectFilter } = wf.trigger;
+          if (fromFilter && !email.from.toLowerCase().includes(fromFilter.toLowerCase())) continue;
+          if (subjectFilter && !email.subject.toLowerCase().includes(subjectFilter.toLowerCase())) continue;
+          await executeWorkflow(wf, {
+            from:    email.from,
+            subject: email.subject,
+            snippet: email.snippet,
+          }).catch(err => console.error(`[scheduler] Email workflow "${wf.name}" failed:`, err));
         }
-      } else if (maxUid > state.lastUid) {
-        saveEmailState({ lastUid: maxUid });
       }
     } catch (err) {
       console.error('[scheduler] Email watcher error:', (err as Error).message);

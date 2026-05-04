@@ -19,10 +19,9 @@ export function imapEnabled(): boolean {
   return !!(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
 }
 
-export async function fetchNewEmails(sinceUid: number): Promise<{ emails: EmailMessage[]; maxUid: number }> {
+async function openClient() {
   const creds = getImapCredentials();
-  if (!creds) return { emails: [], maxUid: sinceUid };
-
+  if (!creds) return null;
   const client = new ImapFlow({
     host: 'imap.gmail.com',
     port: 993,
@@ -30,20 +29,51 @@ export async function fetchNewEmails(sinceUid: number): Promise<{ emails: EmailM
     auth: creds,
     logger: false,
   });
-
   await client.connect();
+  return client;
+}
+
+/**
+ * Returns the highest UID currently in INBOX.
+ * Called on first boot so we start watching from NOW, not from the beginning of history.
+ */
+export async function getCurrentMaxUid(): Promise<number> {
+  const client = await openClient();
+  if (!client) return 0;
+  try {
+    const lock = await client.getMailboxLock('INBOX');
+    try {
+      const status = await client.status('INBOX', { uidNext: true });
+      // uidNext is the UID that will be assigned to the NEXT incoming message,
+      // so the last existing message has UID = uidNext - 1.
+      return Math.max(0, (status.uidNext ?? 1) - 1);
+    } finally {
+      lock.release();
+    }
+  } catch {
+    return 0;
+  } finally {
+    await client.logout();
+  }
+}
+
+/**
+ * Fetches emails with UID > sinceUid (i.e. arrived after last check).
+ * Uses UID-mode fetch so sinceUid tracking is reliable across sessions.
+ */
+export async function fetchNewEmails(sinceUid: number): Promise<{ emails: EmailMessage[]; maxUid: number }> {
+  const client = await openClient();
+  if (!client) return { emails: [], maxUid: sinceUid };
+
   const emails: EmailMessage[] = [];
   let maxUid = sinceUid;
 
   try {
     const lock = await client.getMailboxLock('INBOX');
     try {
-      const searchUid = sinceUid > 0 ? sinceUid + 1 : 1;
-      const messages = client.fetch(`${searchUid}:*`, {
-        uid: true,
-        envelope: true,
-        bodyStructure: false,
-      });
+      // UID range: (sinceUid+1):* — only messages newer than last seen
+      const range = `${sinceUid + 1}:*`;
+      const messages = client.fetch(range, { uid: true, envelope: true }, { uid: true });
 
       for await (const msg of messages) {
         if (!msg.uid || msg.uid <= sinceUid) continue;
@@ -64,7 +94,7 @@ export async function fetchNewEmails(sinceUid: number): Promise<{ emails: EmailM
       lock.release();
     }
   } catch {
-    // mailbox empty or no new messages — normal case
+    // Empty mailbox or no messages in range — normal
   } finally {
     await client.logout();
   }
