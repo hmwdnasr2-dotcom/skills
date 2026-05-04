@@ -249,7 +249,7 @@ app.get('/api/aria/status', (_req, res) => {
       { key: 'reminders', name: 'Reminders',        icon: 'alarm',            active: supabase, tools: ['set_reminder', 'list_reminders'],           category: 'productivity' },
       { key: 'ideas',     name: 'Ideas Vault',      icon: 'lightbulb',        active: supabase, tools: ['save_idea', 'list_ideas'],                  category: 'productivity' },
       { key: 'workspace', name: 'Workspace',        icon: 'corporate_fare',   active: supabase, tools: ['log_achievement', 'get_follow_ups'],        category: 'productivity' },
-      { key: 'gmail',     name: 'Gmail',            icon: 'mail',             active: gmail,    tools: ['gmail_list', 'gmail_get', 'gmail_send'],    category: 'integrations' },
+      { key: 'gmail',     name: 'Gmail',            icon: 'mail',             active: gmail,    tools: ['gmail_list', 'gmail_get', 'gmail_reply', 'gmail_send'], category: 'integrations' },
       { key: 'telegram',  name: 'Telegram',         icon: 'send',             active: telegram, tools: ['telegram_notify'],                          category: 'integrations' },
       { key: 'search',    name: 'Web Search',       icon: 'travel_explore',   active: brave || perplexity, tools: ['web_search'],                   category: 'intelligence', provider: brave ? 'Brave' : perplexity ? 'Perplexity' : null },
       { key: 'n8n',       name: 'n8n Research',     icon: 'account_tree',     active: n8n,      tools: ['research'],                               category: 'intelligence' },

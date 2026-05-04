@@ -173,8 +173,48 @@
       </button>
     </div>
 
-    <!-- Step content -->
-    <div class="p-6">
+    <!-- Mode toggle -->
+    <div class="px-6 pt-4 pb-0">
+      <div class="flex rounded-xl p-1 gap-1" style="background:var(--bg3)">
+        <button id="tab-ai" onclick="switchBuilderMode('ai')" class="flex-1 py-2 rounded-lg text-xs font-semibold transition-all" style="background:var(--accent);color:#fff">
+          <span class="material-symbols-outlined align-middle" style="font-size:14px">auto_awesome</span> Describe it
+        </button>
+        <button id="tab-manual" onclick="switchBuilderMode('manual')" class="flex-1 py-2 rounded-lg text-xs font-semibold transition-all" style="color:var(--text3)">
+          <span class="material-symbols-outlined align-middle" style="font-size:14px">tune</span> Step-by-step
+        </button>
+      </div>
+    </div>
+
+    <!-- AI mode panel -->
+    <div id="ai-panel" class="p-6">
+      <p class="text-sm mb-3" style="color:var(--text2)">Describe what you want to automate in plain English. ARIA will figure out the trigger and actions.</p>
+      <textarea id="ai-description" rows="4" placeholder="Examples:&#10;• Ping me on Telegram when I get an email from my accountant&#10;• Every Monday at 9am, ask ARIA to summarise my open tasks&#10;• When any email arrives, have ARIA check if it needs urgent attention"
+        class="w-full rounded-xl px-4 py-3 text-sm resize-none outline-none" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:inherit"
+        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      <button onclick="parseWorkflow()" id="ai-parse-btn" class="mt-3 w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all" style="background:var(--accent);color:#fff">
+        <span class="material-symbols-outlined" style="font-size:18px">auto_awesome</span>
+        Parse with ARIA
+      </button>
+
+      <!-- Preview card (hidden until parsed) -->
+      <div id="ai-preview" class="hidden mt-4 p-4 rounded-xl border" style="background:rgba(128,131,255,0.06);border-color:var(--border-strong)">
+        <div class="flex items-start gap-3 mb-3">
+          <span class="material-symbols-outlined text-indigo-400 flex-shrink-0" style="font-size:22px">device_hub</span>
+          <div class="flex-1">
+            <div class="font-bold text-sm mb-0.5" style="color:var(--text)" id="preview-name"></div>
+            <div class="text-xs" style="color:var(--text3)" id="preview-desc"></div>
+          </div>
+        </div>
+        <div class="flex gap-2 flex-wrap mb-4" id="preview-tags"></div>
+        <div class="flex gap-3">
+          <button onclick="confirmAiWorkflow()" class="flex-1 py-2 rounded-xl text-xs font-semibold" style="background:var(--accent);color:#fff">Create this workflow</button>
+          <button onclick="document.getElementById('ai-preview').classList.add('hidden')" class="px-4 py-2 rounded-xl text-xs font-semibold" style="background:var(--bg3);color:var(--text2)">Edit description</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step content (manual mode) -->
+    <div id="manual-panel" class="p-6 hidden">
 
       <!-- STEP 1: Name & icon -->
       <div id="step-1">
@@ -292,7 +332,7 @@
         <p class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--text3)">What should happen?</p>
 
         <!-- Telegram notify -->
-        <div class="opt-card p-4 mb-3" onclick="toggleAction('telegram',this)" id="action-tg-card">
+        <div class="opt-card p-4 mb-3 cursor-pointer" onclick="toggleAction('telegram',this)" id="action-tg-card">
           <div class="flex items-center gap-4">
             <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(59,130,246,0.1)">
               <span class="material-symbols-outlined text-blue-400" style="font-size:20px">send</span>
@@ -336,8 +376,8 @@
 
     </div>
 
-    <!-- Modal footer -->
-    <div class="px-6 pb-6 flex items-center justify-between">
+    <!-- Modal footer (manual mode only) -->
+    <div id="manual-footer" class="px-6 pb-6 flex items-center justify-between">
       <button id="btn-back" onclick="stepBack()" class="hidden px-4 py-2 rounded-xl text-sm font-semibold transition-all" style="background:var(--bg3);color:var(--text2)">
         ← Back
       </button>
@@ -496,6 +536,102 @@
       .catch(function() { toast('Failed', true); });
   };
 
+  // ── Builder mode (ai / manual) ───────────────────────────────────────────────
+  var builderMode = 'ai';
+  var parsedWorkflow = null;
+
+  window.switchBuilderMode = function(mode) {
+    builderMode = mode;
+    document.getElementById('ai-panel').classList.toggle('hidden', mode !== 'ai');
+    document.getElementById('manual-panel').classList.toggle('hidden', mode !== 'manual');
+    document.getElementById('manual-footer').classList.toggle('hidden', mode !== 'manual');
+    document.getElementById('builder-step-label').textContent = mode === 'ai' ? 'Describe your workflow' : 'Step 1 of 3 — Name your workflow';
+    var tabAi = document.getElementById('tab-ai');
+    var tabManual = document.getElementById('tab-manual');
+    tabAi.style.background    = mode === 'ai'     ? 'var(--accent)' : 'transparent';
+    tabAi.style.color         = mode === 'ai'     ? '#fff'          : 'var(--text3)';
+    tabManual.style.background = mode === 'manual' ? 'var(--accent)' : 'transparent';
+    tabManual.style.color      = mode === 'manual' ? '#fff'          : 'var(--text3)';
+  };
+
+  // ── AI workflow parsing ───────────────────────────────────────────────────────
+  window.parseWorkflow = function() {
+    var desc = document.getElementById('ai-description').value.trim();
+    if (!desc) { toast('Describe what you want to automate first', true); return; }
+
+    var btn = document.getElementById('ai-parse-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span> Parsing…';
+
+    fetch('/api/aria/workflows/parse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description: desc, userId }),
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">auto_awesome</span> Parse with ARIA';
+
+        if (d.error) { toast(d.error, true); return; }
+        parsedWorkflow = d.parsed;
+        showParsedPreview(parsedWorkflow);
+      })
+      .catch(function() {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">auto_awesome</span> Parse with ARIA';
+        toast('Could not reach server', true);
+      });
+  };
+
+  function showParsedPreview(wf) {
+    document.getElementById('preview-name').textContent = wf.name || 'Unnamed workflow';
+    document.getElementById('preview-desc').textContent = wf.humanDescription || '';
+
+    var TRIGGER_LABELS = { schedule: 'Schedule', email_received: 'Email trigger', manual: 'Manual' };
+    var ACTION_LABELS  = { telegram_notify: 'Telegram notify', aria_prompt: 'ARIA response' };
+
+    var tags = [];
+    if (wf.trigger) tags.push(TRIGGER_LABELS[wf.trigger.type] || wf.trigger.type);
+    if (wf.trigger && wf.trigger.cronExpr) tags.push(wf.trigger.cronExpr);
+    (wf.actions || []).forEach(function(a) { tags.push(ACTION_LABELS[a.type] || a.type); });
+
+    document.getElementById('preview-tags').innerHTML = tags.map(function(t) {
+      return '<span class="px-2 py-1 rounded-full text-[10px] font-semibold" style="background:rgba(128,131,255,0.15);color:var(--accent2)">' + esc(t) + '</span>';
+    }).join('');
+
+    document.getElementById('ai-preview').classList.remove('hidden');
+  }
+
+  window.confirmAiWorkflow = function() {
+    if (!parsedWorkflow) return;
+
+    var btn = document.querySelector('#ai-preview button');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span>'; }
+
+    fetch('/api/aria/workflows', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name:        parsedWorkflow.name,
+        description: parsedWorkflow.humanDescription || '',
+        icon:        parsedWorkflow.trigger && parsedWorkflow.trigger.type === 'schedule' ? 'schedule' : parsedWorkflow.trigger && parsedWorkflow.trigger.type === 'email_received' ? 'mail' : 'play_arrow',
+        trigger:     parsedWorkflow.trigger,
+        actions:     parsedWorkflow.actions,
+        userId,
+      }),
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.error) { toast(d.error, true); if (btn) { btn.disabled = false; btn.textContent = 'Create this workflow'; } return; }
+        workflows.push(d.workflow);
+        renderList();
+        closeBuilder();
+        toast('✓ Workflow created: ' + d.workflow.name, false);
+      })
+      .catch(function() { toast('Failed to save', true); if (btn) { btn.disabled = false; btn.textContent = 'Create this workflow'; } });
+  };
+
   // ── Builder state ────────────────────────────────────────────────────────────
   var builderStep = 1;
   var selectedTrigger = null;
@@ -507,6 +643,11 @@
     builderStep = 1;
     selectedTrigger = null; selectedCron = null;
     actionTg = false; actionAria = false;
+    parsedWorkflow = null;
+    document.getElementById('ai-description').value = '';
+    document.getElementById('ai-preview').classList.add('hidden');
+    document.getElementById('ai-parse-btn').disabled = false;
+    document.getElementById('ai-parse-btn').innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">auto_awesome</span> Parse with ARIA';
     document.getElementById('wf-name').value = '';
     document.getElementById('wf-desc').value = '';
     document.getElementById('cron-input').value = '';
@@ -522,7 +663,14 @@
     document.getElementById('aria-check').classList.add('hidden');
     document.getElementById('tg-opts').classList.add('hidden');
     document.getElementById('aria-opts').classList.add('hidden');
-    showStep(1);
+    switchBuilderMode('ai');
+    // Reset manual step state without changing the step label (AI mode controls label)
+    builderStep = 1;
+    document.getElementById('step-1').classList.remove('hidden');
+    document.getElementById('step-2').classList.add('hidden');
+    document.getElementById('step-3').classList.add('hidden');
+    document.getElementById('btn-back').classList.add('hidden');
+    document.getElementById('btn-next').textContent = 'Next →';
     document.getElementById('builder-overlay').classList.add('open');
   };
 

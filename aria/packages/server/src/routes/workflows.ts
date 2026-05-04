@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { claw } from '../core/index.js';
 import { registerDynamicWorkflow, unregisterDynamicWorkflow } from '../proactive/scheduler.js';
 
 export const workflowsRouter = Router();
@@ -142,6 +143,55 @@ workflowsRouter.patch('/:id', (req, res) => {
   }
 
   res.json({ ok: true, workflow: list[idx] });
+});
+
+// ── POST /api/aria/workflows/:id/run — manual trigger ────────────────────────
+
+// ── POST /api/aria/workflows/parse — AI parses plain-language description ─────
+
+workflowsRouter.post('/parse', async (req, res) => {
+  const { description, userId = 'user-1' } = req.body as { description?: string; userId?: string };
+  if (!description?.trim()) { res.status(400).json({ error: 'description required' }); return; }
+
+  const systemPrompt = `You parse workflow descriptions into structured JSON. Reply ONLY with valid JSON, no markdown.
+
+Output format:
+{
+  "name": "short friendly name",
+  "humanDescription": "one plain-English sentence describing when this fires and what it does",
+  "trigger": {
+    "type": "schedule" | "email_received" | "manual",
+    "cronExpr": "0 9 * * *",          // only for schedule
+    "fromFilter": "sender@co.com",     // only for email_received, optional
+    "subjectFilter": "keyword"         // only for email_received, optional
+  },
+  "actions": [
+    { "type": "telegram_notify", "template": "optional message with {from} {subject}" },
+    { "type": "aria_prompt",     "prompt":   "optional instructions for ARIA" }
+  ]
+}
+
+Rules:
+- At least one action required.
+- For "check/read/summarise email" intents → use trigger.type="manual" with aria_prompt action that calls gmail_list then summarises.
+- For "when I get an email" / "on email" intents → use trigger.type="email_received".
+- For time-based intents (daily, every morning, Monday) → use trigger.type="schedule" with correct cron.
+- telegram_notify is for simple push messages. aria_prompt is for AI-generated responses.
+- If both are appropriate, include both actions.`;
+
+  try {
+    const result = await claw.run('chat', {
+      userId,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: description },
+      ],
+    });
+    const json = JSON.parse(result.replace(/```json?\n?/g, '').replace(/```/g, '').trim());
+    res.json({ ok: true, parsed: json });
+  } catch (err) {
+    res.status(422).json({ error: 'Could not parse — try rephrasing', detail: (err as Error).message });
+  }
 });
 
 // ── POST /api/aria/workflows/:id/run — manual trigger ────────────────────────

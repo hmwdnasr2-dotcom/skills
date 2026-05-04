@@ -243,6 +243,22 @@
     <div class="max-w-3xl mx-auto flex flex-wrap gap-sm" id="file-chips"></div>
   </div>
 
+  <!-- Agent mode picker -->
+  <div class="flex-shrink-0 px-xl pt-2">
+    <div class="max-w-3xl mx-auto flex items-center gap-2 overflow-x-auto pb-1" style="scrollbar-width:none">
+      <span class="text-[10px] font-semibold uppercase tracking-wider flex-shrink-0" style="color:var(--text3)">Mode:</span>
+      <div id="mode-pills" class="flex gap-1.5 flex-shrink-0">
+        <button onclick="setMode('aria')"       id="mode-aria"       class="mode-pill px-3 py-1 rounded-full text-xs font-semibold transition-all flex-shrink-0" style="background:rgba(99,102,241,0.15);color:var(--accent2);border:1px solid rgba(99,102,241,0.3)">Chief of Staff</button>
+        <button onclick="setMode('researcher')" id="mode-researcher" class="mode-pill px-3 py-1 rounded-full text-xs font-semibold transition-all flex-shrink-0" style="background:var(--bg3);color:var(--text3);border:1px solid var(--border)">Researcher</button>
+        <button onclick="setMode('strategist')" id="mode-strategist" class="mode-pill px-3 py-1 rounded-full text-xs font-semibold transition-all flex-shrink-0" style="background:var(--bg3);color:var(--text3);border:1px solid var(--border)">Strategist</button>
+        <button onclick="setMode('developer')"  id="mode-developer"  class="mode-pill px-3 py-1 rounded-full text-xs font-semibold transition-all flex-shrink-0" style="background:var(--bg3);color:var(--text3);border:1px solid var(--border)">Developer</button>
+        <button onclick="setMode('coach')"      id="mode-coach"      class="mode-pill px-3 py-1 rounded-full text-xs font-semibold transition-all flex-shrink-0" style="background:var(--bg3);color:var(--text3);border:1px solid var(--border)">Coach</button>
+        <button onclick="setMode('email')"      id="mode-email"      class="mode-pill px-3 py-1 rounded-full text-xs font-semibold transition-all flex-shrink-0" style="background:var(--bg3);color:var(--text3);border:1px solid var(--border)">Email Manager</button>
+        <button onclick="setMode('document')"   id="mode-document"   class="mode-pill px-3 py-1 rounded-full text-xs font-semibold transition-all flex-shrink-0" style="background:var(--bg3);color:var(--text3);border:1px solid var(--border)">Document Studio</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Input area -->
   <footer class="flex-shrink-0 px-xl pt-2" style="background:linear-gradient(to top,var(--bg) 80%,transparent);padding-bottom:max(16px,env(safe-area-inset-bottom))">
     <div class="max-w-3xl mx-auto relative group">
@@ -708,6 +724,48 @@
     es.onerror = () => { es.close(); setOnline(false); setTimeout(connectSSE, 6000); };
   }
 
+  // ── Agent mode pills ──
+  var currentMode = localStorage.getItem('aria_mode') || 'aria';
+
+  var MODE_LABELS = {
+    aria: 'Chief of Staff', researcher: 'Researcher', strategist: 'Strategist',
+    developer: 'Developer', coach: 'Coach', email: 'Email Manager', document: 'Document Studio',
+  };
+
+  function applyModePills(mode) {
+    document.querySelectorAll('.mode-pill').forEach(function(btn) {
+      var isActive = btn.id === 'mode-' + mode;
+      btn.style.background     = isActive ? 'rgba(99,102,241,0.15)' : 'var(--bg3)';
+      btn.style.color          = isActive ? 'var(--accent2)'        : 'var(--text3)';
+      btn.style.borderColor    = isActive ? 'rgba(99,102,241,0.3)'  : 'var(--border)';
+    });
+  }
+
+  window.setMode = function(mode) {
+    if (mode === currentMode) return;
+    currentMode = mode;
+    localStorage.setItem('aria_mode', mode);
+    applyModePills(mode);
+    fetch('/api/aria/mode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: UID, mode }),
+    }).then(function() {
+      var label = MODE_LABELS[mode] || mode;
+      addMessage('aria', 'Switched to **' + label + '** mode. How can I help?');
+    }).catch(function() {});
+  };
+
+  // Apply saved mode on load
+  applyModePills(currentMode);
+  if (currentMode !== 'aria') {
+    fetch('/api/aria/mode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: UID, mode: currentMode }),
+    }).catch(function() {});
+  }
+
   // ── Agent mode from URL param ──
   (function() {
     const mode = new URLSearchParams(window.location.search).get('mode');
@@ -717,9 +775,11 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: UID, mode }),
     }).then(function() {
-      var labels = { aria: 'Chief of Staff', researcher: 'Researcher', strategist: 'Strategist', developer: 'Developer', coach: 'Coach' };
-      var label = labels[mode] || mode;
-      addMessage('aria', '👋 Switched to **' + label + '** mode. How can I help?');
+      currentMode = mode;
+      localStorage.setItem('aria_mode', mode);
+      applyModePills(mode);
+      var label = MODE_LABELS[mode] || mode;
+      addMessage('aria', 'Switched to **' + label + '** mode. How can I help?');
     }).catch(function() {});
     // Clean the URL so refreshing doesn't re-fire
     history.replaceState(null, '', '/');
