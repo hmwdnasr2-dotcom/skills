@@ -276,6 +276,148 @@
       </div>
     </div>
 
+    <!-- OpenClaw Engine -->
+    <div class="card" id="openclaw-card">
+      <h2 class="font-semibold text-base mb-md flex items-center gap-2 font-h2" style="color:var(--text)">
+        <span class="material-symbols-outlined text-indigo-400">hub</span> OpenClaw Engine
+      </h2>
+
+      <!-- Brain -->
+      <div class="mb-lg">
+        <div class="text-xs font-semibold uppercase tracking-wider mb-sm" style="color:var(--text3)">AI Brain</div>
+        <div class="grid grid-cols-3 gap-2 mb-sm" id="brain-btns">
+          <button onclick="selectBrain('claude')"   class="brain-btn" data-brain="claude">Claude</button>
+          <button onclick="selectBrain('deepseek')" class="brain-btn" data-brain="deepseek">DeepSeek</button>
+          <button onclick="selectBrain('openai')"   class="brain-btn" data-brain="openai">OpenAI</button>
+          <button onclick="selectBrain('groq')"     class="brain-btn" data-brain="groq">Groq</button>
+          <button onclick="selectBrain('gemini')"   class="brain-btn" data-brain="gemini">Gemini</button>
+          <button onclick="selectBrain('ollama')"   class="brain-btn" data-brain="ollama">Ollama</button>
+        </div>
+        <div class="flex gap-2 mt-sm">
+          <div class="flex-1">
+            <label class="text-xs font-semibold uppercase tracking-wider mb-1 block" style="color:var(--text3)">Model ID</label>
+            <input id="model-inp" class="input-field" type="text" placeholder="auto"/>
+          </div>
+          <div style="padding-top:22px">
+            <button onclick="applyBrain()" class="btn-primary whitespace-nowrap">Apply</button>
+          </div>
+        </div>
+        <p id="brain-hint" class="text-xs mt-sm" style="color:var(--text3)"></p>
+      </div>
+
+      <!-- API Keys -->
+      <div class="mb-lg border-t pt-md" style="border-color:var(--border)">
+        <div class="text-xs font-semibold uppercase tracking-wider mb-sm" style="color:var(--text3)">API Keys</div>
+        <div class="space-y-sm">
+          <div class="flex gap-2 items-end">
+            <div class="flex-1">
+              <label class="text-xs mb-1 block" style="color:var(--text3)"><span id="lbl-anthropic" class="key-lbl">Anthropic</span></label>
+              <input id="key-anthropic" class="input-field font-mono text-xs" type="password" placeholder="sk-ant-..."/>
+            </div>
+            <button onclick="saveKey('anthropic')" class="btn-secondary whitespace-nowrap">Save</button>
+          </div>
+          <div class="flex gap-2 items-end">
+            <div class="flex-1">
+              <label class="text-xs mb-1 block" style="color:var(--text3)"><span class="key-lbl">DeepSeek</span></label>
+              <input id="key-deepseek" class="input-field font-mono text-xs" type="password" placeholder="sk-..."/>
+            </div>
+            <button onclick="saveKey('deepseek')" class="btn-secondary whitespace-nowrap">Save</button>
+          </div>
+          <div class="flex gap-2 items-end">
+            <div class="flex-1">
+              <label class="text-xs mb-1 block" style="color:var(--text3)"><span class="key-lbl">OpenAI</span></label>
+              <input id="key-openai" class="input-field font-mono text-xs" type="password" placeholder="sk-..."/>
+            </div>
+            <button onclick="saveKey('openai')" class="btn-secondary whitespace-nowrap">Save</button>
+          </div>
+          <div class="flex gap-2 items-end">
+            <div class="flex-1">
+              <label class="text-xs mb-1 block" style="color:var(--text3)"><span class="key-lbl">Groq</span></label>
+              <input id="key-groq" class="input-field font-mono text-xs" type="password" placeholder="gsk_..."/>
+            </div>
+            <button onclick="saveKey('groq')" class="btn-secondary whitespace-nowrap">Save</button>
+          </div>
+          <div class="flex gap-2 items-end">
+            <div class="flex-1">
+              <label class="text-xs mb-1 block" style="color:var(--text3)"><span class="key-lbl">Gemini</span></label>
+              <input id="key-gemini" class="input-field font-mono text-xs" type="password" placeholder="AIza..."/>
+            </div>
+            <button onclick="saveKey('gemini')" class="btn-secondary whitespace-nowrap">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Web Search -->
+      <div class="mb-lg border-t pt-md" style="border-color:var(--border)">
+        <div class="text-xs font-semibold uppercase tracking-wider mb-sm" style="color:var(--text3)">Web Search</div>
+        <div class="space-y-sm">
+          <div class="flex gap-2 items-end">
+            <div class="flex-1">
+              <label class="text-xs mb-1 flex items-center gap-1 block" style="color:var(--text3)">
+                Brave Search API Key
+                <span id="brave-status" class="text-green-400 text-xs hidden">✓ active</span>
+              </label>
+              <input id="key-brave" class="input-field font-mono text-xs" type="password" placeholder="BSA..."/>
+            </div>
+            <button onclick="saveKey('brave')" class="btn-secondary whitespace-nowrap">Save</button>
+          </div>
+          <div class="flex gap-2 items-end">
+            <div class="flex-1">
+              <label class="text-xs mb-1 flex items-center gap-1 block" style="color:var(--text3)">
+                Perplexity API Key
+                <span id="perplexity-status" class="text-green-400 text-xs hidden">✓ active</span>
+              </label>
+              <input id="key-perplexity" class="input-field font-mono text-xs" type="password" placeholder="pplx-..."/>
+            </div>
+            <button onclick="saveKey('perplexity')" class="btn-secondary whitespace-nowrap">Save</button>
+          </div>
+          <p class="text-xs" style="color:var(--text3)">Brave takes priority if both keys are set.</p>
+        </div>
+      </div>
+
+      <!-- Gmail -->
+      <div class="mb-lg border-t pt-md" style="border-color:var(--border)">
+        <div class="text-xs font-semibold uppercase tracking-wider mb-sm" style="color:var(--text3)">
+          Gmail
+          <span id="gmail-status" class="ml-2 text-green-400 text-xs hidden">✓ connected</span>
+        </div>
+        <div class="space-y-sm">
+          <div>
+            <label class="text-xs mb-1 block" style="color:var(--text3)">Gmail Address</label>
+            <input id="gmail-user" class="input-field" type="email" placeholder="you@gmail.com"/>
+          </div>
+          <div>
+            <label class="text-xs mb-1 block" style="color:var(--text3)">App Password <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--accent)">→ get one</a></label>
+            <input id="gmail-pass" class="input-field font-mono text-xs" type="password" placeholder="16-character app password"/>
+          </div>
+          <button onclick="saveGmail()" class="btn-primary">Save Gmail</button>
+        </div>
+      </div>
+
+      <!-- Tool Pipeline -->
+      <div class="border-t pt-md" style="border-color:var(--border)">
+        <div class="text-xs font-semibold uppercase tracking-wider mb-sm" style="color:var(--text3)">Runtime Info</div>
+        <div class="space-y-xs">
+          <div class="flex justify-between text-sm py-xs border-b" style="border-color:var(--border)">
+            <span style="color:var(--text2)">Registered tools</span>
+            <span id="tool-count" class="font-mono text-xs font-semibold" style="color:var(--accent2)">—</span>
+          </div>
+          <div class="flex justify-between text-sm py-xs border-b" style="border-color:var(--border)">
+            <span style="color:var(--text2)">Pipeline timeout</span>
+            <span class="font-mono text-xs" style="color:var(--text3)">45s</span>
+          </div>
+          <div class="flex justify-between text-sm py-xs border-b" style="border-color:var(--border)">
+            <span style="color:var(--text2)">Max tool iterations</span>
+            <span class="font-mono text-xs" style="color:var(--text3)">10</span>
+          </div>
+          <div class="flex justify-between text-sm py-xs">
+            <span style="color:var(--text2)">Server uptime</span>
+            <span id="oc-uptime" class="font-mono text-xs" style="color:var(--text3)">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Danger Zone -->
     <div class="card" style="border-color:rgba(239,68,68,0.2)">
       <h2 class="font-semibold text-base mb-md flex items-center gap-2 text-red-400 font-h2">
@@ -341,12 +483,6 @@
     if (name) localStorage.setItem('aria_name', name);
     showToast();
   };
-
-  function showToast() {
-    const t = document.getElementById('save-toast');
-    t.classList.remove('hidden');
-    setTimeout(() => t.classList.add('hidden'), 2000);
-  }
 
   // History stats
   const sessions = JSON.parse(localStorage.getItem('aria_sessions') || '[]');
@@ -447,6 +583,116 @@
     .catch(() => {
       document.getElementById('srv-status').innerHTML = '<div class="w-2 h-2 rounded-full bg-red-500"></div><span style="color:#fca5a5">Offline</span>';
     });
+
+  // ── OpenClaw Engine ──────────────────────────────────────────────────────────
+
+  const BRAIN_DEFAULTS = {
+    claude:'claude-haiku-4-5-20251001', deepseek:'deepseek-chat', openai:'gpt-4o-mini',
+    groq:'llama3-8b-8192', gemini:'gemini-2.0-flash', ollama:'llama3'
+  };
+  let _selectedBrain = 'claude';
+
+  const KEY_LABELS = { anthropic:'Anthropic ✓', deepseek:'DeepSeek ✓', openai:'OpenAI ✓', groq:'Groq ✓', gemini:'Gemini ✓', brave:'Brave Search ✓', perplexity:'Perplexity ✓' };
+
+  function renderBrainBtns(active) {
+    document.querySelectorAll('.brain-btn').forEach(btn => {
+      const b = btn.getAttribute('data-brain');
+      btn.style.cssText = b === active
+        ? 'background:var(--accent);color:#fff;border-color:var(--accent);border-radius:8px;padding:7px 0;font-size:13px;font-weight:600;cursor:pointer;border:1px solid'
+        : 'background:var(--bg3);color:var(--text2);border-color:var(--border);border-radius:8px;padding:7px 0;font-size:13px;font-weight:600;cursor:pointer;border:1px solid';
+    });
+  }
+
+  window.selectBrain = function(b) {
+    _selectedBrain = b;
+    renderBrainBtns(b);
+    const cur = document.getElementById('model-inp').value.trim();
+    if (!cur || Object.values(BRAIN_DEFAULTS).includes(cur)) {
+      document.getElementById('model-inp').value = BRAIN_DEFAULTS[b] || '';
+    }
+    document.getElementById('brain-hint').textContent = `Default model: ${BRAIN_DEFAULTS[b] || 'custom'}`;
+  };
+
+  window.applyBrain = async function() {
+    const model = document.getElementById('model-inp').value.trim() || BRAIN_DEFAULTS[_selectedBrain];
+    const r = await fetch('/api/aria/openclaw', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ brain: _selectedBrain, model })
+    }).catch(() => null);
+    if (r?.ok) { showToast('Brain updated'); document.getElementById('brain-val').textContent = _selectedBrain; document.getElementById('model-val').textContent = model; }
+    else alert('Failed to update brain.');
+  };
+
+  window.saveKey = async function(provider) {
+    const keyMap = { anthropic:'key-anthropic', deepseek:'key-deepseek', openai:'key-openai', groq:'key-groq', gemini:'key-gemini', brave:'key-brave', perplexity:'key-perplexity' };
+    const bodyMap = { anthropic:'anthropicKey', deepseek:'deepseekKey', openai:'openaiKey', groq:'groqKey', gemini:'geminiKey', brave:'braveKey', perplexity:'perplexityKey' };
+    const val = document.getElementById(keyMap[provider])?.value.trim();
+    if (!val) { alert('Enter the key first.'); return; }
+    const r = await fetch('/api/aria/openclaw', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ [bodyMap[provider]]: val })
+    }).catch(() => null);
+    if (r?.ok) { document.getElementById(keyMap[provider]).value = ''; showToast('Key saved'); loadOpenClaw(); }
+    else alert('Failed to save key.');
+  };
+
+  window.saveGmail = async function() {
+    const user = document.getElementById('gmail-user').value.trim();
+    const pass = document.getElementById('gmail-pass').value.trim();
+    if (!user || !pass) { alert('Enter both Gmail address and App Password.'); return; }
+    const r = await fetch('/api/aria/openclaw', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ gmailUser: user, gmailAppPassword: pass })
+    }).catch(() => null);
+    if (r?.ok) { document.getElementById('gmail-pass').value = ''; showToast('Gmail saved'); loadOpenClaw(); }
+    else alert('Failed to save Gmail settings.');
+  };
+
+  function loadOpenClaw() {
+    fetch('/api/aria/openclaw').then(r => r.json()).then(d => {
+      _selectedBrain = d.brain || 'claude';
+      renderBrainBtns(_selectedBrain);
+      document.getElementById('model-inp').value = d.model || '';
+      document.getElementById('brain-hint').textContent = `Default model: ${BRAIN_DEFAULTS[_selectedBrain] || 'custom'}`;
+
+      // Key status labels
+      const statusMap = { anthropic: d.hasAnthropicKey, deepseek: d.hasDeepseekKey, openai: d.hasOpenaiKey, groq: d.hasGroqKey, gemini: d.hasGeminiKey };
+      ['anthropic','deepseek','openai','groq','gemini'].forEach(k => {
+        const lbl = document.querySelector(`#key-${k}`)?.closest('.flex')?.querySelector('.key-lbl');
+        if (lbl) lbl.textContent = k.charAt(0).toUpperCase()+k.slice(1) + (statusMap[k] ? ' ✓' : '');
+      });
+
+      if (d.hasBraveKey) document.getElementById('brave-status').classList.remove('hidden');
+      else document.getElementById('brave-status').classList.add('hidden');
+      if (d.hasPerplexityKey) document.getElementById('perplexity-status').classList.remove('hidden');
+      else document.getElementById('perplexity-status').classList.add('hidden');
+
+      if (d.hasGmailUser && d.hasGmailPass) document.getElementById('gmail-status').classList.remove('hidden');
+      else document.getElementById('gmail-status').classList.add('hidden');
+      if (d.gmailUser) document.getElementById('gmail-user').value = d.gmailUser;
+
+      // Runtime info
+      const h = Math.floor((parseInt(document.getElementById('srv-uptime').textContent)||0));
+      document.getElementById('oc-uptime').textContent = document.getElementById('srv-uptime').textContent || '—';
+    }).catch(() => {});
+
+    // Tool count from status
+    fetch('/api/aria/status').then(r=>r.json()).then(d => {
+      const active = (d.connectors||[]).filter(c=>c.active).reduce((s,c)=>s+(c.tools?.length||0),0);
+      document.getElementById('tool-count').textContent = `${active} active`;
+      const h2 = Math.floor(d.uptime/3600), m2 = Math.floor((d.uptime%3600)/60);
+      document.getElementById('oc-uptime').textContent = `${h2}h ${m2}m`;
+    }).catch(()=>{});
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('save-toast');
+    t.textContent = msg || 'Saved!';
+    t.classList.remove('hidden');
+    setTimeout(() => t.classList.add('hidden'), 2000);
+  }
+
+  loadOpenClaw();
 })();
 </script>
 </body>

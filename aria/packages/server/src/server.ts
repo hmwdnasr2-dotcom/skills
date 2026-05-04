@@ -6,7 +6,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { AgentBridgeConnector } from '@aria/core';
-import { claw } from './core/index.js';
+import { claw, activateBraveSearch } from './core/index.js';
 import { GmailConnector, buildGmailAdapters } from './connectors/gmail.js';
 import { buildProjectAdapters } from './connectors/tasks.js';
 import { buildWorkspaceAdapters } from './connectors/workspace.js';
@@ -110,6 +110,106 @@ app.use('/api/aria/download', downloadRouter);
 app.use('/api/auth', authRouter);
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
+
+// ─── OpenClaw settings API ────────────────────────────────────────────────────
+
+import { readFileSync, writeFileSync } from 'node:fs';
+
+const ENV_FILE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../.env');
+
+function patchEnvFile(key: string, value: string): void {
+  let raw = '';
+  try { raw = readFileSync(ENV_FILE, 'utf8'); } catch { /* new file */ }
+  const lines = raw.split('\n').filter(l => !l.startsWith(`${key}=`));
+  lines.push(`${key}=${value}`);
+  writeFileSync(ENV_FILE, lines.join('\n'));
+}
+
+const BRAIN_DEFAULTS: Record<string, string> = {
+  claude:   'claude-haiku-4-5-20251001',
+  deepseek: 'deepseek-chat',
+  openai:   'gpt-4o-mini',
+  groq:     'llama3-8b-8192',
+  gemini:   'gemini-2.0-flash',
+  ollama:   'llama3',
+};
+
+app.get('/api/aria/openclaw', (_req, res) => {
+  res.json({
+    brain:            process.env.ARIA_BRAIN    ?? 'claude',
+    model:            process.env.ARIA_MODEL    ?? BRAIN_DEFAULTS['claude'],
+    hasAnthropicKey:  !!process.env.ANTHROPIC_API_KEY,
+    hasDeepseekKey:   !!process.env.DEEPSEEK_API_KEY,
+    hasOpenaiKey:     !!process.env.OPENAI_API_KEY,
+    hasGroqKey:       !!process.env.GROQ_API_KEY,
+    hasGeminiKey:     !!process.env.GEMINI_API_KEY,
+    hasBraveKey:      !!process.env.BRAVE_SEARCH_API_KEY,
+    hasPerplexityKey: !!process.env.PERPLEXITY_API_KEY,
+    hasGmailUser:     !!process.env.GMAIL_USER,
+    hasGmailPass:     !!process.env.GMAIL_APP_PASSWORD,
+    gmailUser:        process.env.GMAIL_USER ?? '',
+    webSearch:        process.env.BRAVE_SEARCH_API_KEY ? 'brave' : process.env.PERPLEXITY_API_KEY ? 'perplexity' : 'none',
+    brainDefaults:    BRAIN_DEFAULTS,
+  });
+});
+
+app.post('/api/aria/openclaw', (req, res) => {
+  const {
+    brain, model,
+    anthropicKey, deepseekKey, openaiKey, groqKey, geminiKey,
+    braveKey, perplexityKey,
+    gmailUser, gmailAppPassword,
+  } = req.body as Record<string, string | undefined>;
+
+  if (brain && BRAIN_DEFAULTS[brain]) {
+    patchEnvFile('ARIA_BRAIN', brain);
+    process.env.ARIA_BRAIN = brain;
+  }
+  if (model?.trim()) {
+    patchEnvFile('ARIA_MODEL', model.trim());
+    process.env.ARIA_MODEL = model.trim();
+  }
+  if (anthropicKey?.trim()) {
+    patchEnvFile('ANTHROPIC_API_KEY', anthropicKey.trim());
+    process.env.ANTHROPIC_API_KEY = anthropicKey.trim();
+  }
+  if (deepseekKey?.trim()) {
+    patchEnvFile('DEEPSEEK_API_KEY', deepseekKey.trim());
+    process.env.DEEPSEEK_API_KEY = deepseekKey.trim();
+  }
+  if (openaiKey?.trim()) {
+    patchEnvFile('OPENAI_API_KEY', openaiKey.trim());
+    process.env.OPENAI_API_KEY = openaiKey.trim();
+  }
+  if (groqKey?.trim()) {
+    patchEnvFile('GROQ_API_KEY', groqKey.trim());
+    process.env.GROQ_API_KEY = groqKey.trim();
+  }
+  if (geminiKey?.trim()) {
+    patchEnvFile('GEMINI_API_KEY', geminiKey.trim());
+    process.env.GEMINI_API_KEY = geminiKey.trim();
+  }
+  if (braveKey?.trim()) {
+    patchEnvFile('BRAVE_SEARCH_API_KEY', braveKey.trim());
+    process.env.BRAVE_SEARCH_API_KEY = braveKey.trim();
+    activateBraveSearch();
+  }
+  if (perplexityKey?.trim()) {
+    patchEnvFile('PERPLEXITY_API_KEY', perplexityKey.trim());
+    process.env.PERPLEXITY_API_KEY = perplexityKey.trim();
+  }
+  if (gmailUser?.trim()) {
+    patchEnvFile('GMAIL_USER', gmailUser.trim());
+    process.env.GMAIL_USER = gmailUser.trim();
+  }
+  if (gmailAppPassword?.trim()) {
+    patchEnvFile('GMAIL_APP_PASSWORD', gmailAppPassword.trim());
+    process.env.GMAIL_APP_PASSWORD = gmailAppPassword.trim();
+  }
+
+  console.log('[settings] OpenClaw settings updated via web UI');
+  res.json({ ok: true, brain: process.env.ARIA_BRAIN, model: process.env.ARIA_MODEL });
+});
 
 // ─── Status — which connectors are active ─────────────────────────────────────
 
