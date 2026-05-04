@@ -1,34 +1,35 @@
 import cron from 'node-cron';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { claw } from '../core/index.js';
 import { connectedUserIds, pushToCommandLog } from './push.js';
 import { sendTelegram, telegramEnabled } from '../services/telegram.js';
 import { getDueReminders, markReminderSent } from '../connectors/reminders.js';
 import { sendReport } from '../services/reportScheduler.js';
+import { fetchNewEmails, imapEnabled } from '../connectors/imap.js';
+import { executeWorkflow } from './workflow-engine.js';
 import type { WorkflowRecord } from '../routes/workflows.js';
 
-// ── Dynamic workflow registry ─────────────────────────────────────────────────
+// ── Dynamic cron workflow registry ────────────────────────────────────────────
 
 const activeCronJobs = new Map<string, cron.ScheduledTask>();
 
 export function registerDynamicWorkflow(workflow: WorkflowRecord): void {
-  if (!cron.validate(workflow.cronExpr)) {
-    console.warn(`[scheduler] Invalid cron for workflow "${workflow.name}": ${workflow.cronExpr}`);
+  if (workflow.trigger.type !== 'schedule') return; // email/manual handled by watcher
+  const expr = workflow.trigger.cronExpr ?? '';
+  if (!cron.validate(expr)) {
+    console.warn(`[scheduler] Invalid cron for "${workflow.name}": ${expr}`);
     return;
   }
-  const job = cron.schedule(workflow.cronExpr, async () => {
+  const job = cron.schedule(expr, async () => {
     try {
-      const result = await claw.run('chat', {
-        userId: workflow.userId,
-        messages: [{ role: 'user', content: workflow.prompt }],
-      });
-      await pushToCommandLog(workflow.userId, result);
-      if (telegramEnabled()) await sendTelegram(`🔄 *${workflow.name}*\n\n${result}`);
+      await executeWorkflow(workflow, {});
     } catch (err) {
       console.error(`[scheduler] Workflow "${workflow.name}" failed:`, (err as Error).message);
     }
   });
   activeCronJobs.set(workflow.id, job);
-  console.log(`[scheduler] Workflow registered: "${workflow.name}" (${workflow.cronExpr})`);
+  console.log(`[scheduler] Cron workflow registered: "${workflow.name}" (${expr})`);
 }
 
 export function unregisterDynamicWorkflow(workflowId: string): void {
@@ -40,11 +41,23 @@ export async function loadPersistedWorkflows(): Promise<void> {
   try {
     const { loadWorkflows } = await import('../routes/workflows.js');
     for (const w of loadWorkflows()) {
-      if (w.enabled) registerDynamicWorkflow(w);
+      if (w.enabled && w.trigger.type === 'schedule') registerDynamicWorkflow(w);
     }
   } catch { /* no workflows file yet */ }
 }
 
+// ── Email watcher state ───────────────────────────────────────────────────────
+
+const STATE_FILE = resolve(process.cwd(), '.workflow-state.json');
+
+function loadEmailState(): { lastUid: number } {
+  try { return JSON.parse(readFileSync(STATE_FILE, 'utf8')); }
+  catch { return { lastUid: 0 }; }
+}
+
+function saveEmailState(state: { lastUid: number }): void {
+  try { writeFileSync(STATE_FILE, JSON.stringify(state)); } catch { /* best-effort */ }
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -64,13 +77,11 @@ Today is ${new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'nume
 
 Use your tools NOW before writing the briefing:
 1. Call list_tasks with user_id="${userId}" and status="todo" to get open tasks.
-2. Call gmail_list with query="is:unread" and maxResults=5 to get unread email (if Gmail is connected).
 
 Then produce the briefing in this exact format (omit any section with nothing to show):
 
 ▸ OVERDUE   — tasks that appear past their implied deadline
 ▸ TODAY     — top 3 open tasks by priority
-▸ INBOX     — unread emails that are time-sensitive or need action
 ▸ WATCHING  — tasks or threads waiting on a reply from someone else
 ▸ SUGGEST   — one sharp recommendation based on what you see
 
@@ -120,8 +131,48 @@ export function startScheduler() {
   });
   console.log('[scheduler] Reminder cron registered (every minute)');
 
+  // Email watcher — every 2 minutes (polls IMAP for new emails, fires email_received workflows)
+  cron.schedule('*/2 * * * *', async () => {
+    if (!imapEnabled()) return;
+
+    let emailWorkflows: WorkflowRecord[] = [];
+    try {
+      const { loadWorkflows } = await import('../routes/workflows.js');
+      emailWorkflows = loadWorkflows().filter(w => w.enabled && w.trigger.type === 'email_received');
+    } catch { return; }
+
+    if (!emailWorkflows.length) return;
+
+    try {
+      const state = loadEmailState();
+      const { emails, maxUid } = await fetchNewEmails(state.lastUid);
+      if (emails.length) {
+        saveEmailState({ lastUid: maxUid });
+        console.log(`[scheduler] Email watcher: ${emails.length} new email(s)`);
+        for (const email of emails) {
+          for (const wf of emailWorkflows) {
+            const { fromFilter, subjectFilter } = wf.trigger;
+            if (fromFilter && !email.from.toLowerCase().includes(fromFilter.toLowerCase())) continue;
+            if (subjectFilter && !email.subject.toLowerCase().includes(subjectFilter.toLowerCase())) continue;
+            await executeWorkflow(wf, {
+              from:    email.from,
+              subject: email.subject,
+              snippet: email.snippet,
+            }).catch(err => console.error(`[scheduler] Email workflow "${wf.name}" failed:`, err));
+          }
+        }
+      } else if (maxUid > state.lastUid) {
+        saveEmailState({ lastUid: maxUid });
+      }
+    } catch (err) {
+      console.error('[scheduler] Email watcher error:', (err as Error).message);
+    }
+  });
+  console.log('[scheduler] Email watcher cron registered (every 2 min)');
+
   if (!supabaseReady()) {
     console.log('[scheduler] Report crons skipped — Supabase not configured');
+    loadPersistedWorkflows().catch(err => console.error('[scheduler] Failed to load workflows:', err));
     return;
   }
 
@@ -157,6 +208,6 @@ export function startScheduler() {
 
   console.log('[scheduler] Report crons registered (daily 20:00, weekly Sun 09:00, monthly/quarterly/yearly 1st)');
 
-  // Load user-created workflows from persistent store
+  // Load user-created schedule workflows from persistent store
   loadPersistedWorkflows().catch(err => console.error('[scheduler] Failed to load workflows:', err));
 }

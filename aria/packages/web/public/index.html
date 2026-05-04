@@ -708,6 +708,23 @@
     es.onerror = () => { es.close(); setOnline(false); setTimeout(connectSSE, 6000); };
   }
 
+  // ── Agent mode from URL param ──
+  (function() {
+    const mode = new URLSearchParams(window.location.search).get('mode');
+    if (!mode) return;
+    fetch('/api/aria/mode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: UID, mode }),
+    }).then(function() {
+      var labels = { aria: 'Chief of Staff', researcher: 'Researcher', strategist: 'Strategist', developer: 'Developer', coach: 'Coach' };
+      var label = labels[mode] || mode;
+      addMessage('aria', '👋 Switched to **' + label + '** mode. How can I help?');
+    }).catch(function() {});
+    // Clean the URL so refreshing doesn't re-fire
+    history.replaceState(null, '', '/');
+  })();
+
   // ── Init ──
   renderHistory();
   connectSSE();

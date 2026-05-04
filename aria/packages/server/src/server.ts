@@ -6,7 +6,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { AgentBridgeConnector } from '@aria/core';
-import { claw, activateBraveSearch } from './core/index.js';
+import { claw, activateBraveSearch, setAgentMode } from './core/index.js';
 import { GmailConnector, buildGmailAdapters } from './connectors/gmail.js';
 import { buildProjectAdapters } from './connectors/tasks.js';
 import { buildWorkspaceAdapters } from './connectors/workspace.js';
@@ -17,6 +17,7 @@ import { buildDocumentAdapters } from './connectors/documents.js';
 import { startScheduler } from './proactive/scheduler.js';
 import { authRouter } from './routes/auth.js';
 import { workflowsRouter } from './routes/workflows.js';
+import { agentsRouter } from './routes/agents.js';
 import { chatRouter } from './routes/chat.js';
 import { eventsRouter } from './routes/events.js';
 import { memoryRouter } from './routes/memory.js';
@@ -110,8 +111,18 @@ app.use('/api/aria/upload', uploadRouter);
 app.use('/api/aria/download', downloadRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/aria/workflows', workflowsRouter);
+app.use('/api/aria/agents', agentsRouter);
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
+
+// Set agent mode (called by frontend when switching agents)
+app.post('/api/aria/mode', (req, res) => {
+  const { userId = 'user-1', mode } = req.body as { userId?: string; mode?: string };
+  if (!mode) { res.status(400).json({ error: 'mode required' }); return; }
+  setAgentMode(userId, mode);
+  console.log(`[mode] ${userId} → ${mode}`);
+  res.json({ ok: true, userId, mode });
+});
 
 // ─── OpenClaw settings API ────────────────────────────────────────────────────
 

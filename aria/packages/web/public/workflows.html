@@ -8,121 +8,98 @@
 <title>Workflows | ARIA</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
+<script>
   tailwind.config = {
     darkMode: "class",
     theme: { extend: {
       colors: {
-        "background": "#0b1326", "surface": "#0b1326",
-        "surface-container": "#171f33", "surface-container-low": "#131b2e",
-        "surface-container-lowest": "#060e20", "surface-container-high": "#222a3d",
-        "on-background": "#dae2fd", "on-surface": "#dae2fd",
-        "on-surface-variant": "#c7c4d7", "outline": "#908fa0",
-        "outline-variant": "#464554", "primary": "#c0c1ff",
-        "primary-container": "#8083ff", "secondary": "#ddb7ff",
-        "secondary-container": "#6f00be", "tertiary": "#89ceff",
-        "error": "#ffb4ab", "error-container": "#93000a"
+        "background":"#0b1326","surface":"#0b1326","surface-container":"#171f33",
+        "surface-container-low":"#131b2e","surface-container-lowest":"#060e20",
+        "surface-container-high":"#222a3d","on-background":"#dae2fd","on-surface":"#dae2fd",
+        "on-surface-variant":"#c7c4d7","outline":"#908fa0","outline-variant":"#464554",
+        "primary":"#c0c1ff","primary-container":"#8083ff","secondary":"#ddb7ff",
+        "secondary-container":"#6f00be","tertiary":"#89ceff","error":"#ffb4ab","error-container":"#93000a"
       },
-      borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
-      spacing: { "xs": "4px", "sm": "8px", "md": "16px", "lg": "24px", "xl": "32px", "gutter": "24px", "margin": "32px", "2xl": "48px", "base": "4px" },
-      fontFamily: { "h1": ["Manrope","sans-serif"], "h2": ["Manrope","sans-serif"], "h3": ["Manrope","sans-serif"], "body-md": ["Inter","sans-serif"], "body-sm": ["Inter","sans-serif"] },
-      fontSize: {
-        "h1": ["40px",{"lineHeight":"1.2","letterSpacing":"-0.02em","fontWeight":"700"}],
-        "h2": ["32px",{"lineHeight":"1.3","letterSpacing":"-0.01em","fontWeight":"600"}],
-        "h3": ["24px",{"lineHeight":"1.4","fontWeight":"600"}],
-        "body-md": ["16px",{"lineHeight":"1.5","fontWeight":"400"}],
-        "body-sm": ["14px",{"lineHeight":"1.5","fontWeight":"400"}]
-      }
+      borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},
+      fontFamily:{"h1":["Manrope","sans-serif"],"h2":["Manrope","sans-serif"],"h3":["Manrope","sans-serif"],"body-md":["Inter","sans-serif"],"body-sm":["Inter","sans-serif"]}
     }}
   }
 </script>
 <style>
   :root {
-    --bg: #0b1326; --bg2: #171f33; --bg3: #222a3d;
-    --border: rgba(144,143,160,0.15); --border-strong: rgba(192,193,255,0.2);
-    --text: #dae2fd; --text2: #c7c4d7; --text3: #908fa0;
-    --accent: #8083ff; --accent2: #c0c1ff;
-    --sidebar-bg: rgba(10,15,30,0.92);
+    --bg:#0b1326;--bg2:#171f33;--bg3:#222a3d;
+    --border:rgba(144,143,160,0.15);--border-strong:rgba(192,193,255,0.2);
+    --text:#dae2fd;--text2:#c7c4d7;--text3:#908fa0;
+    --accent:#8083ff;--accent2:#c0c1ff;
+    --sidebar-bg:rgba(10,15,30,0.92);
   }
-  html.light {
-    --bg: #f4f6fb; --bg2: #ffffff; --bg3: #e8ecf5;
-    --border: rgba(0,0,0,0.1); --border-strong: rgba(99,102,241,0.3);
-    --text: #1a1d2e; --text2: #3d4166; --text3: #7b7fa8;
-    --accent: #4f52d9; --accent2: #6366f1;
-    --sidebar-bg: rgba(248,249,255,0.95);
-  }
-  html.light body { background: var(--bg); color: var(--text); }
-  .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; vertical-align: middle; }
-  .glass-card { background: rgba(45,52,73,0.4); backdrop-filter: blur(12px); border: 1px solid var(--border); }
-  html.light .glass-card { background: rgba(255,255,255,0.7); }
-  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #2d3449; border-radius: 2px; }
-  html.light ::-webkit-scrollbar-thumb { background: #c5cae9; }
-  .mob-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 49; }
-  .tab-btn { transition: all .2s; border-bottom: 2px solid transparent; }
-  .tab-btn.active { border-color: var(--accent); color: var(--accent2); }
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
-  .tpl-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; transition: all .2s; }
-  .tpl-card:hover { border-color: var(--border-strong); }
-  .tpl-card.activated { border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.05); }
-  .spinner { width: 16px; height: 16px; border: 2px solid rgba(192,193,255,0.3); border-top-color: var(--accent2); border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  #toast { transition: opacity .3s, transform .3s; opacity: 0; transform: translateY(8px); pointer-events: none; }
-  #toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  html.light{--bg:#f4f6fb;--bg2:#ffffff;--bg3:#e8ecf5;--border:rgba(0,0,0,0.1);--border-strong:rgba(99,102,241,0.3);--text:#1a1d2e;--text2:#3d4166;--text3:#7b7fa8;--accent:#4f52d9;--accent2:#6366f1;--sidebar-bg:rgba(248,249,255,0.95);}
+  html.light body{background:var(--bg);color:var(--text);}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;vertical-align:middle;}
+  ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:#2d3449;border-radius:2px;}
+  html.light ::-webkit-scrollbar-thumb{background:#c5cae9;}
+  .mob-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:49;}
+  /* Trigger / action option cards */
+  .opt-card{border:2px solid var(--border);border-radius:12px;cursor:pointer;transition:all .15s;background:var(--bg2);}
+  .opt-card:hover{border-color:var(--accent);background:rgba(128,131,255,0.05);}
+  .opt-card.selected{border-color:var(--accent);background:rgba(128,131,255,0.1);}
+  /* Workflow list cards */
+  .wf-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;transition:border-color .15s;}
+  .wf-card:hover{border-color:var(--border-strong);}
+  /* Spinner */
+  .spin{width:16px;height:16px;border:2px solid rgba(192,193,255,0.3);border-top-color:var(--accent2);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  /* Step connector */
+  .step-line{width:2px;height:20px;background:linear-gradient(to bottom,var(--accent),transparent);margin:0 auto;}
+  /* Toast */
+  #toast{opacity:0;transform:translateY(8px);pointer-events:none;transition:all .3s;}
+  #toast.show{opacity:1;transform:translateY(0);pointer-events:auto;}
+  /* Builder modal */
+  #builder-overlay{display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);}
+  #builder-overlay.open{display:flex;}
 </style>
 </head>
 <body class="font-body-md antialiased" style="background:var(--bg);color:var(--text)">
 
 <div id="mob-backdrop" class="mob-backdrop"></div>
 
-<aside id="sidebar" class="sidebar fixed left-0 top-0 h-full z-50 w-64 border-r flex flex-col shadow-2xl shadow-black/20" style="display:none;background:var(--sidebar-bg);border-color:var(--border);backdrop-filter:blur(20px)">
-  <div class="p-xl flex items-center space-x-sm">
+<!-- Sidebar -->
+<aside id="sidebar" class="fixed left-0 top-0 h-full z-50 w-64 border-r flex flex-col shadow-2xl" style="display:none;background:var(--sidebar-bg);border-color:var(--border);backdrop-filter:blur(20px)">
+  <div class="p-6 flex items-center space-x-2">
     <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center flex-shrink-0">
       <span class="material-symbols-outlined text-white" style="font-size:18px">hub</span>
     </div>
     <div class="flex flex-col flex-1">
-      <span class="text-base font-bold tracking-wide" style="color:var(--text)">Agent Orchestrator</span>
+      <span class="text-base font-bold" style="color:var(--text)">Agent Orchestrator</span>
       <span class="text-[10px] uppercase tracking-widest font-bold text-indigo-400">ARIA</span>
     </div>
-    <button onclick="closeSidebar()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors" style="color:var(--text3)">
+    <button onclick="closeSidebar()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10" style="color:var(--text3)">
       <span class="material-symbols-outlined" style="font-size:20px">close</span>
     </button>
   </div>
-  <div class="px-md mt-md">
-    <a href="/" class="w-full py-sm px-md rounded-lg bg-indigo-500 text-white font-semibold flex items-center justify-center space-x-sm hover:bg-indigo-400 active:scale-95 transition-all text-sm">
-      <span class="material-symbols-outlined" style="font-size:18px">add</span>
-      <span>New Session</span>
+  <nav class="flex-1 px-2 mt-2 overflow-y-auto">
+    <a href="/" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mb-1" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'">
+      <span class="material-symbols-outlined" style="font-size:20px">chat</span>Chat
     </a>
-  </div>
-  <nav class="flex-1 px-sm mt-lg overflow-y-auto">
-    <a href="/" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
-      <span class="material-symbols-outlined" style="font-size:20px">chat</span><span>Chat</span>
+    <a href="/agents.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mb-1" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'">
+      <span class="material-symbols-outlined" style="font-size:20px">account_tree</span>Agents
     </a>
-    <a href="/agents.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
-      <span class="material-symbols-outlined" style="font-size:20px">account_tree</span><span>Agents</span>
+    <a href="/workflows.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mb-1" style="background:rgba(99,102,241,0.1);color:var(--accent2)">
+      <span class="material-symbols-outlined" style="font-size:20px">device_hub</span>Workflows
     </a>
-    <a href="/workflows.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="background:rgba(99,102,241,0.1);color:var(--accent2)">
-      <span class="material-symbols-outlined" style="font-size:20px">device_hub</span><span>Workflows</span>
+    <a href="/knowledge.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mb-1" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'">
+      <span class="material-symbols-outlined" style="font-size:20px">auto_stories</span>Knowledge Base
     </a>
-    <a href="/knowledge.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
-      <span class="material-symbols-outlined" style="font-size:20px">auto_stories</span><span>Knowledge Base</span>
+    <a href="/dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mb-1" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'">
+      <span class="material-symbols-outlined" style="font-size:20px">monitoring</span>Performance
     </a>
-    <a href="/dashboard.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
-      <span class="material-symbols-outlined" style="font-size:20px">monitoring</span><span>Performance</span>
-    </a>
-    <a href="/settings.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
-      <span class="material-symbols-outlined" style="font-size:20px">settings</span><span>Settings</span>
+    <a href="/settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mb-1" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'">
+      <span class="material-symbols-outlined" style="font-size:20px">settings</span>Settings
     </a>
   </nav>
-  <div class="p-md border-t flex items-center justify-between" style="border-color:var(--border)">
-    <div class="flex items-center space-x-sm">
-      <div class="relative flex items-center justify-center w-4 h-4">
-        <span id="pulse-ring" class="absolute w-3.5 h-3.5 rounded-full opacity-0" style="background:var(--accent)"></span>
-        <div id="status-pip" class="relative w-2 h-2 rounded-full bg-slate-600"></div>
-      </div>
-      <span class="text-xs font-medium" id="node-label" style="color:var(--text3)">ARIA</span>
-    </div>
-    <div class="flex items-center gap-sm">
+  <div class="p-4 border-t flex items-center justify-between" style="border-color:var(--border)">
+    <span class="text-xs font-medium" style="color:var(--text3)">ARIA</span>
+    <div class="flex items-center gap-2">
       <button onclick="toggleTheme()" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-indigo-500/20" style="color:var(--text3)">
         <span id="theme-icon" class="material-symbols-outlined" style="font-size:16px">light_mode</span>
       </button>
@@ -133,320 +110,351 @@
   </div>
 </aside>
 
-<header class="flex items-center justify-between px-md h-12 w-full sticky top-0 z-30 border-b flex-shrink-0" style="background:rgba(11,19,38,0.85);border-color:var(--border);backdrop-filter:blur(12px)">
+<!-- Header -->
+<header class="flex items-center justify-between px-4 h-12 sticky top-0 z-30 border-b" style="background:rgba(11,19,38,0.9);border-color:var(--border);backdrop-filter:blur(12px)">
   <button onclick="openSidebar()" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-indigo-500/20" style="color:var(--text2)">
     <span class="material-symbols-outlined" style="font-size:22px">menu</span>
   </button>
   <span class="text-sm font-semibold" style="color:var(--text2)">Workflows</span>
-  <button onclick="toggleTheme()" style="color:var(--text3)" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-indigo-500/20">
+  <button onclick="toggleTheme()" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-indigo-500/20" style="color:var(--text3)">
     <span id="theme-icon-header" class="material-symbols-outlined" style="font-size:20px">light_mode</span>
   </button>
 </header>
 
-<main style="background:var(--bg)" class="min-h-screen overflow-y-auto p-lg">
-  <div class="max-w-5xl mx-auto">
+<!-- Main -->
+<main style="background:var(--bg)" class="min-h-screen p-4 md:p-6">
+  <div class="max-w-4xl mx-auto">
 
     <!-- Page header -->
-    <div class="mb-lg flex items-center justify-between">
+    <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold mb-xs font-h1" style="color:var(--text)">Workflows</h1>
-        <p class="text-sm" style="color:var(--text3)">Automate ARIA with scheduled tasks — pick a template or build your own.</p>
+        <h1 class="text-2xl font-bold font-h1" style="color:var(--text)">Workflows</h1>
+        <p class="text-sm mt-1" style="color:var(--text3)">Automate ARIA with real triggers — schedule, email events, or manual.</p>
       </div>
-      <div id="active-count-badge" class="hidden items-center gap-1.5 px-md py-xs rounded-full text-xs font-semibold" style="background:rgba(34,197,94,0.1);color:#86efac;border:1px solid rgba(34,197,94,0.25)">
-        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-        <span id="active-count-text">0 active</span>
-      </div>
-    </div>
-
-    <!-- Tab nav -->
-    <div class="flex gap-lg border-b mb-lg" style="border-color:var(--border)">
-      <button class="tab-btn active pb-sm text-sm font-semibold" style="color:var(--text2)" onclick="switchTab('templates',this)">Templates</button>
-      <button class="tab-btn pb-sm text-sm font-semibold" style="color:var(--text3)" onclick="switchTab('active',this)">
-        Active
-        <span id="tab-active-badge" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold hidden" style="background:var(--accent);color:#fff"></span>
+      <button onclick="openBuilder()" class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold" style="background:var(--accent);color:#fff">
+        <span class="material-symbols-outlined" style="font-size:18px">add</span>
+        New Workflow
       </button>
-      <button class="tab-btn pb-sm text-sm font-semibold" style="color:var(--text3)" onclick="switchTab('create',this)">Create Custom</button>
     </div>
 
-    <!-- ── TEMPLATES TAB ──────────────────────────────────────────────────── -->
-    <div id="tab-templates" class="tab-panel active">
-
-      <!-- Category filter -->
-      <div class="flex flex-wrap gap-sm mb-lg" id="category-filters">
-        <button class="cat-btn active px-md py-xs rounded-full text-xs font-semibold transition-all" data-cat="all" onclick="filterCategory('all',this)">All</button>
-        <button class="cat-btn px-md py-xs rounded-full text-xs font-semibold transition-all" data-cat="daily" onclick="filterCategory('daily',this)">Daily</button>
-        <button class="cat-btn px-md py-xs rounded-full text-xs font-semibold transition-all" data-cat="weekly" onclick="filterCategory('weekly',this)">Weekly</button>
-        <button class="cat-btn px-md py-xs rounded-full text-xs font-semibold transition-all" data-cat="alerts" onclick="filterCategory('alerts',this)">Alerts</button>
-        <button class="cat-btn px-md py-xs rounded-full text-xs font-semibold transition-all" data-cat="email" onclick="filterCategory('email',this)">Email</button>
-        <button class="cat-btn px-md py-xs rounded-full text-xs font-semibold transition-all" data-cat="reports" onclick="filterCategory('reports',this)">Reports</button>
-      </div>
-
-      <div id="templates-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
-        <!-- Populated by JS -->
-        <div class="col-span-3 text-center py-2xl" style="color:var(--text3)">
-          <div class="spinner mx-auto mb-md"></div>
-          <p class="text-sm">Loading templates…</p>
-        </div>
+    <!-- Active workflows list -->
+    <div id="wf-list">
+      <div class="text-center py-16" style="color:var(--text3)">
+        <div class="spin mx-auto mb-4"></div>
+        <p class="text-sm">Loading workflows…</p>
       </div>
     </div>
 
-    <!-- ── ACTIVE TAB ─────────────────────────────────────────────────────── -->
-    <div id="tab-active" class="tab-panel">
-      <div id="active-list">
-        <div class="text-center py-2xl" style="color:var(--text3)">
-          <div class="spinner mx-auto mb-md"></div>
-          <p class="text-sm">Loading active workflows…</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── CREATE CUSTOM TAB ──────────────────────────────────────────────── -->
-    <div id="tab-create" class="tab-panel">
-      <div class="max-w-2xl">
-        <div class="rounded-xl border p-lg mb-lg" style="background:var(--bg2);border-color:var(--border)">
-          <h3 class="font-semibold mb-xs flex items-center gap-2" style="color:var(--text)">
-            <span class="material-symbols-outlined text-indigo-400" style="font-size:20px">auto_awesome</span>
-            Describe your workflow
-          </h3>
-          <p class="text-xs mb-md" style="color:var(--text3)">Tell ARIA what you want automated — it'll figure out the schedule and prompt.</p>
-
-          <textarea id="custom-prompt" rows="4"
-            placeholder='E.g. "Remind me every Monday at 9am to review my weekly goals" or "Send me a daily digest of completed tasks at 6pm"'
-            class="w-full rounded-lg p-md text-sm resize-none outline-none transition-all"
-            style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:inherit"
-            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
-
-          <div class="flex items-center justify-between mt-md">
-            <p class="text-xs" style="color:var(--text3)">ARIA uses AI to parse your request into a cron schedule and prompt.</p>
-            <button id="create-btn" onclick="createCustomWorkflow()" class="px-lg py-sm rounded-lg text-sm font-semibold transition-all flex items-center gap-2" style="background:var(--accent);color:#fff">
-              <span class="material-symbols-outlined" style="font-size:16px">add</span>
-              Create Workflow
-            </button>
-          </div>
-        </div>
-
-        <!-- Optional advanced fields -->
-        <div class="rounded-xl border p-lg" style="background:var(--bg2);border-color:var(--border)">
-          <button onclick="toggleAdvanced()" class="flex items-center gap-2 text-sm font-semibold w-full" style="color:var(--text2)">
-            <span class="material-symbols-outlined" style="font-size:18px">tune</span>
-            Advanced Options
-            <span id="adv-chevron" class="material-symbols-outlined ml-auto" style="font-size:18px;color:var(--text3)">expand_more</span>
-          </button>
-          <div id="adv-fields" class="hidden mt-md space-y-md">
-            <div>
-              <label class="block text-xs font-medium mb-xs" style="color:var(--text2)">Name</label>
-              <input id="adv-name" type="text" placeholder="My Workflow" class="w-full rounded-lg px-md py-sm text-sm outline-none" style="background:var(--bg3);border:1px solid var(--border);color:var(--text)"/>
-            </div>
-            <div>
-              <label class="block text-xs font-medium mb-xs" style="color:var(--text2)">Cron Expression</label>
-              <input id="adv-cron" type="text" placeholder="0 9 * * 1-5  (weekdays 9am)" class="w-full rounded-lg px-md py-sm text-sm outline-none font-mono" style="background:var(--bg3);border:1px solid var(--border);color:var(--text)"/>
-              <p class="text-xs mt-xs" style="color:var(--text3)">Leave blank to let ARIA infer the schedule from your description.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Examples -->
-        <div class="mt-lg">
-          <p class="text-xs font-semibold mb-sm uppercase tracking-wider" style="color:var(--text3)">Quick examples</p>
-          <div class="flex flex-wrap gap-sm">
-            <button onclick="setExample(this)" class="example-chip px-md py-xs rounded-full text-xs transition-all" style="background:var(--bg2);border:1px solid var(--border);color:var(--text2)">Every Friday remind me to write a week recap</button>
-            <button onclick="setExample(this)" class="example-chip px-md py-xs rounded-full text-xs transition-all" style="background:var(--bg2);border:1px solid var(--border);color:var(--text2)">Check for overdue tasks every morning</button>
-            <button onclick="setExample(this)" class="example-chip px-md py-xs rounded-full text-xs transition-all" style="background:var(--bg2);border:1px solid var(--border);color:var(--text2)">Summarise my inbox every day at 7am</button>
-            <button onclick="setExample(this)" class="example-chip px-md py-xs rounded-full text-xs transition-all" style="background:var(--bg2);border:1px solid var(--border);color:var(--text2)">Generate a monthly report on the 1st</button>
-          </div>
-        </div>
-      </div>
+    <!-- Empty state (hidden until loaded) -->
+    <div id="wf-empty" class="hidden rounded-2xl border-2 border-dashed p-12 text-center" style="border-color:var(--border)">
+      <span class="material-symbols-outlined text-5xl block mb-3" style="color:var(--text3)">device_hub</span>
+      <h3 class="font-semibold text-base mb-1 font-h3" style="color:var(--text2)">No workflows yet</h3>
+      <p class="text-sm mb-6" style="color:var(--text3)">Create your first automation — trigger on a schedule or when an email arrives.</p>
+      <button onclick="openBuilder()" class="px-6 py-2 rounded-xl font-semibold text-sm" style="background:var(--accent);color:#fff">
+        Create your first workflow
+      </button>
     </div>
 
   </div>
 </main>
 
+<!-- ── Workflow builder modal ──────────────────────────────────────────────── -->
+<div id="builder-overlay" class="items-start justify-center pt-6 pb-6 px-4">
+  <div class="w-full max-w-xl rounded-2xl border overflow-hidden" style="background:var(--bg2);border-color:var(--border);max-height:calc(100vh - 48px);overflow-y:auto">
+
+    <!-- Modal header -->
+    <div class="px-6 py-4 border-b flex items-center justify-between sticky top-0 z-10" style="background:var(--bg2);border-color:var(--border)">
+      <div>
+        <h2 class="font-bold font-h2" style="color:var(--text)">New Workflow</h2>
+        <p id="builder-step-label" class="text-xs mt-0.5" style="color:var(--text3)">Step 1 of 3 — Name your workflow</p>
+      </div>
+      <button onclick="closeBuilder()" style="color:var(--text3)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10">
+        <span class="material-symbols-outlined" style="font-size:20px">close</span>
+      </button>
+    </div>
+
+    <!-- Step content -->
+    <div class="p-6">
+
+      <!-- STEP 1: Name & icon -->
+      <div id="step-1">
+        <div class="mb-4">
+          <label class="text-xs font-semibold uppercase tracking-wider block mb-2" style="color:var(--text3)">Workflow name</label>
+          <input id="wf-name" type="text" placeholder="Ping me when a client emails"
+            class="w-full rounded-xl px-4 py-3 text-sm outline-none" style="background:var(--bg3);border:1px solid var(--border);color:var(--text)"
+            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+        </div>
+        <div class="mb-6">
+          <label class="text-xs font-semibold uppercase tracking-wider block mb-2" style="color:var(--text3)">Description (optional)</label>
+          <input id="wf-desc" type="text" placeholder="What does this workflow do?"
+            class="w-full rounded-xl px-4 py-3 text-sm outline-none" style="background:var(--bg3);border:1px solid var(--border);color:var(--text)"
+            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+        </div>
+      </div>
+
+      <!-- STEP 2: Trigger -->
+      <div id="step-2" class="hidden">
+        <p class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--text3)">When should this run?</p>
+        <div class="grid grid-cols-1 gap-3 mb-4">
+          <div class="opt-card p-4 flex items-center gap-4" onclick="selectTrigger('schedule',this)">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(99,102,241,0.15)">
+              <span class="material-symbols-outlined text-indigo-400" style="font-size:20px">schedule</span>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-sm" style="color:var(--text)">On a schedule</div>
+              <div class="text-xs" style="color:var(--text3)">Daily, weekly, or any cron expression</div>
+            </div>
+            <span class="material-symbols-outlined text-indigo-400 hidden check-icon" style="font-size:20px">check_circle</span>
+          </div>
+          <div class="opt-card p-4 flex items-center gap-4" onclick="selectTrigger('email_received',this)">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(239,68,68,0.1)">
+              <span class="material-symbols-outlined text-red-400" style="font-size:20px">mail</span>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-sm" style="color:var(--text)">When an email arrives</div>
+              <div class="text-xs" style="color:var(--text3)">Polled every 2 min via Gmail IMAP — filter by sender or subject</div>
+            </div>
+            <span class="material-symbols-outlined text-red-400 hidden check-icon" style="font-size:20px">check_circle</span>
+          </div>
+          <div class="opt-card p-4 flex items-center gap-4" onclick="selectTrigger('manual',this)">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(34,197,94,0.1)">
+              <span class="material-symbols-outlined text-green-400" style="font-size:20px">play_arrow</span>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-sm" style="color:var(--text)">Manual trigger only</div>
+              <div class="text-xs" style="color:var(--text3)">Run it yourself from this page whenever you want</div>
+            </div>
+            <span class="material-symbols-outlined text-green-400 hidden check-icon" style="font-size:20px">check_circle</span>
+          </div>
+        </div>
+
+        <!-- Schedule sub-options -->
+        <div id="trigger-schedule-opts" class="hidden space-y-3 mt-4">
+          <p class="text-xs font-semibold uppercase tracking-wider" style="color:var(--text3)">Quick schedule presets</p>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="setCron('0 7 * * *',this)" class="cron-preset px-3 py-2 rounded-lg text-xs text-left transition-all" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)">
+              <div class="font-semibold">Every day 7am</div>
+              <div style="color:var(--text3)">0 7 * * *</div>
+            </button>
+            <button onclick="setCron('0 9 * * 1-5',this)" class="cron-preset px-3 py-2 rounded-lg text-xs text-left transition-all" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)">
+              <div class="font-semibold">Weekdays 9am</div>
+              <div style="color:var(--text3)">0 9 * * 1-5</div>
+            </button>
+            <button onclick="setCron('0 20 * * *',this)" class="cron-preset px-3 py-2 rounded-lg text-xs text-left transition-all" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)">
+              <div class="font-semibold">Every day 8pm</div>
+              <div style="color:var(--text3)">0 20 * * *</div>
+            </button>
+            <button onclick="setCron('0 9 * * 1',this)" class="cron-preset px-3 py-2 rounded-lg text-xs text-left transition-all" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)">
+              <div class="font-semibold">Monday 9am</div>
+              <div style="color:var(--text3)">0 9 * * 1</div>
+            </button>
+            <button onclick="setCron('0 9 * * 0',this)" class="cron-preset px-3 py-2 rounded-lg text-xs text-left transition-all" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)">
+              <div class="font-semibold">Sunday 9am</div>
+              <div style="color:var(--text3)">0 9 * * 0</div>
+            </button>
+            <button onclick="setCron('0 9 1 * *',this)" class="cron-preset px-3 py-2 rounded-lg text-xs text-left transition-all" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)">
+              <div class="font-semibold">1st of month</div>
+              <div style="color:var(--text3)">0 9 1 * *</div>
+            </button>
+          </div>
+          <div>
+            <label class="text-xs block mb-1" style="color:var(--text3)">Or enter custom cron expression</label>
+            <input id="cron-input" type="text" placeholder="0 9 * * 1-5"
+              class="w-full rounded-lg px-3 py-2 text-sm font-mono outline-none" style="background:var(--bg3);border:1px solid var(--border);color:var(--text)"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
+              oninput="clearCronPresets()"/>
+          </div>
+        </div>
+
+        <!-- Email sub-options -->
+        <div id="trigger-email-opts" class="hidden space-y-3 mt-4">
+          <div>
+            <label class="text-xs block mb-1 font-medium" style="color:var(--text2)">Filter by sender (optional)</label>
+            <input id="email-from" type="text" placeholder="client@example.com or @domain.com"
+              class="w-full rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--bg3);border:1px solid var(--border);color:var(--text)"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+            <p class="text-xs mt-1" style="color:var(--text3)">Leave blank to fire on any new email.</p>
+          </div>
+          <div>
+            <label class="text-xs block mb-1 font-medium" style="color:var(--text2)">Filter by subject keyword (optional)</label>
+            <input id="email-subject" type="text" placeholder="invoice, urgent, follow-up…"
+              class="w-full rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--bg3);border:1px solid var(--border);color:var(--text)"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+          </div>
+          <div class="p-3 rounded-lg text-xs" style="background:rgba(99,102,241,0.08);color:var(--text2)">
+            <b style="color:var(--text)">Requires Gmail App Password.</b> Set GMAIL_USER + GMAIL_APP_PASSWORD in Settings → OpenClaw.
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Actions -->
+      <div id="step-3" class="hidden">
+        <p class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--text3)">What should happen?</p>
+
+        <!-- Telegram notify -->
+        <div class="opt-card p-4 mb-3" onclick="toggleAction('telegram',this)" id="action-tg-card">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(59,130,246,0.1)">
+              <span class="material-symbols-outlined text-blue-400" style="font-size:20px">send</span>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-sm" style="color:var(--text)">Telegram notification</div>
+              <div class="text-xs" style="color:var(--text3)">Send a message to your Telegram chat</div>
+            </div>
+            <span id="tg-check" class="material-symbols-outlined text-blue-400 hidden" style="font-size:20px">check_circle</span>
+          </div>
+          <div id="tg-opts" class="hidden mt-4">
+            <label class="text-xs block mb-1 font-medium" style="color:var(--text2)">Message template</label>
+            <textarea id="tg-template" rows="2" placeholder="New email from {from}: {subject}"
+              class="w-full rounded-lg px-3 py-2 text-sm resize-none outline-none" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:inherit"
+              onclick="event.stopPropagation()" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            <p class="text-xs mt-1" style="color:var(--text3)">Use {from}, {subject}, {snippet} for email data. Leave blank for default format.</p>
+          </div>
+        </div>
+
+        <!-- ARIA prompt -->
+        <div class="opt-card p-4" onclick="toggleAction('aria',this)" id="action-aria-card">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(128,131,255,0.1)">
+              <span class="material-symbols-outlined text-indigo-400" style="font-size:20px">hub</span>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-sm" style="color:var(--text)">Ask ARIA to respond</div>
+              <div class="text-xs" style="color:var(--text3)">ARIA processes the event and sends you a response via Telegram</div>
+            </div>
+            <span id="aria-check" class="material-symbols-outlined text-indigo-400 hidden" style="font-size:20px">check_circle</span>
+          </div>
+          <div id="aria-opts" class="hidden mt-4">
+            <label class="text-xs block mb-1 font-medium" style="color:var(--text2)">Prompt for ARIA</label>
+            <textarea id="aria-prompt" rows="3" placeholder="An email arrived from {from} with subject '{subject}'. Summarise it and tell me if I need to reply urgently."
+              class="w-full rounded-lg px-3 py-2 text-sm resize-none outline-none" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:inherit"
+              onclick="event.stopPropagation()" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            <p class="text-xs mt-1" style="color:var(--text3)">ARIA will use her tools and reply to you. Use {from}, {subject} for context.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal footer -->
+    <div class="px-6 pb-6 flex items-center justify-between">
+      <button id="btn-back" onclick="stepBack()" class="hidden px-4 py-2 rounded-xl text-sm font-semibold transition-all" style="background:var(--bg3);color:var(--text2)">
+        ← Back
+      </button>
+      <div class="flex-1"></div>
+      <button id="btn-next" onclick="stepNext()" class="px-5 py-2 rounded-xl text-sm font-semibold" style="background:var(--accent);color:#fff">
+        Next →
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
-<div id="toast" class="fixed bottom-lg right-lg z-50 px-lg py-sm rounded-xl text-sm font-semibold shadow-xl" style="background:var(--bg2);border:1px solid var(--border);color:var(--text)"></div>
+<div id="toast" class="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-semibold shadow-xl" style="background:var(--bg2);border:1px solid var(--border);color:var(--text)"></div>
 
 <script>
 (function() {
   if (!localStorage.getItem('aria_auth')) { window.location.replace('/login.html'); return; }
 
-  // ── Theme ──────────────────────────────────────────────────────────────────
+  // ── Theme ────────────────────────────────────────────────────────────────────
   function applyTheme(t) {
     document.documentElement.classList.toggle('dark', t === 'dark');
     document.documentElement.classList.toggle('light', t === 'light');
     var icon = t === 'dark' ? 'light_mode' : 'dark_mode';
-    document.querySelectorAll('#theme-icon,#theme-icon-header').forEach(function(el) { el.textContent = icon; });
+    document.querySelectorAll('#theme-icon,#theme-icon-header').forEach(function(e) { e.textContent = icon; });
     var hdr = document.querySelector('header');
-    if (hdr) hdr.style.background = t === 'light' ? 'rgba(244,246,251,0.95)' : 'rgba(11,19,38,0.85)';
-    document.querySelectorAll('.cat-btn').forEach(function(b) { styleCatBtn(b, b.classList.contains('active')); });
+    if (hdr) hdr.style.background = t === 'light' ? 'rgba(244,246,251,0.95)' : 'rgba(11,19,38,0.9)';
   }
   window.toggleTheme = function() {
-    var isLight = document.documentElement.classList.contains('light');
-    var next = isLight ? 'dark' : 'light';
-    localStorage.setItem('aria_theme', next);
-    applyTheme(next);
+    var next = document.documentElement.classList.contains('light') ? 'dark' : 'light';
+    localStorage.setItem('aria_theme', next); applyTheme(next);
   };
   applyTheme(localStorage.getItem('aria_theme') || 'dark');
 
-  // ── Sidebar ────────────────────────────────────────────────────────────────
-  var _sb = document.getElementById('sidebar');
-  var _bd = document.getElementById('mob-backdrop');
-  window.openSidebar = function() { _sb.style.display = 'flex'; _bd.style.display = 'block'; };
-  window.closeSidebar = function() { _sb.style.display = 'none'; _bd.style.display = 'none'; };
-  document.addEventListener('click', function(e) {
-    if (_sb.style.display === 'flex' && !_sb.contains(e.target)) closeSidebar();
-  }, true);
+  // ── Sidebar ──────────────────────────────────────────────────────────────────
+  var _sb = document.getElementById('sidebar'), _bd = document.getElementById('mob-backdrop');
+  window.openSidebar  = function() { _sb.style.display = 'flex'; _bd.style.display = 'block'; };
+  window.closeSidebar = function() { _sb.style.display = 'none';  _bd.style.display = 'none'; };
+  document.addEventListener('click', function(e) { if (_sb.style.display==='flex' && !_sb.contains(e.target)) closeSidebar(); }, true);
   window.doLogout = function() { localStorage.removeItem('aria_auth'); window.location.replace('/login.html'); };
 
-  // ── Toast ──────────────────────────────────────────────────────────────────
-  var _toastTimer;
-  function showToast(msg, isError) {
+  // ── Toast ────────────────────────────────────────────────────────────────────
+  var _tt;
+  function toast(msg, err) {
     var t = document.getElementById('toast');
     t.textContent = msg;
-    t.style.borderColor = isError ? 'rgba(255,100,100,0.3)' : 'var(--border)';
+    t.style.borderColor = err ? 'rgba(255,100,100,0.4)' : 'var(--border)';
     t.classList.add('show');
-    clearTimeout(_toastTimer);
-    _toastTimer = setTimeout(function() { t.classList.remove('show'); }, 3000);
+    clearTimeout(_tt); _tt = setTimeout(function() { t.classList.remove('show'); }, 3000);
   }
 
-  // ── Tabs ───────────────────────────────────────────────────────────────────
-  window.switchTab = function(tab, btn) {
-    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
-    document.querySelectorAll('.tab-btn').forEach(function(b) {
-      b.classList.remove('active');
-      b.style.color = 'var(--text3)';
-    });
-    document.getElementById('tab-' + tab).classList.add('active');
-    btn.classList.add('active');
-    btn.style.color = 'var(--text2)';
-    if (tab === 'active') renderActiveList();
-  };
-
-  // ── Category filter ────────────────────────────────────────────────────────
-  var currentCat = 'all';
-  function styleCatBtn(btn, active) {
-    btn.style.background = active ? 'var(--accent)' : 'var(--bg2)';
-    btn.style.color = active ? '#fff' : 'var(--text2)';
-    btn.style.border = active ? '1px solid var(--accent)' : '1px solid var(--border)';
-  }
-  document.querySelectorAll('.cat-btn').forEach(function(b) {
-    styleCatBtn(b, b.dataset.cat === 'all');
-  });
-  window.filterCategory = function(cat, btn) {
-    currentCat = cat;
-    document.querySelectorAll('.cat-btn').forEach(function(b) { styleCatBtn(b, b.dataset.cat === cat); });
-    renderTemplates();
-  };
-
-  // ── State ──────────────────────────────────────────────────────────────────
-  var templates = [];
-  var activeWorkflows = [];
-  var activeTemplateIds = new Set();
+  // ── Workflows data ───────────────────────────────────────────────────────────
+  var workflows = [];
   var userId = 'user-1';
 
-  // ── Fetch data ─────────────────────────────────────────────────────────────
-  function loadData() {
+  function loadWorkflows() {
     fetch('/api/aria/workflows?userId=' + userId)
       .then(function(r) { return r.json(); })
-      .then(function(data) {
-        templates = data.templates || [];
-        activeWorkflows = data.active || [];
-        activeTemplateIds = new Set(data.activeTemplateIds || []);
-        renderTemplates();
-        updateActiveBadge();
+      .then(function(d) {
+        workflows = d.workflows || [];
+        renderList();
       })
-      .catch(function() {
-        document.getElementById('templates-grid').innerHTML =
-          '<div class="col-span-3 text-center py-xl text-sm" style="color:var(--text3)">Failed to load workflows. Is the server running?</div>';
-      });
+      .catch(function() { document.getElementById('wf-list').innerHTML = '<p class="text-sm text-center py-8" style="color:var(--text3)">Failed to load — is the server running?</p>'; });
   }
-  loadData();
+  loadWorkflows();
 
-  function updateActiveBadge() {
-    var count = activeWorkflows.length;
-    var badge = document.getElementById('active-count-badge');
-    var tabBadge = document.getElementById('tab-active-badge');
-    var countText = document.getElementById('active-count-text');
-    countText.textContent = count + ' active';
-    if (count > 0) {
-      badge.classList.remove('hidden');
-      badge.classList.add('flex');
-      tabBadge.classList.remove('hidden');
-      tabBadge.textContent = count;
-    } else {
-      badge.classList.add('hidden');
-      badge.classList.remove('flex');
-      tabBadge.classList.add('hidden');
-    }
-  }
+  // ── Render workflow list ─────────────────────────────────────────────────────
+  var TRIGGER_LABELS = { schedule: 'Schedule', email_received: 'Email received', manual: 'Manual' };
+  var TRIGGER_ICONS  = { schedule: 'schedule', email_received: 'mail', manual: 'play_arrow' };
+  var TRIGGER_COLORS = { schedule: 'text-indigo-400', email_received: 'text-red-400', manual: 'text-green-400' };
+  var ACTION_LABELS  = { telegram_notify: 'Telegram', aria_prompt: 'ARIA response' };
 
-  // ── Render templates ───────────────────────────────────────────────────────
-  var CAT_COLORS = {
-    daily: 'text-indigo-400', weekly: 'text-blue-400', alerts: 'text-yellow-400',
-    email: 'text-red-400', reports: 'text-purple-400'
-  };
-
-  function renderTemplates() {
-    var filtered = currentCat === 'all' ? templates : templates.filter(function(t) { return t.category === currentCat; });
-    if (!filtered.length) {
-      document.getElementById('templates-grid').innerHTML =
-        '<div class="col-span-3 text-center py-xl text-sm" style="color:var(--text3)">No templates in this category.</div>';
+  function renderList() {
+    var el = document.getElementById('wf-list');
+    var empty = document.getElementById('wf-empty');
+    if (!workflows.length) {
+      el.innerHTML = '';
+      empty.classList.remove('hidden');
       return;
     }
-    document.getElementById('templates-grid').innerHTML = filtered.map(function(tpl) {
-      var isActive = activeTemplateIds.has(tpl.id);
-      var catColor = CAT_COLORS[tpl.category] || 'text-slate-400';
-      return '<div class="tpl-card p-lg flex flex-col gap-sm' + (isActive ? ' activated' : '') + '" data-id="' + tpl.id + '">' +
-        '<div class="flex items-start gap-md">' +
-          '<div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:var(--bg3)">' +
-            '<span class="material-symbols-outlined ' + catColor + '" style="font-size:20px">' + tpl.icon + '</span>' +
-          '</div>' +
-          '<div class="flex-1 min-w-0">' +
-            '<div class="font-semibold text-sm mb-xs" style="color:var(--text)">' + esc(tpl.name) + '</div>' +
-            '<div class="text-xs leading-relaxed" style="color:var(--text3)">' + esc(tpl.description) + '</div>' +
-          '</div>' +
-        '</div>' +
-        '<div class="flex items-center justify-between mt-xs pt-sm" style="border-top:1px solid var(--border)">' +
-          '<code class="text-[10px] font-mono px-sm py-xs rounded" style="background:var(--bg3);color:var(--text3)">' + esc(tpl.cronExpr) + '</code>' +
-          (isActive
-            ? '<span class="flex items-center gap-1 text-xs font-semibold" style="color:#86efac"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Active</span>'
-            : '<button onclick="activateTemplate(\'' + tpl.id + '\')" class="px-md py-xs rounded-lg text-xs font-semibold transition-all" style="background:var(--accent);color:#fff">Activate</button>'
-          ) +
-        '</div>' +
-      '</div>';
-    }).join('');
-  }
-
-  // ── Render active list ─────────────────────────────────────────────────────
-  function renderActiveList() {
-    var el = document.getElementById('active-list');
-    if (!activeWorkflows.length) {
-      el.innerHTML =
-        '<div class="rounded-xl border p-2xl text-center" style="border-color:var(--border);border-style:dashed">' +
-          '<span class="material-symbols-outlined text-4xl mb-md block" style="color:var(--text3)">device_hub</span>' +
-          '<p class="text-sm font-semibold mb-xs" style="color:var(--text2)">No active workflows</p>' +
-          '<p class="text-xs" style="color:var(--text3)">Activate a template or create a custom workflow.</p>' +
-          '<button onclick="switchTab(\'templates\', document.querySelector(\'.tab-btn\'))" class="mt-md px-lg py-sm rounded-lg text-sm font-semibold" style="background:var(--accent);color:#fff">Browse Templates</button>' +
-        '</div>';
-      return;
-    }
-    el.innerHTML = '<div class="space-y-md">' + activeWorkflows.map(function(w) {
-      var fromTpl = w.fromTemplate ? '<span class="text-[10px] px-sm py-xs rounded-full" style="background:var(--bg3);color:var(--text3)">from template</span>' : '';
-      return '<div class="rounded-xl border p-lg flex items-center gap-md" style="background:var(--bg2);border-color:var(--border)" data-wid="' + w.id + '">' +
+    empty.classList.add('hidden');
+    el.innerHTML = '<div class="space-y-3">' + workflows.map(function(wf) {
+      var tIcon = TRIGGER_ICONS[wf.trigger.type] || 'device_hub';
+      var tColor = TRIGGER_COLORS[wf.trigger.type] || 'text-slate-400';
+      var tLabel = TRIGGER_LABELS[wf.trigger.type] || wf.trigger.type;
+      var tSub   = wf.trigger.type === 'schedule'       ? (wf.trigger.cronExpr || '')
+                 : wf.trigger.type === 'email_received' ? (wf.trigger.fromFilter ? 'from ' + esc(wf.trigger.fromFilter) : 'any email')
+                 : 'run manually';
+      var actionTags = (wf.actions || []).map(function(a) {
+        return '<span class="px-2 py-0.5 rounded-full text-[10px] font-medium" style="background:var(--bg3);color:var(--text3)">' + (ACTION_LABELS[a.type] || a.type) + '</span>';
+      }).join('');
+      var lastRun = wf.lastRunAt
+        ? '<span class="text-[11px]" style="color:' + (wf.lastRunStatus === 'error' ? '#fca5a5' : 'var(--text3)') + '">Last run: ' + new Date(wf.lastRunAt).toLocaleString() + '</span>'
+        : '<span class="text-[11px]" style="color:var(--text3)">Never run</span>';
+      return '<div class="wf-card p-4 flex items-center gap-4">' +
         '<div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:var(--bg3)">' +
-          '<span class="material-symbols-outlined text-indigo-400" style="font-size:20px">' + (w.icon || 'auto_awesome') + '</span>' +
+          '<span class="material-symbols-outlined ' + tColor + '" style="font-size:20px">' + tIcon + '</span>' +
         '</div>' +
         '<div class="flex-1 min-w-0">' +
-          '<div class="flex items-center gap-sm mb-xs">' +
-            '<span class="font-semibold text-sm" style="color:var(--text)">' + esc(w.name) + '</span>' +
-            fromTpl +
+          '<div class="flex items-center gap-2 flex-wrap">' +
+            '<span class="font-semibold text-sm" style="color:var(--text)">' + esc(wf.name) + '</span>' +
+            (wf.enabled ? '<span class="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0"></span>' : '<span class="w-1.5 h-1.5 rounded-full bg-slate-500 flex-shrink-0"></span>') +
           '</div>' +
-          '<div class="text-xs mb-xs" style="color:var(--text3)">' + esc(w.description) + '</div>' +
-          '<code class="text-[10px] font-mono px-sm py-xs rounded" style="background:var(--bg3);color:var(--text3)">' + esc(w.cronExpr) + '</code>' +
+          '<div class="text-xs mt-0.5 flex items-center gap-1" style="color:var(--text3)">' +
+            '<span class="material-symbols-outlined ' + tColor + '" style="font-size:14px">' + tIcon + '</span>' +
+            tLabel + ' · ' + esc(tSub) +
+          '</div>' +
+          '<div class="flex items-center gap-2 mt-1 flex-wrap">' + actionTags + '<span class="text-[11px]" style="color:var(--border-strong)">|</span>' + lastRun + '</div>' +
         '</div>' +
-        '<div class="flex items-center gap-sm">' +
-          '<span class="flex items-center gap-1 text-xs font-semibold" style="color:#86efac">' +
-            '<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Running' +
-          '</span>' +
-          '<button onclick="deleteWorkflow(\'' + w.id + '\')" class="w-8 h-8 flex items-center justify-center rounded-lg transition-all hover:bg-red-500/20 text-red-400">' +
+        '<div class="flex items-center gap-1 flex-shrink-0">' +
+          (wf.trigger.type === 'manual'
+            ? '<button onclick="runWorkflow(\'' + wf.id + '\')" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all" style="background:rgba(34,197,94,0.1);color:#86efac;border:1px solid rgba(34,197,94,0.2)">▶ Run</button>'
+            : ''
+          ) +
+          '<button onclick="toggleWorkflow(\'' + wf.id + '\',' + !wf.enabled + ')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all" style="color:var(--text3)" title="' + (wf.enabled ? 'Disable' : 'Enable') + '">' +
+            '<span class="material-symbols-outlined" style="font-size:18px">' + (wf.enabled ? 'pause' : 'play_arrow') + '</span>' +
+          '</button>' +
+          '<button onclick="deleteWorkflow(\'' + wf.id + '\')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-500/20 transition-all text-red-400">' +
             '<span class="material-symbols-outlined" style="font-size:18px">delete</span>' +
           '</button>' +
         '</div>' +
@@ -454,106 +462,192 @@
     }).join('') + '</div>';
   }
 
-  // ── Activate template ──────────────────────────────────────────────────────
-  window.activateTemplate = function(templateId) {
-    var card = document.querySelector('[data-id="' + templateId + '"]');
-    var btn = card ? card.querySelector('button') : null;
-    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>'; }
-
-    fetch('/api/aria/workflows', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ templateId: templateId, userId: userId }),
-    })
-      .then(function(r) {
-        if (r.status === 409) { showToast('Already active', false); return null; }
-        return r.json();
-      })
-      .then(function(data) {
-        if (!data) return;
-        if (data.error) { showToast(data.error, true); return; }
-        activeWorkflows.push(data.workflow);
-        activeTemplateIds.add(templateId);
-        updateActiveBadge();
-        renderTemplates();
-        showToast('✓ Workflow activated', false);
-      })
-      .catch(function() { showToast('Failed to activate', true); });
+  // ── Toggle / delete / run ────────────────────────────────────────────────────
+  window.toggleWorkflow = function(id, enabled) {
+    fetch('/api/aria/workflows/' + id, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ enabled }) })
+      .then(function(r) { return r.json(); })
+      .then(function(d) { var wf = workflows.find(function(w) { return w.id===id; }); if (wf) wf.enabled = d.workflow.enabled; renderList(); toast(enabled ? 'Workflow enabled' : 'Workflow paused', false); })
+      .catch(function() { toast('Failed', true); });
   };
 
-  // ── Delete workflow ────────────────────────────────────────────────────────
   window.deleteWorkflow = function(id) {
-    if (!confirm('Remove this workflow?')) return;
-    fetch('/api/aria/workflows/' + id, { method: 'DELETE' })
-      .then(function(r) { return r.json(); })
-      .then(function() {
-        var removed = activeWorkflows.find(function(w) { return w.id === id; });
-        activeWorkflows = activeWorkflows.filter(function(w) { return w.id !== id; });
-        if (removed && removed.fromTemplate) activeTemplateIds.delete(removed.fromTemplate);
-        updateActiveBadge();
-        renderActiveList();
-        renderTemplates();
-        showToast('Workflow removed', false);
-      })
-      .catch(function() { showToast('Failed to remove', true); });
+    if (!confirm('Delete this workflow?')) return;
+    fetch('/api/aria/workflows/' + id, { method:'DELETE' })
+      .then(function() { workflows = workflows.filter(function(w) { return w.id !== id; }); renderList(); toast('Deleted', false); })
+      .catch(function() { toast('Failed', true); });
   };
 
-  // ── Create custom ──────────────────────────────────────────────────────────
-  window.createCustomWorkflow = function() {
-    var prompt = document.getElementById('custom-prompt').value.trim();
-    if (!prompt) { showToast('Please describe your workflow first', true); return; }
+  window.runWorkflow = function(id) {
+    toast('Running…', false);
+    fetch('/api/aria/workflows/' + id + '/run', { method:'POST' })
+      .then(function(r) { return r.json(); })
+      .then(function(d) { toast(d.ok ? 'Workflow ran OK' : 'Error: ' + d.error, !d.ok); loadWorkflows(); })
+      .catch(function() { toast('Failed', true); });
+  };
 
-    var name = document.getElementById('adv-name').value.trim() || undefined;
-    var cronExpr = document.getElementById('adv-cron').value.trim() || undefined;
+  // ── Builder state ────────────────────────────────────────────────────────────
+  var builderStep = 1;
+  var selectedTrigger = null;
+  var selectedCron    = null;
+  var actionTg   = false;
+  var actionAria = false;
 
-    var btn = document.getElementById('create-btn');
+  window.openBuilder = function() {
+    builderStep = 1;
+    selectedTrigger = null; selectedCron = null;
+    actionTg = false; actionAria = false;
+    document.getElementById('wf-name').value = '';
+    document.getElementById('wf-desc').value = '';
+    document.getElementById('cron-input').value = '';
+    document.getElementById('email-from').value = '';
+    document.getElementById('email-subject').value = '';
+    document.getElementById('tg-template').value = '';
+    document.getElementById('aria-prompt').value = '';
+    document.querySelectorAll('.opt-card').forEach(function(c) { c.classList.remove('selected'); });
+    document.querySelectorAll('.check-icon').forEach(function(i) { i.classList.add('hidden'); });
+    document.getElementById('action-tg-card').classList.remove('selected');
+    document.getElementById('action-aria-card').classList.remove('selected');
+    document.getElementById('tg-check').classList.add('hidden');
+    document.getElementById('aria-check').classList.add('hidden');
+    document.getElementById('tg-opts').classList.add('hidden');
+    document.getElementById('aria-opts').classList.add('hidden');
+    showStep(1);
+    document.getElementById('builder-overlay').classList.add('open');
+  };
+
+  window.closeBuilder = function() {
+    document.getElementById('builder-overlay').classList.remove('open');
+  };
+
+  function showStep(n) {
+    builderStep = n;
+    document.getElementById('step-1').classList.toggle('hidden', n !== 1);
+    document.getElementById('step-2').classList.toggle('hidden', n !== 2);
+    document.getElementById('step-3').classList.toggle('hidden', n !== 3);
+    var labels = ['', 'Step 1 of 3 — Name your workflow', 'Step 2 of 3 — Choose trigger', 'Step 3 of 3 — Choose actions'];
+    document.getElementById('builder-step-label').textContent = labels[n];
+    document.getElementById('btn-back').classList.toggle('hidden', n === 1);
+    document.getElementById('btn-next').textContent = n === 3 ? 'Create workflow' : 'Next →';
+  }
+
+  window.stepNext = function() {
+    if (builderStep === 1) {
+      if (!document.getElementById('wf-name').value.trim()) { toast('Enter a workflow name', true); return; }
+      showStep(2);
+    } else if (builderStep === 2) {
+      if (!selectedTrigger) { toast('Choose a trigger', true); return; }
+      if (selectedTrigger === 'schedule' && !getCronExpr()) { toast('Select or enter a schedule', true); return; }
+      showStep(3);
+    } else if (builderStep === 3) {
+      if (!actionTg && !actionAria) { toast('Choose at least one action', true); return; }
+      saveWorkflow();
+    }
+  };
+
+  window.stepBack = function() {
+    if (builderStep > 1) showStep(builderStep - 1);
+  };
+
+  window.selectTrigger = function(type, card) {
+    selectedTrigger = type;
+    document.querySelectorAll('#step-2 .opt-card').forEach(function(c) {
+      c.classList.remove('selected');
+      c.querySelector('.check-icon').classList.add('hidden');
+    });
+    card.classList.add('selected');
+    card.querySelector('.check-icon').classList.remove('hidden');
+    document.getElementById('trigger-schedule-opts').classList.toggle('hidden', type !== 'schedule');
+    document.getElementById('trigger-email-opts').classList.toggle('hidden', type !== 'email_received');
+  };
+
+  window.setCron = function(expr, btn) {
+    selectedCron = expr;
+    document.getElementById('cron-input').value = expr;
+    document.querySelectorAll('.cron-preset').forEach(function(b) { b.style.borderColor = 'var(--border)'; b.style.background = 'var(--bg3)'; });
+    btn.style.borderColor = 'var(--accent)';
+    btn.style.background = 'rgba(128,131,255,0.1)';
+  };
+
+  window.clearCronPresets = function() {
+    selectedCron = null;
+    document.querySelectorAll('.cron-preset').forEach(function(b) { b.style.borderColor = 'var(--border)'; b.style.background = 'var(--bg3)'; });
+  };
+
+  function getCronExpr() {
+    return selectedCron || document.getElementById('cron-input').value.trim();
+  }
+
+  window.toggleAction = function(type, card) {
+    if (type === 'telegram') {
+      actionTg = !actionTg;
+      card.classList.toggle('selected', actionTg);
+      document.getElementById('tg-check').classList.toggle('hidden', !actionTg);
+      document.getElementById('tg-opts').classList.toggle('hidden', !actionTg);
+    } else {
+      actionAria = !actionAria;
+      card.classList.toggle('selected', actionAria);
+      document.getElementById('aria-check').classList.toggle('hidden', !actionAria);
+      document.getElementById('aria-opts').classList.toggle('hidden', !actionAria);
+    }
+  };
+
+  // ── Save workflow ────────────────────────────────────────────────────────────
+  function saveWorkflow() {
+    var btn = document.getElementById('btn-next');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Creating…';
+    btn.innerHTML = '<span class="spin"></span>';
+
+    var trigger = { type: selectedTrigger };
+    if (selectedTrigger === 'schedule') trigger.cronExpr = getCronExpr();
+    if (selectedTrigger === 'email_received') {
+      var from = document.getElementById('email-from').value.trim();
+      var subj = document.getElementById('email-subject').value.trim();
+      if (from) trigger.fromFilter = from;
+      if (subj) trigger.subjectFilter = subj;
+    }
+
+    var actions = [];
+    if (actionTg) {
+      var tpl = document.getElementById('tg-template').value.trim();
+      actions.push({ type: 'telegram_notify', template: tpl || undefined });
+    }
+    if (actionAria) {
+      var prompt = document.getElementById('aria-prompt').value.trim();
+      actions.push({ type: 'aria_prompt', prompt: prompt || undefined });
+    }
+
+    var icon = selectedTrigger === 'schedule' ? 'schedule' : selectedTrigger === 'email_received' ? 'mail' : 'play_arrow';
 
     fetch('/api/aria/workflows', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: prompt, name: name, cronExpr: cronExpr, userId: userId }),
+      body: JSON.stringify({
+        name:        document.getElementById('wf-name').value.trim(),
+        description: document.getElementById('wf-desc').value.trim(),
+        icon,
+        trigger,
+        actions,
+        userId,
+      }),
     })
       .then(function(r) { return r.json(); })
-      .then(function(data) {
-        btn.disabled = false;
-        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">add</span> Create Workflow';
-        if (data.error) { showToast(data.error, true); return; }
-        activeWorkflows.push(data.workflow);
-        updateActiveBadge();
-        renderTemplates();
-        document.getElementById('custom-prompt').value = '';
-        document.getElementById('adv-name').value = '';
-        document.getElementById('adv-cron').value = '';
-        showToast('✓ Workflow "' + data.workflow.name + '" created', false);
-        switchTab('active', document.querySelectorAll('.tab-btn')[1]);
+      .then(function(d) {
+        btn.disabled = false; btn.textContent = 'Create workflow';
+        if (d.error) { toast(d.error, true); return; }
+        workflows.push(d.workflow);
+        renderList();
+        closeBuilder();
+        toast('✓ Workflow created', false);
       })
       .catch(function() {
-        btn.disabled = false;
-        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">add</span> Create Workflow';
-        showToast('Failed to create workflow', true);
+        btn.disabled = false; btn.textContent = 'Create workflow';
+        toast('Failed to save', true);
       });
-  };
+  }
 
-  // ── Advanced toggle ────────────────────────────────────────────────────────
-  window.toggleAdvanced = function() {
-    var fields = document.getElementById('adv-fields');
-    var chev = document.getElementById('adv-chevron');
-    var hidden = fields.classList.toggle('hidden');
-    chev.textContent = hidden ? 'expand_more' : 'expand_less';
-  };
-
-  // ── Example chips ──────────────────────────────────────────────────────────
-  window.setExample = function(btn) {
-    document.getElementById('custom-prompt').value = btn.textContent.trim();
-    document.getElementById('custom-prompt').focus();
-    switchTab('create', document.querySelectorAll('.tab-btn')[2]);
-  };
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  function esc(str) {
-    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
 })();

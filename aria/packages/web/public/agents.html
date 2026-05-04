@@ -8,118 +8,89 @@
 <title>Agents | ARIA</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
+<script>
   tailwind.config = {
     darkMode: "class",
     theme: { extend: {
       colors: {
-        "background": "#0b1326", "surface": "#0b1326",
-        "surface-container": "#171f33", "surface-container-low": "#131b2e",
-        "surface-container-lowest": "#060e20", "surface-container-high": "#222a3d",
-        "on-background": "#dae2fd", "on-surface": "#dae2fd",
-        "on-surface-variant": "#c7c4d7", "outline": "#908fa0",
-        "outline-variant": "#464554", "primary": "#c0c1ff",
-        "primary-container": "#8083ff", "secondary": "#ddb7ff",
-        "secondary-container": "#6f00be", "tertiary": "#89ceff",
-        "error": "#ffb4ab", "error-container": "#93000a"
+        "background":"#0b1326","surface":"#0b1326","surface-container":"#171f33",
+        "surface-container-low":"#131b2e","surface-container-lowest":"#060e20",
+        "surface-container-high":"#222a3d","on-background":"#dae2fd","on-surface":"#dae2fd",
+        "on-surface-variant":"#c7c4d7","outline":"#908fa0","outline-variant":"#464554",
+        "primary":"#c0c1ff","primary-container":"#8083ff","secondary":"#ddb7ff",
+        "secondary-container":"#6f00be","tertiary":"#89ceff","error":"#ffb4ab","error-container":"#93000a"
       },
-      borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
-      spacing: { "xs": "4px", "sm": "8px", "md": "16px", "lg": "24px", "xl": "32px", "gutter": "24px", "margin": "32px", "2xl": "48px", "base": "4px" },
-      fontFamily: { "h1": ["Manrope","sans-serif"], "h2": ["Manrope","sans-serif"], "h3": ["Manrope","sans-serif"], "body-md": ["Inter","sans-serif"], "body-sm": ["Inter","sans-serif"] },
-      fontSize: {
-        "h1": ["40px",{"lineHeight":"1.2","letterSpacing":"-0.02em","fontWeight":"700"}],
-        "h2": ["32px",{"lineHeight":"1.3","letterSpacing":"-0.01em","fontWeight":"600"}],
-        "h3": ["24px",{"lineHeight":"1.4","fontWeight":"600"}],
-        "body-md": ["16px",{"lineHeight":"1.5","fontWeight":"400"}],
-        "body-sm": ["14px",{"lineHeight":"1.5","fontWeight":"400"}]
-      }
+      borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},
+      fontFamily:{"h1":["Manrope","sans-serif"],"h2":["Manrope","sans-serif"],"h3":["Manrope","sans-serif"],"body-md":["Inter","sans-serif"],"body-sm":["Inter","sans-serif"]}
     }}
   }
 </script>
 <style>
   :root {
-    --bg: #0b1326; --bg2: #171f33; --bg3: #222a3d;
-    --border: rgba(144,143,160,0.15); --border-strong: rgba(192,193,255,0.2);
-    --text: #dae2fd; --text2: #c7c4d7; --text3: #908fa0;
-    --accent: #8083ff; --accent2: #c0c1ff;
-    --sidebar-bg: rgba(10,15,30,0.92);
+    --bg:#0b1326;--bg2:#171f33;--bg3:#222a3d;
+    --border:rgba(144,143,160,0.15);--border-strong:rgba(192,193,255,0.2);
+    --text:#dae2fd;--text2:#c7c4d7;--text3:#908fa0;
+    --accent:#8083ff;--accent2:#c0c1ff;
+    --sidebar-bg:rgba(10,15,30,0.92);
   }
-  html.light {
-    --bg: #f4f6fb; --bg2: #ffffff; --bg3: #e8ecf5;
-    --border: rgba(0,0,0,0.1); --border-strong: rgba(99,102,241,0.3);
-    --text: #1a1d2e; --text2: #3d4166; --text3: #7b7fa8;
-    --accent: #4f52d9; --accent2: #6366f1;
-    --sidebar-bg: rgba(248,249,255,0.95);
-  }
-  html.light body { background: var(--bg); color: var(--text); }
-  .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; vertical-align: middle; }
-  .glass-card { background: rgba(45,52,73,0.4); backdrop-filter: blur(12px); border: 1px solid var(--border); }
-  html.light .glass-card { background: rgba(255,255,255,0.7); }
-  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #2d3449; border-radius: 2px; }
-  html.light ::-webkit-scrollbar-thumb { background: #c5cae9; }
-  .mob-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 49; }
-  /* Page-specific */
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .status-pulse { animation: pulse 2s cubic-bezier(.4,0,.6,1) infinite; }
-  .agent-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; transition: all .2s; }
-  .agent-card:hover { border-color: rgba(128,131,255,0.3); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-  .input-sm { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; color: var(--text); font-size: 12px; width: 100%; outline: none; transition: border-color .15s; }
-  .input-sm:focus { border-color: var(--accent); }
+  html.light{--bg:#f4f6fb;--bg2:#ffffff;--bg3:#e8ecf5;--border:rgba(0,0,0,0.1);--border-strong:rgba(99,102,241,0.3);--text:#1a1d2e;--text2:#3d4166;--text3:#7b7fa8;--accent:#4f52d9;--accent2:#6366f1;--sidebar-bg:rgba(248,249,255,0.95);}
+  html.light body{background:var(--bg);color:var(--text);}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;vertical-align:middle;}
+  ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:#2d3449;border-radius:2px;}
+  html.light ::-webkit-scrollbar-thumb{background:#c5cae9;}
+  .mob-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:49;}
+  .agent-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;transition:all .2s;}
+  .agent-card:hover{border-color:var(--border-strong);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,0.3);}
+  html.light .agent-card:hover{box-shadow:0 8px 30px rgba(0,0,0,0.1);}
+  .spin{width:16px;height:16px;border:2px solid rgba(192,193,255,0.3);border-top-color:var(--accent2);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #modal-overlay{display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);}
+  #modal-overlay.open{display:flex;}
+  #toast{opacity:0;transform:translateY(8px);pointer-events:none;transition:all .3s;}
+  #toast.show{opacity:1;transform:translateY(0);pointer-events:auto;}
 </style>
 </head>
 <body class="font-body-md antialiased" style="background:var(--bg);color:var(--text)">
 
 <div id="mob-backdrop" class="mob-backdrop"></div>
 
-<aside id="sidebar" class="sidebar fixed left-0 top-0 h-full z-50 w-64 border-r flex flex-col shadow-2xl shadow-black/20" style="display:none;background:var(--sidebar-bg);border-color:var(--border);backdrop-filter:blur(20px)">
-  <div class="p-xl flex items-center space-x-sm">
+<!-- Sidebar -->
+<aside id="sidebar" class="fixed left-0 top-0 h-full z-50 w-64 border-r flex flex-col shadow-2xl" style="display:none;background:var(--sidebar-bg);border-color:var(--border);backdrop-filter:blur(20px)">
+  <div class="p-6 flex items-center space-x-2">
     <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center flex-shrink-0">
       <span class="material-symbols-outlined text-white" style="font-size:18px">hub</span>
     </div>
     <div class="flex flex-col flex-1">
-      <span class="text-base font-bold tracking-wide" style="color:var(--text)">Agent Orchestrator</span>
+      <span class="text-base font-bold" style="color:var(--text)">Agent Orchestrator</span>
       <span class="text-[10px] uppercase tracking-widest font-bold text-indigo-400">ARIA</span>
     </div>
-    <button onclick="closeSidebar()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors" style="color:var(--text3)">
+    <button onclick="closeSidebar()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10" style="color:var(--text3)">
       <span class="material-symbols-outlined" style="font-size:20px">close</span>
     </button>
   </div>
-  <div class="px-md mt-md">
-    <a href="/" class="w-full py-sm px-md rounded-lg bg-indigo-500 text-white font-semibold flex items-center justify-center space-x-sm hover:bg-indigo-400 active:scale-95 transition-all text-sm">
-      <span class="material-symbols-outlined" style="font-size:18px">add</span>
-      <span>New Session</span>
+  <nav class="flex-1 px-2 mt-2 overflow-y-auto">
+    <a href="/" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mb-1" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'">
+      <span class="material-symbols-outlined" style="font-size:20px">chat</span>Chat
     </a>
-  </div>
-  <nav class="flex-1 px-sm mt-lg overflow-y-auto">
-    <a href="/" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
-      <span class="material-symbols-outlined" style="font-size:20px">chat</span><span>Chat</span>
+    <a href="/agents.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mb-1" style="background:rgba(99,102,241,0.1);color:var(--accent2)">
+      <span class="material-symbols-outlined" style="font-size:20px">account_tree</span>Agents
     </a>
-    <a href="/agents.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="background:rgba(99,102,241,0.1);color:var(--accent2)">
-      <span class="material-symbols-outlined" style="font-size:20px">account_tree</span><span>Agents</span>
+    <a href="/workflows.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mb-1" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'">
+      <span class="material-symbols-outlined" style="font-size:20px">device_hub</span>Workflows
     </a>
-    <a href="/workflows.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
-      <span class="material-symbols-outlined" style="font-size:20px">device_hub</span><span>Workflows</span>
+    <a href="/knowledge.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mb-1" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'">
+      <span class="material-symbols-outlined" style="font-size:20px">auto_stories</span>Knowledge Base
     </a>
-    <a href="/knowledge.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
-      <span class="material-symbols-outlined" style="font-size:20px">auto_stories</span><span>Knowledge Base</span>
+    <a href="/dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mb-1" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'">
+      <span class="material-symbols-outlined" style="font-size:20px">monitoring</span>Performance
     </a>
-    <a href="/dashboard.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
-      <span class="material-symbols-outlined" style="font-size:20px">monitoring</span><span>Performance</span>
-    </a>
-    <a href="/settings.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all text-sm font-medium mb-xs" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">
-      <span class="material-symbols-outlined" style="font-size:20px">settings</span><span>Settings</span>
+    <a href="/settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mb-1" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'">
+      <span class="material-symbols-outlined" style="font-size:20px">settings</span>Settings
     </a>
   </nav>
-  <div class="p-md border-t flex items-center justify-between" style="border-color:var(--border)">
-    <div class="flex items-center space-x-sm">
-      <div class="relative flex items-center justify-center w-4 h-4">
-        <span id="pulse-ring" class="absolute w-3.5 h-3.5 rounded-full opacity-0" style="background:var(--accent)"></span>
-        <div id="status-pip" class="relative w-2 h-2 rounded-full bg-slate-600"></div>
-      </div>
-      <span class="text-xs font-medium" id="node-label" style="color:var(--text3)">ARIA</span>
-    </div>
-    <div class="flex items-center gap-sm">
+  <div class="p-4 border-t flex items-center justify-between" style="border-color:var(--border)">
+    <span class="text-xs font-medium" style="color:var(--text3)">ARIA</span>
+    <div class="flex items-center gap-2">
       <button onclick="toggleTheme()" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-indigo-500/20" style="color:var(--text3)">
         <span id="theme-icon" class="material-symbols-outlined" style="font-size:16px">light_mode</span>
       </button>
@@ -130,338 +101,243 @@
   </div>
 </aside>
 
-<header class="flex items-center justify-between px-md h-12 w-full sticky top-0 z-30 border-b flex-shrink-0" style="background:rgba(11,19,38,0.85);border-color:var(--border);backdrop-filter:blur(12px)">
+<!-- Header -->
+<header class="flex items-center justify-between px-4 h-12 sticky top-0 z-30 border-b" style="background:rgba(11,19,38,0.9);border-color:var(--border);backdrop-filter:blur(12px)">
   <button onclick="openSidebar()" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-indigo-500/20" style="color:var(--text2)">
     <span class="material-symbols-outlined" style="font-size:22px">menu</span>
   </button>
   <span class="text-sm font-semibold" style="color:var(--text2)">Agents</span>
-  <button onclick="toggleTheme()" style="color:var(--text3)" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-indigo-500/20">
+  <button onclick="toggleTheme()" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-indigo-500/20" style="color:var(--text3)">
     <span id="theme-icon-header" class="material-symbols-outlined" style="font-size:20px">light_mode</span>
   </button>
 </header>
 
-<main style="background:var(--bg)" class="min-h-screen overflow-y-auto p-lg">
-  <div class="max-w-5xl">
-    <div class="flex items-end justify-between mb-lg">
+<!-- Main -->
+<main style="background:var(--bg)" class="min-h-screen p-4 md:p-6">
+  <div class="max-w-4xl mx-auto">
+
+    <!-- Page header -->
+    <div class="flex items-start justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold mb-xs font-h1" style="color:var(--text)">Agents</h1>
-        <p class="text-sm" style="color:var(--text3)">Real agents running behind ARIA. Click <b style="color:var(--text2)">Configure</b> on inactive connectors to set them up.</p>
+        <h1 class="text-2xl font-bold font-h1" style="color:var(--text)">Agents</h1>
+        <p class="text-sm mt-1" style="color:var(--text3)">Switch ARIA's mode or add your own custom agent persona.</p>
       </div>
-      <button onclick="loadAgents()" class="flex items-center gap-2 px-md py-sm rounded-lg text-sm font-semibold border transition-all" style="background:var(--bg3);color:var(--text2);border-color:var(--border)" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-        <span class="material-symbols-outlined" style="font-size:16px">refresh</span> Refresh
+      <button onclick="openModal()" class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold flex-shrink-0" style="background:var(--accent);color:#fff">
+        <span class="material-symbols-outlined" style="font-size:18px">add</span>
+        Add Agent
       </button>
     </div>
 
-    <!-- Stats bar -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-md mb-lg">
-      <div class="rounded-xl border p-md" style="background:var(--bg2);border-color:var(--border)">
-        <div class="text-[10px] uppercase tracking-wider font-bold mb-sm" style="color:var(--text3)">Total Agents</div>
-        <div id="stat-total" class="text-2xl font-bold font-h2" style="color:var(--text)">—</div>
-      </div>
-      <div class="rounded-xl border p-md" style="background:var(--bg2);border-color:var(--border)">
-        <div class="text-[10px] uppercase tracking-wider font-bold mb-sm" style="color:var(--text3)">Active</div>
-        <div id="stat-active" class="text-2xl font-bold text-green-400 font-h2">—</div>
-      </div>
-      <div class="rounded-xl border p-md" style="background:var(--bg2);border-color:var(--border)">
-        <div class="text-[10px] uppercase tracking-wider font-bold mb-sm" style="color:var(--text3)">Inactive</div>
-        <div id="stat-inactive" class="text-2xl font-bold font-h2" style="color:var(--text3)">—</div>
-      </div>
-      <div class="rounded-xl border p-md" style="background:var(--bg2);border-color:var(--border)">
-        <div class="text-[10px] uppercase tracking-wider font-bold mb-sm" style="color:var(--text3)">Brain</div>
-        <div id="stat-brain" class="text-xl font-bold text-indigo-400 font-h2">—</div>
+    <!-- Built-in agents -->
+    <div class="mb-2">
+      <p class="text-xs font-semibold uppercase tracking-wider mb-4" style="color:var(--text3)">Built-in</p>
+      <div id="builtin-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div class="col-span-2 text-center py-8" style="color:var(--text3)">
+          <div class="spin mx-auto mb-3"></div>
+          <p class="text-sm">Loading agents…</p>
+        </div>
       </div>
     </div>
 
-    <!-- Agent grid -->
-    <div id="agents-grid" class="grid grid-cols-1 md:grid-cols-2 gap-md mb-xl">
-      <div class="col-span-2 text-center py-12" style="color:var(--text3)">
-        <span class="material-symbols-outlined" style="font-size:40px">hourglass_empty</span>
-        <p class="mt-sm text-sm">Loading agents…</p>
-      </div>
+    <!-- Custom agents -->
+    <div id="custom-section" class="hidden">
+      <p class="text-xs font-semibold uppercase tracking-wider mb-4" style="color:var(--text3)">Custom</p>
+      <div id="custom-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </div>
 
-    <!-- Quick workflow creator -->
-    <div class="mb-lg">
-      <div class="flex items-center justify-between mb-md">
-        <div>
-          <h2 class="text-base font-bold font-h2" style="color:var(--text)">Quick Workflow</h2>
-          <p class="text-xs" style="color:var(--text3)">Create a scheduled automation in plain language.</p>
-        </div>
-        <a href="/workflows.html" class="flex items-center gap-1 text-xs font-semibold transition-all" style="color:var(--accent2)">
-          <span>Manage all workflows</span>
-          <span class="material-symbols-outlined" style="font-size:14px">arrow_forward</span>
-        </a>
-      </div>
-      <div class="rounded-xl border p-lg" style="background:var(--bg2);border-color:var(--border)">
-        <div class="flex gap-md">
-          <input id="qw-prompt" type="text" placeholder='E.g. "Send me overdue tasks every morning at 8am"'
-            class="flex-1 rounded-lg px-md py-sm text-sm outline-none transition-all"
-            style="background:var(--bg3);border:1px solid var(--border);color:var(--text)"
-            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
-            onkeydown="if(event.key==='Enter')createQuickWorkflow()"/>
-          <button id="qw-btn" onclick="createQuickWorkflow()" class="px-lg py-sm rounded-lg text-sm font-semibold flex items-center gap-2 flex-shrink-0" style="background:var(--accent);color:#fff">
-            <span class="material-symbols-outlined" style="font-size:16px">add</span>
-            Create
-          </button>
-        </div>
-        <div id="qw-result" class="hidden mt-md p-md rounded-lg text-sm" style="background:var(--bg3);color:var(--text2)"></div>
-        <div class="flex flex-wrap gap-sm mt-md" id="qw-chips">
-          <span class="text-xs font-medium" style="color:var(--text3)">Quick picks:</span>
-          <button onclick="qwSetPrompt('Morning briefing at 7am')" class="px-md py-xs rounded-full text-xs transition-all" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)">Morning briefing</button>
-          <button onclick="qwSetPrompt('Daily focus: top 3 tasks at 9am weekdays')" class="px-md py-xs rounded-full text-xs transition-all" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)">Daily focus</button>
-          <button onclick="qwSetPrompt('Weekly review every Sunday at 9am')" class="px-md py-xs rounded-full text-xs transition-all" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)">Weekly review</button>
-          <button onclick="qwSetPrompt('Email digest every morning at 8am')" class="px-md py-xs rounded-full text-xs transition-all" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)">Email digest</button>
-        </div>
-      </div>
-    </div>
   </div>
 </main>
 
-<!-- Setup modal -->
-<div id="setup-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-md" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(4px)">
-  <div class="rounded-2xl border w-full max-w-lg" style="background:var(--bg2);border-color:var(--border)">
-    <div class="p-lg border-b flex items-center justify-between" style="border-color:var(--border)">
-      <div>
-        <h2 id="modal-title" class="font-bold text-base font-h2" style="color:var(--text)">Configure Connector</h2>
-        <p id="modal-sub" class="text-xs mt-xs" style="color:var(--text3)">Add the required environment variables on your VPS.</p>
-      </div>
-      <button onclick="closeModal()" style="color:var(--text3)" class="hover:text-white transition-colors"><span class="material-symbols-outlined">close</span></button>
+<!-- ── Add custom agent modal ──────────────────────────────────────────────── -->
+<div id="modal-overlay" class="items-center justify-center p-4">
+  <div class="w-full max-w-lg rounded-2xl border" style="background:var(--bg2);border-color:var(--border)">
+    <div class="px-6 py-4 border-b flex items-center justify-between" style="border-color:var(--border)">
+      <h2 class="font-bold font-h2" style="color:var(--text)">Add custom agent</h2>
+      <button onclick="closeModal()" style="color:var(--text3)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10">
+        <span class="material-symbols-outlined" style="font-size:20px">close</span>
+      </button>
     </div>
-    <div id="modal-body" class="p-lg"></div>
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="text-xs font-semibold uppercase tracking-wider block mb-2" style="color:var(--text3)">Agent name</label>
+        <input id="ag-name" type="text" placeholder="My Legal Assistant"
+          class="w-full rounded-xl px-4 py-3 text-sm outline-none" style="background:var(--bg3);border:1px solid var(--border);color:var(--text)"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+      </div>
+      <div>
+        <label class="text-xs font-semibold uppercase tracking-wider block mb-2" style="color:var(--text3)">Description</label>
+        <input id="ag-desc" type="text" placeholder="What this agent specialises in"
+          class="w-full rounded-xl px-4 py-3 text-sm outline-none" style="background:var(--bg3);border:1px solid var(--border);color:var(--text)"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+      </div>
+      <div>
+        <label class="text-xs font-semibold uppercase tracking-wider block mb-2" style="color:var(--text3)">System prompt instructions</label>
+        <textarea id="ag-prompt" rows="5"
+          placeholder="You are a legal assistant specialised in UK contract law. Always cite relevant legislation. Flag ambiguous clauses. When asked to review a document, give a risk rating: Low / Medium / High."
+          class="w-full rounded-xl px-4 py-3 text-sm resize-none outline-none" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:inherit"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+        <p class="text-xs mt-1" style="color:var(--text3)">These instructions are appended to ARIA's base prompt when you chat with this agent.</p>
+      </div>
+    </div>
+    <div class="px-6 pb-6 flex justify-end gap-3">
+      <button onclick="closeModal()" class="px-4 py-2 rounded-xl text-sm font-semibold" style="background:var(--bg3);color:var(--text2)">Cancel</button>
+      <button id="ag-save-btn" onclick="saveAgent()" class="px-5 py-2 rounded-xl text-sm font-semibold" style="background:var(--accent);color:#fff">Create Agent</button>
+    </div>
   </div>
 </div>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-semibold shadow-xl" style="background:var(--bg2);border:1px solid var(--border);color:var(--text)"></div>
 
 <script>
 (function() {
   if (!localStorage.getItem('aria_auth')) { window.location.replace('/login.html'); return; }
 
-  // Theme
+  // ── Theme ────────────────────────────────────────────────────────────────────
   function applyTheme(t) {
     document.documentElement.classList.toggle('dark', t === 'dark');
     document.documentElement.classList.toggle('light', t === 'light');
     var icon = t === 'dark' ? 'light_mode' : 'dark_mode';
-    document.querySelectorAll('#theme-icon,#theme-icon-header').forEach(function(el) { el.textContent = icon; });
+    document.querySelectorAll('#theme-icon,#theme-icon-header').forEach(function(e) { e.textContent = icon; });
     var hdr = document.querySelector('header');
-    if (hdr) hdr.style.background = t === 'light' ? 'rgba(244,246,251,0.95)' : 'rgba(11,19,38,0.85)';
+    if (hdr) hdr.style.background = t === 'light' ? 'rgba(244,246,251,0.95)' : 'rgba(11,19,38,0.9)';
   }
   window.toggleTheme = function() {
-    var isLight = document.documentElement.classList.contains('light');
-    var next = isLight ? 'dark' : 'light';
-    localStorage.setItem('aria_theme', next);
-    applyTheme(next);
+    var next = document.documentElement.classList.contains('light') ? 'dark' : 'light';
+    localStorage.setItem('aria_theme', next); applyTheme(next);
   };
   applyTheme(localStorage.getItem('aria_theme') || 'dark');
 
-  // Sidebar
-  var _sb = document.getElementById('sidebar');
-  var _bd = document.getElementById('mob-backdrop');
-  window.openSidebar = function() { _sb.style.display = 'flex'; _bd.style.display = 'block'; };
-  window.closeSidebar = function() { _sb.style.display = 'none'; _bd.style.display = 'none'; };
-  document.addEventListener('click', function(e) {
-    if (_sb.style.display === 'flex' && !_sb.contains(e.target)) closeSidebar();
-  }, true);
-
-  // Logout
+  // ── Sidebar ──────────────────────────────────────────────────────────────────
+  var _sb = document.getElementById('sidebar'), _bd = document.getElementById('mob-backdrop');
+  window.openSidebar  = function() { _sb.style.display = 'flex'; _bd.style.display = 'block'; };
+  window.closeSidebar = function() { _sb.style.display = 'none';  _bd.style.display = 'none'; };
+  document.addEventListener('click', function(e) { if (_sb.style.display==='flex' && !_sb.contains(e.target)) closeSidebar(); }, true);
   window.doLogout = function() { localStorage.removeItem('aria_auth'); window.location.replace('/login.html'); };
 
-  const SETUP_GUIDES = {
-    gmail: {
-      title: 'Gmail Connector',
-      steps: [
-        { label: 'GMAIL_CLIENT_ID', hint: 'From Google Cloud Console → Credentials → OAuth 2.0 Client ID', link: 'https://console.cloud.google.com/apis/credentials' },
-        { label: 'GMAIL_CLIENT_SECRET', hint: 'Client secret from the same OAuth client', link: '' },
-        { label: 'GMAIL_REFRESH_TOKEN', hint: 'Run OAuth flow first: visit <b>/api/auth/gmail</b> from your browser to get this token', link: '' },
-      ],
-      note: 'After adding, run: <code>pm2 restart aria-server --update-env</code> then visit <b>/api/auth/gmail</b> to authorize.',
-    },
-    telegram: {
-      title: 'Telegram Bridge',
-      steps: [
-        { label: 'TELEGRAM_BOT_TOKEN', hint: 'From @BotFather on Telegram: /newbot → copy the token', link: '' },
-        { label: 'TELEGRAM_CHAT_ID', hint: 'Message @userinfobot on Telegram to get your chat ID', link: '' },
-        { label: 'TELEGRAM_USER_ID', hint: 'Set to <b>user-1</b> (or your custom ARIA user ID)', link: '' },
-      ],
-      note: 'After adding, run: <code>pm2 restart aria-server --update-env</code>',
-    },
-    search: {
-      title: 'Web Search',
-      steps: [
-        { label: 'BRAVE_SEARCH_API_KEY', hint: 'Free tier available at brave.com/search/api — recommended', link: 'https://brave.com/search/api/' },
-        { label: 'PERPLEXITY_API_KEY', hint: 'Alternative: pplx-... from perplexity.ai (used if Brave not set)', link: 'https://www.perplexity.ai/settings/api' },
-      ],
-      note: 'Only one key is needed. Brave is preferred. After adding, run: <code>pm2 restart aria-server --update-env</code>',
-    },
-    memory: {
-      title: 'Memory & Database',
-      steps: [
-        { label: 'SUPABASE_URL', hint: 'From app.supabase.com → Project Settings → API → Project URL', link: 'https://supabase.com/dashboard' },
-        { label: 'SUPABASE_ANON_KEY', hint: 'From app.supabase.com → Project Settings → API → anon key', link: '' },
-      ],
-      note: 'Enables: memory, tasks, projects, reminders, ideas, documents, reports. Run migrations from <code>supabase/migrations/</code> after setup.',
-    },
-    n8n: {
-      title: 'n8n Research Webhook',
-      steps: [
-        { label: 'N8N_RESEARCH_WEBHOOK_URL', hint: 'Your n8n instance webhook URL for research workflows', link: '' },
-      ],
-      note: 'Optional. Delegates research tasks to your n8n automation instance.',
-    },
-    openai: {
-      title: 'Vector Memory (OpenAI)',
-      steps: [
-        { label: 'OPENAI_API_KEY', hint: 'From platform.openai.com → API Keys (sk-...)', link: 'https://platform.openai.com/api-keys' },
-      ],
-      note: 'Enables semantic/vector memory search using text-embedding-3-small. Only needed for semantic recall.',
-    },
+  // ── Modal ────────────────────────────────────────────────────────────────────
+  window.openModal  = function() { document.getElementById('modal-overlay').classList.add('open'); };
+  window.closeModal = function() { document.getElementById('modal-overlay').classList.remove('open'); };
+
+  // ── Toast ────────────────────────────────────────────────────────────────────
+  var _tt;
+  function toast(msg, err) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.borderColor = err ? 'rgba(255,100,100,0.4)' : 'var(--border)';
+    t.classList.add('show');
+    clearTimeout(_tt); _tt = setTimeout(function() { t.classList.remove('show'); }, 3000);
+  }
+
+  // ── Gradient map ─────────────────────────────────────────────────────────────
+  var GRAD = {
+    'from-indigo-500 to-blue-500':    'linear-gradient(135deg,#6366f1,#3b82f6)',
+    'from-cyan-500 to-teal-500':      'linear-gradient(135deg,#06b6d4,#14b8a6)',
+    'from-violet-500 to-purple-500':  'linear-gradient(135deg,#8b5cf6,#a855f7)',
+    'from-green-500 to-emerald-500':  'linear-gradient(135deg,#22c55e,#10b981)',
+    'from-orange-500 to-amber-500':   'linear-gradient(135deg,#f97316,#f59e0b)',
+    'from-slate-500 to-slate-600':    'linear-gradient(135deg,#64748b,#475569)',
   };
 
-  const COLORS = {
-    core:'indigo', scheduler:'purple', memory:'green', tasks:'blue', projects:'blue',
-    reminders:'yellow', ideas:'yellow', workspace:'orange', gmail:'red',
-    telegram:'blue', search:'cyan', n8n:'purple', documents:'slate', reports:'indigo', openai:'green'
-  };
-  const ICONS = {
-    core:'hub', scheduler:'schedule', memory:'memory', tasks:'task_alt', projects:'folder',
-    reminders:'alarm', ideas:'lightbulb', workspace:'corporate_fare', gmail:'mail',
-    telegram:'send', search:'travel_explore', n8n:'account_tree', documents:'description',
-    reports:'analytics', openai:'hub'
-  };
+  function gradStyle(color) {
+    return GRAD[color] || 'linear-gradient(135deg,#64748b,#475569)';
+  }
 
-  window.loadAgents = function() {
-    fetch('/api/aria/status')
-      .then(r => r.json())
-      .then(data => {
-        const { connectors, brain, model, uptime } = data;
-        const active = connectors.filter(c => c.active).length;
-        document.getElementById('stat-total').textContent = connectors.length;
-        document.getElementById('stat-active').textContent = active;
-        document.getElementById('stat-inactive').textContent = connectors.length - active;
-        document.getElementById('stat-brain').textContent = brain;
+  // ── Render agent card ─────────────────────────────────────────────────────────
+  function agentCard(agent, canDelete) {
+    var chatUrl = '/?mode=' + encodeURIComponent(agent.mode || agent.id);
+    var del = canDelete
+      ? '<button onclick="deleteAgent(\'' + agent.id + '\')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-500/20 text-red-400 flex-shrink-0">' +
+          '<span class="material-symbols-outlined" style="font-size:18px">delete</span>' +
+        '</button>'
+      : '';
+    return '<div class="agent-card p-5 flex flex-col" data-id="' + agent.id + '">' +
+      '<div class="flex items-start justify-between mb-4">' +
+        '<div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style="background:' + gradStyle(agent.color) + '">' +
+          '<span class="material-symbols-outlined text-white" style="font-size:24px">' + (agent.icon || 'smart_toy') + '</span>' +
+        '</div>' +
+        del +
+      '</div>' +
+      '<div class="flex-1">' +
+        '<h3 class="font-bold text-base mb-1 font-h3" style="color:var(--text)">' + esc(agent.name) + '</h3>' +
+        '<p class="text-sm leading-relaxed" style="color:var(--text3)">' + esc(agent.description) + '</p>' +
+      '</div>' +
+      '<div class="mt-4 pt-4 border-t" style="border-color:var(--border)">' +
+        '<a href="' + chatUrl + '" class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold transition-all" style="background:rgba(128,131,255,0.1);color:var(--accent2);border:1px solid var(--border-strong)">' +
+          '<span class="material-symbols-outlined" style="font-size:16px">chat</span>' +
+          'Chat with ' + esc(agent.name) +
+        '</a>' +
+      '</div>' +
+    '</div>';
+  }
 
-        const grid = document.getElementById('agents-grid');
-        grid.innerHTML = connectors.map(c => {
-          const col = COLORS[c.key] || 'slate';
-          const icon = ICONS[c.key] || 'extension';
-          const badge = c.active
-            ? `<span class="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-500/10 border border-green-500/20 text-green-400"><span class="w-1.5 h-1.5 rounded-full bg-green-500 status-pulse"></span>Active</span>`
-            : `<span class="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-500/10 border border-slate-500/20" style="color:var(--text3)"><span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>Inactive</span>`;
-          const tools = c.tools?.map(t => `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono" style="background:rgba(255,255,255,0.05);color:var(--text3)">${t}</span>`).join('') || '';
-          const hasGuide = !!SETUP_GUIDES[c.key];
-          const setupBtn = !c.active && hasGuide
-            ? `<button onclick="showSetup('${c.key}')" class="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all" style="border-color:var(--accent);color:var(--accent)" onmouseover="this.style.background='rgba(128,131,255,0.1)'" onmouseout="this.style.background='transparent'">Configure</button>`
-            : c.active
-            ? `<span class="text-xs" style="color:var(--text3)">${c.provider ? c.provider : ''}</span>`
-            : '';
-          const provider = c.provider ? `<span class="text-[10px] px-1.5 py-0.5 rounded" style="background:rgba(255,255,255,0.05);color:var(--text3)">${c.provider}</span>` : '';
-          return `
-            <div class="agent-card">
-              <div class="p-md">
-                <div class="flex items-start justify-between mb-md">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(128,131,255,0.12)">
-                      <span class="material-symbols-outlined text-${col}-400">${icon}</span>
-                    </div>
-                    <div>
-                      <div class="font-semibold text-sm" style="color:var(--text)">${c.name}</div>
-                      <div class="text-[10px] uppercase tracking-wider mt-0.5" style="color:var(--text3)">${c.category}</div>
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-2">${provider}${badge}</div>
-                </div>
-                <div class="flex flex-wrap gap-1 mb-md">${tools}</div>
-                <div class="flex items-center justify-between">
-                  ${setupBtn}
-                  ${c.key === 'core' ? `<span class="text-xs" style="color:var(--text3)">Uptime: ${Math.floor(uptime/3600)}h ${Math.floor((uptime%3600)/60)}m</span>` : ''}
-                  ${c.key === 'gmail' && c.active ? `<a href="/api/auth/gmail" class="text-xs text-blue-400 hover:underline">Re-auth OAuth</a>` : ''}
-                </div>
-              </div>
-            </div>`;
-        }).join('');
-      })
-      .catch(() => {
-        document.getElementById('agents-grid').innerHTML = `<div class="col-span-2 text-center py-12" style="color:var(--text3)"><span class="material-symbols-outlined text-red-400" style="font-size:40px">error</span><p class="mt-sm text-sm">Cannot reach server</p></div>`;
-      });
-  };
-
-  window.showSetup = function(key) {
-    const guide = SETUP_GUIDES[key];
-    if (!guide) return;
-    document.getElementById('modal-title').textContent = guide.title;
-    const body = document.getElementById('modal-body');
-    body.innerHTML = `
-      <div class="space-y-md">
-        <div class="space-y-md">
-          ${guide.steps.map(s => `
-            <div>
-              <label class="text-[10px] uppercase tracking-wider font-bold mb-xs block" style="color:var(--text3)">${s.label}</label>
-              <div class="flex items-center gap-2 p-md rounded-lg border font-mono text-xs" style="background:var(--bg3);border-color:var(--border);color:var(--accent)">${s.label}=<span style="color:var(--text3)">your_value_here</span></div>
-              <p class="text-xs mt-xs" style="color:var(--text3)">${s.hint}${s.link ? ` — <a href="${s.link}" target="_blank" class="text-indigo-400 hover:underline">Get key ↗</a>` : ''}</p>
-            </div>`).join('')}
-        </div>
-        <div class="p-md rounded-lg text-xs" style="background:rgba(99,102,241,0.08);color:var(--text2)">
-          <b style="color:var(--text)">How to apply:</b><br>
-          Add the variable(s) above to <code class="px-1 rounded" style="background:var(--bg3)">/root/skills/aria/.env</code> on your VPS:<br>
-          <code class="block mt-sm p-sm rounded text-[11px]" style="background:var(--bg3)">echo 'KEY=value' >> /root/skills/aria/.env<br>pm2 restart aria-server --update-env</code>
-        </div>
-        <div class="p-md rounded-lg text-xs border border-amber-500/20" style="background:rgba(245,158,11,0.05);color:var(--text2)">${guide.note}</div>
-        <button onclick="closeModal()" class="w-full py-sm rounded-lg font-semibold text-sm text-white transition-all" style="background:var(--accent)">Got it</button>
-      </div>`;
-    document.getElementById('setup-modal').classList.remove('hidden');
-  };
-
-  window.closeModal = function() {
-    document.getElementById('setup-modal').classList.add('hidden');
-  };
-
-  // ── Quick Workflow ──────────────────────────────────────────────────────────
-  window.qwSetPrompt = function(text) {
-    document.getElementById('qw-prompt').value = text;
-    document.getElementById('qw-prompt').focus();
-  };
-
-  window.createQuickWorkflow = function() {
-    var prompt = document.getElementById('qw-prompt').value.trim();
-    if (!prompt) return;
-    var btn = document.getElementById('qw-btn');
-    var result = document.getElementById('qw-result');
-    btn.disabled = true;
-    btn.innerHTML = '<span style="width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block"></span>';
-
-    fetch('/api/aria/workflows', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: prompt, userId: 'user-1' }),
-    })
+  // ── Load and render agents ────────────────────────────────────────────────────
+  function loadAgents() {
+    fetch('/api/aria/agents')
       .then(function(r) { return r.json(); })
-      .then(function(data) {
-        btn.disabled = false;
-        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">add</span> Create';
-        if (data.error) {
-          result.className = 'mt-md p-md rounded-lg text-sm';
-          result.style.background = 'rgba(255,100,100,0.08)';
-          result.style.color = '#fca5a5';
-          result.textContent = data.error;
-          result.classList.remove('hidden');
-          return;
+      .then(function(d) {
+        var builtinGrid = document.getElementById('builtin-grid');
+        builtinGrid.innerHTML = (d.builtin || []).map(function(a) { return agentCard(a, false); }).join('');
+
+        var customAgents = d.custom || [];
+        var customSection = document.getElementById('custom-section');
+        var customGrid    = document.getElementById('custom-grid');
+        if (customAgents.length) {
+          customSection.classList.remove('hidden');
+          customGrid.innerHTML = customAgents.map(function(a) { return agentCard(a, true); }).join('');
+        } else {
+          customSection.classList.add('hidden');
         }
-        var w = data.workflow;
-        result.className = 'mt-md p-md rounded-lg text-sm';
-        result.style.background = 'rgba(34,197,94,0.08)';
-        result.style.color = '#86efac';
-        result.innerHTML = '✓ <b style="color:var(--text)">' + w.name + '</b> created — runs <code style="background:var(--bg3);padding:1px 4px;border-radius:4px;color:var(--text3)">' + w.cronExpr + '</code>';
-        result.classList.remove('hidden');
-        document.getElementById('qw-prompt').value = '';
-        setTimeout(function() { result.classList.add('hidden'); }, 5000);
       })
       .catch(function() {
-        btn.disabled = false;
-        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">add</span> Create';
-        result.textContent = 'Failed — is the server running?';
-        result.classList.remove('hidden');
+        document.getElementById('builtin-grid').innerHTML =
+          '<p class="col-span-2 text-sm text-center py-8" style="color:var(--text3)">Failed to load — is the server running?</p>';
       });
+  }
+  loadAgents();
+
+  // ── Save custom agent ─────────────────────────────────────────────────────────
+  window.saveAgent = function() {
+    var name   = document.getElementById('ag-name').value.trim();
+    var desc   = document.getElementById('ag-desc').value.trim();
+    var prompt = document.getElementById('ag-prompt').value.trim();
+    if (!name || !prompt) { toast('Name and instructions are required', true); return; }
+
+    var btn = document.getElementById('ag-save-btn');
+    btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+
+    fetch('/api/aria/agents', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, description: desc, customPrompt: prompt }),
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        btn.disabled = false; btn.textContent = 'Create Agent';
+        if (d.error) { toast(d.error, true); return; }
+        closeModal();
+        document.getElementById('ag-name').value = '';
+        document.getElementById('ag-desc').value = '';
+        document.getElementById('ag-prompt').value = '';
+        loadAgents();
+        toast('✓ Agent created', false);
+      })
+      .catch(function() { btn.disabled = false; btn.textContent = 'Create Agent'; toast('Failed', true); });
   };
 
-  loadAgents();
+  // ── Delete custom agent ───────────────────────────────────────────────────────
+  window.deleteAgent = function(id) {
+    if (!confirm('Delete this agent?')) return;
+    fetch('/api/aria/agents/' + id, { method: 'DELETE' })
+      .then(function() { loadAgents(); toast('Deleted', false); })
+      .catch(function() { toast('Failed', true); });
+  };
+
+  // ── Helper ────────────────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
 })();
 </script>
 </body>
