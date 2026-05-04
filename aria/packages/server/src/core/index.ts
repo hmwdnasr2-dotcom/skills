@@ -262,6 +262,9 @@ claw.pipeline('chat', async (ctx) => {
   try { await ctx.memory.load(ctx.userId); } catch { /* no persistence — continue without history */ }
   const history = ctx.memory.working.get();
 
+  const toolNames = ctx.tools.getDefinitions().map((t) => t.name);
+  console.log(`[chat] tools (${toolNames.length}): ${toolNames.join(', ') || 'NONE'}`);
+
   const system = { role: 'system' as const, content: ARIA_SYSTEM(ctx.userId) };
 
   const allMessages = [system, ...history, ...ctx.messages];
