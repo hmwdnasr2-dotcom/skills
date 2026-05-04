@@ -16,6 +16,7 @@ import { buildIdeasAdapters } from './connectors/ideas.js';
 import { buildDocumentAdapters } from './connectors/documents.js';
 import { startScheduler } from './proactive/scheduler.js';
 import { authRouter } from './routes/auth.js';
+import { workflowsRouter } from './routes/workflows.js';
 import { chatRouter } from './routes/chat.js';
 import { eventsRouter } from './routes/events.js';
 import { memoryRouter } from './routes/memory.js';
@@ -108,6 +109,7 @@ app.use('/api/aria/memory', memoryRouter);
 app.use('/api/aria/upload', uploadRouter);
 app.use('/api/aria/download', downloadRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/aria/workflows', workflowsRouter);
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 

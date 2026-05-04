@@ -58,13 +58,17 @@
   ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #2d3449; border-radius: 2px; }
   html.light ::-webkit-scrollbar-thumb { background: #c5cae9; }
   .mob-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 49; }
-  /* Page-specific */
-  .flow-node { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; transition: all .2s; }
-  .flow-node:hover { border-color: var(--accent); box-shadow: 0 0 20px rgba(128,131,255,0.15); }
-  .flow-node.active { border-color: #22c55e; box-shadow: 0 0 15px rgba(34,197,94,0.15); }
-  .flow-node.inactive { opacity: .5; }
-  @keyframes flow-pulse { 0%,100%{opacity:.3} 50%{opacity:1} }
-  .flow-dot { animation: flow-pulse 2s ease infinite; }
+  .tab-btn { transition: all .2s; border-bottom: 2px solid transparent; }
+  .tab-btn.active { border-color: var(--accent); color: var(--accent2); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  .tpl-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; transition: all .2s; }
+  .tpl-card:hover { border-color: var(--border-strong); }
+  .tpl-card.activated { border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.05); }
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(192,193,255,0.3); border-top-color: var(--accent2); border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #toast { transition: opacity .3s, transform .3s; opacity: 0; transform: translateY(8px); pointer-events: none; }
+  #toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
 </style>
 </head>
 <body class="font-body-md antialiased" style="background:var(--bg);color:var(--text)">
@@ -140,139 +144,131 @@
 </header>
 
 <main style="background:var(--bg)" class="min-h-screen overflow-y-auto p-lg">
-  <div class="max-w-5xl">
-    <div class="mb-lg">
-      <h1 class="text-2xl font-bold mb-xs font-h1" style="color:var(--text)">Agent Workflows</h1>
-      <p class="text-sm" style="color:var(--text3)">How your agents connect and communicate. Green = active connector.</p>
+  <div class="max-w-5xl mx-auto">
+
+    <!-- Page header -->
+    <div class="mb-lg flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold mb-xs font-h1" style="color:var(--text)">Workflows</h1>
+        <p class="text-sm" style="color:var(--text3)">Automate ARIA with scheduled tasks — pick a template or build your own.</p>
+      </div>
+      <div id="active-count-badge" class="hidden items-center gap-1.5 px-md py-xs rounded-full text-xs font-semibold" style="background:rgba(34,197,94,0.1);color:#86efac;border:1px solid rgba(34,197,94,0.25)">
+        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+        <span id="active-count-text">0 active</span>
+      </div>
     </div>
 
-    <!-- Workflow Diagram -->
-    <div class="relative rounded-2xl border p-xl mb-lg overflow-hidden" style="background:var(--bg2);border-color:var(--border);min-height:520px">
-      <!-- SVG connector lines -->
-      <svg id="flow-svg" class="absolute inset-0 w-full h-full pointer-events-none" style="z-index:0"></svg>
+    <!-- Tab nav -->
+    <div class="flex gap-lg border-b mb-lg" style="border-color:var(--border)">
+      <button class="tab-btn active pb-sm text-sm font-semibold" style="color:var(--text2)" onclick="switchTab('templates',this)">Templates</button>
+      <button class="tab-btn pb-sm text-sm font-semibold" style="color:var(--text3)" onclick="switchTab('active',this)">
+        Active
+        <span id="tab-active-badge" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold hidden" style="background:var(--accent);color:#fff"></span>
+      </button>
+      <button class="tab-btn pb-sm text-sm font-semibold" style="color:var(--text3)" onclick="switchTab('create',this)">Create Custom</button>
+    </div>
 
-      <!-- Core row -->
-      <div class="relative z-10 flex flex-col items-center gap-lg">
+    <!-- ── TEMPLATES TAB ──────────────────────────────────────────────────── -->
+    <div id="tab-templates" class="tab-panel active">
 
-        <!-- Input sources -->
-        <div class="flex gap-lg justify-center w-full flex-wrap">
-          <div id="node-web" class="flow-node px-md py-sm flex items-center gap-2 text-sm">
-            <span class="material-symbols-outlined text-indigo-400" style="font-size:18px">language</span>
-            <span style="color:var(--text)">Web App</span>
-            <span class="w-1.5 h-1.5 rounded-full bg-green-500 ml-1"></span>
-          </div>
-          <div id="node-tg" class="flow-node px-md py-sm flex items-center gap-2 text-sm">
-            <span class="material-symbols-outlined text-blue-400" style="font-size:18px">send</span>
-            <span style="color:var(--text)">Telegram</span>
-            <span id="tg-dot" class="w-1.5 h-1.5 rounded-full bg-slate-500 ml-1"></span>
-          </div>
-          <div id="node-scheduler" class="flow-node px-md py-sm flex items-center gap-2 text-sm">
-            <span class="material-symbols-outlined text-purple-400" style="font-size:18px">schedule</span>
-            <span style="color:var(--text)">Scheduler</span>
-            <span class="w-1.5 h-1.5 rounded-full bg-green-500 flow-dot ml-1"></span>
-          </div>
-        </div>
+      <!-- Category filter -->
+      <div class="flex flex-wrap gap-sm mb-lg" id="category-filters">
+        <button class="cat-btn active px-md py-xs rounded-full text-xs font-semibold transition-all" data-cat="all" onclick="filterCategory('all',this)">All</button>
+        <button class="cat-btn px-md py-xs rounded-full text-xs font-semibold transition-all" data-cat="daily" onclick="filterCategory('daily',this)">Daily</button>
+        <button class="cat-btn px-md py-xs rounded-full text-xs font-semibold transition-all" data-cat="weekly" onclick="filterCategory('weekly',this)">Weekly</button>
+        <button class="cat-btn px-md py-xs rounded-full text-xs font-semibold transition-all" data-cat="alerts" onclick="filterCategory('alerts',this)">Alerts</button>
+        <button class="cat-btn px-md py-xs rounded-full text-xs font-semibold transition-all" data-cat="email" onclick="filterCategory('email',this)">Email</button>
+        <button class="cat-btn px-md py-xs rounded-full text-xs font-semibold transition-all" data-cat="reports" onclick="filterCategory('reports',this)">Reports</button>
+      </div>
 
-        <!-- Arrow down -->
-        <div class="flex flex-col items-center gap-1 opacity-40">
-          <div class="w-px h-6" style="background:var(--accent)"></div>
-          <div class="w-2 h-2 rotate-45 border-r-2 border-b-2" style="border-color:var(--accent)"></div>
-        </div>
-
-        <!-- ARIA Core (center) -->
-        <div id="node-core" class="flow-node active px-xl py-md text-center" style="background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(59,130,246,0.1));min-width:200px">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center mx-auto mb-2">
-            <span class="material-symbols-outlined text-white">hub</span>
-          </div>
-          <div class="font-bold text-sm" style="color:var(--text)">ARIA Core</div>
-          <div id="core-model" class="text-[10px] uppercase tracking-wider mt-0.5" style="color:var(--text3)">Loading…</div>
-          <div class="flex items-center justify-center gap-1 mt-2">
-            <div class="w-1.5 h-1.5 rounded-full bg-green-500 flow-dot"></div>
-            <span class="text-[10px]" style="color:#86efac">Online</span>
-          </div>
-        </div>
-
-        <!-- Arrow down -->
-        <div class="flex flex-col items-center gap-1 opacity-40">
-          <div class="w-px h-6" style="background:var(--accent)"></div>
-          <div class="w-2 h-2 rotate-45 border-r-2 border-b-2" style="border-color:var(--accent)"></div>
-        </div>
-
-        <!-- Output connectors grid -->
-        <div id="connectors-grid" class="grid grid-cols-3 md:grid-cols-4 gap-md w-full max-w-3xl">
-          <!-- Populated by JS -->
+      <div id="templates-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+        <!-- Populated by JS -->
+        <div class="col-span-3 text-center py-2xl" style="color:var(--text3)">
+          <div class="spinner mx-auto mb-md"></div>
+          <p class="text-sm">Loading templates…</p>
         </div>
       </div>
     </div>
 
-    <!-- Workflow detail cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-md mb-lg">
-      <div class="rounded-xl border p-lg" style="background:var(--bg2);border-color:var(--border)">
-        <h3 class="font-semibold text-sm mb-sm flex items-center gap-2 font-h3" style="color:var(--text)">
-          <span class="material-symbols-outlined text-indigo-400" style="font-size:18px">chat</span>
-          Chat Workflow
-        </h3>
-        <ol class="space-y-2 text-xs" style="color:var(--text2)">
-          <li class="flex gap-2"><span class="text-indigo-400 font-bold">1.</span> User sends message via Web App or Telegram</li>
-          <li class="flex gap-2"><span class="text-indigo-400 font-bold">2.</span> Intent router classifies request (task / email / research / general)</li>
-          <li class="flex gap-2"><span class="text-indigo-400 font-bold">3.</span> Context builder pulls memory + relevant data</li>
-          <li class="flex gap-2"><span class="text-indigo-400 font-bold">4.</span> ARIA Core generates response using active connectors as tools</li>
-          <li class="flex gap-2"><span class="text-indigo-400 font-bold">5.</span> Memory layer saves insight for future context</li>
-          <li class="flex gap-2"><span class="text-indigo-400 font-bold">6.</span> Response delivered back to user</li>
-        </ol>
-      </div>
-
-      <div class="rounded-xl border p-lg" style="background:var(--bg2);border-color:var(--border)">
-        <h3 class="font-semibold text-sm mb-sm flex items-center gap-2 font-h3" style="color:var(--text)">
-          <span class="material-symbols-outlined text-purple-400" style="font-size:18px">schedule</span>
-          Proactive Workflow
-        </h3>
-        <ol class="space-y-2 text-xs" style="color:var(--text2)">
-          <li class="flex gap-2"><span class="text-purple-400 font-bold">1.</span> Scheduler fires on cron (morning, evening, reminders)</li>
-          <li class="flex gap-2"><span class="text-purple-400 font-bold">2.</span> Builds context from pending tasks + reminders</li>
-          <li class="flex gap-2"><span class="text-purple-400 font-bold">3.</span> ARIA generates proactive briefing or nudge</li>
-          <li class="flex gap-2"><span class="text-purple-400 font-bold">4.</span> Pushed via SSE to open web sessions</li>
-          <li class="flex gap-2"><span class="text-purple-400 font-bold">5.</span> Sent to Telegram if configured</li>
-        </ol>
-      </div>
-
-      <div class="rounded-xl border p-lg" style="background:var(--bg2);border-color:var(--border)">
-        <h3 class="font-semibold text-sm mb-sm flex items-center gap-2 font-h3" style="color:var(--text)">
-          <span class="material-symbols-outlined text-blue-400" style="font-size:18px">attach_file</span>
-          File Processing Workflow
-        </h3>
-        <ol class="space-y-2 text-xs" style="color:var(--text2)">
-          <li class="flex gap-2"><span class="text-blue-400 font-bold">1.</span> User attaches file (PDF, Excel, CSV, image, doc)</li>
-          <li class="flex gap-2"><span class="text-blue-400 font-bold">2.</span> Upload endpoint stores file, returns fileId</li>
-          <li class="flex gap-2"><span class="text-blue-400 font-bold">3.</span> Chat sends message + fileIds to ARIA</li>
-          <li class="flex gap-2"><span class="text-blue-400 font-bold">4.</span> File handler extracts text / parses data</li>
-          <li class="flex gap-2"><span class="text-blue-400 font-bold">5.</span> ARIA analyzes content with user's prompt</li>
-          <li class="flex gap-2"><span class="text-blue-400 font-bold">6.</span> Optional: generate Excel/PDF report as output</li>
-        </ol>
-      </div>
-
-      <div class="rounded-xl border p-lg" style="background:var(--bg2);border-color:var(--border)">
-        <h3 class="font-semibold text-sm mb-sm flex items-center gap-2 font-h3" style="color:var(--text)">
-          <span class="material-symbols-outlined text-green-400" style="font-size:18px">memory</span>
-          Memory Workflow
-        </h3>
-        <ol class="space-y-2 text-xs" style="color:var(--text2)">
-          <li class="flex gap-2"><span class="text-green-400 font-bold">1.</span> After each ARIA response, insight is extracted</li>
-          <li class="flex gap-2"><span class="text-green-400 font-bold">2.</span> Saved to Supabase <code class="px-1 rounded" style="background:var(--bg3)">aria_memory</code> table</li>
-          <li class="flex gap-2"><span class="text-green-400 font-bold">3.</span> On next message, recent memories loaded as context</li>
-          <li class="flex gap-2"><span class="text-green-400 font-bold">4.</span> If OpenAI key set: vector embeddings for semantic search</li>
-          <li class="flex gap-2"><span class="text-green-400 font-bold">5.</span> Search memories from chat header search bar</li>
-        </ol>
+    <!-- ── ACTIVE TAB ─────────────────────────────────────────────────────── -->
+    <div id="tab-active" class="tab-panel">
+      <div id="active-list">
+        <div class="text-center py-2xl" style="color:var(--text3)">
+          <div class="spinner mx-auto mb-md"></div>
+          <p class="text-sm">Loading active workflows…</p>
+        </div>
       </div>
     </div>
+
+    <!-- ── CREATE CUSTOM TAB ──────────────────────────────────────────────── -->
+    <div id="tab-create" class="tab-panel">
+      <div class="max-w-2xl">
+        <div class="rounded-xl border p-lg mb-lg" style="background:var(--bg2);border-color:var(--border)">
+          <h3 class="font-semibold mb-xs flex items-center gap-2" style="color:var(--text)">
+            <span class="material-symbols-outlined text-indigo-400" style="font-size:20px">auto_awesome</span>
+            Describe your workflow
+          </h3>
+          <p class="text-xs mb-md" style="color:var(--text3)">Tell ARIA what you want automated — it'll figure out the schedule and prompt.</p>
+
+          <textarea id="custom-prompt" rows="4"
+            placeholder='E.g. "Remind me every Monday at 9am to review my weekly goals" or "Send me a daily digest of completed tasks at 6pm"'
+            class="w-full rounded-lg p-md text-sm resize-none outline-none transition-all"
+            style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:inherit"
+            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+
+          <div class="flex items-center justify-between mt-md">
+            <p class="text-xs" style="color:var(--text3)">ARIA uses AI to parse your request into a cron schedule and prompt.</p>
+            <button id="create-btn" onclick="createCustomWorkflow()" class="px-lg py-sm rounded-lg text-sm font-semibold transition-all flex items-center gap-2" style="background:var(--accent);color:#fff">
+              <span class="material-symbols-outlined" style="font-size:16px">add</span>
+              Create Workflow
+            </button>
+          </div>
+        </div>
+
+        <!-- Optional advanced fields -->
+        <div class="rounded-xl border p-lg" style="background:var(--bg2);border-color:var(--border)">
+          <button onclick="toggleAdvanced()" class="flex items-center gap-2 text-sm font-semibold w-full" style="color:var(--text2)">
+            <span class="material-symbols-outlined" style="font-size:18px">tune</span>
+            Advanced Options
+            <span id="adv-chevron" class="material-symbols-outlined ml-auto" style="font-size:18px;color:var(--text3)">expand_more</span>
+          </button>
+          <div id="adv-fields" class="hidden mt-md space-y-md">
+            <div>
+              <label class="block text-xs font-medium mb-xs" style="color:var(--text2)">Name</label>
+              <input id="adv-name" type="text" placeholder="My Workflow" class="w-full rounded-lg px-md py-sm text-sm outline-none" style="background:var(--bg3);border:1px solid var(--border);color:var(--text)"/>
+            </div>
+            <div>
+              <label class="block text-xs font-medium mb-xs" style="color:var(--text2)">Cron Expression</label>
+              <input id="adv-cron" type="text" placeholder="0 9 * * 1-5  (weekdays 9am)" class="w-full rounded-lg px-md py-sm text-sm outline-none font-mono" style="background:var(--bg3);border:1px solid var(--border);color:var(--text)"/>
+              <p class="text-xs mt-xs" style="color:var(--text3)">Leave blank to let ARIA infer the schedule from your description.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Examples -->
+        <div class="mt-lg">
+          <p class="text-xs font-semibold mb-sm uppercase tracking-wider" style="color:var(--text3)">Quick examples</p>
+          <div class="flex flex-wrap gap-sm">
+            <button onclick="setExample(this)" class="example-chip px-md py-xs rounded-full text-xs transition-all" style="background:var(--bg2);border:1px solid var(--border);color:var(--text2)">Every Friday remind me to write a week recap</button>
+            <button onclick="setExample(this)" class="example-chip px-md py-xs rounded-full text-xs transition-all" style="background:var(--bg2);border:1px solid var(--border);color:var(--text2)">Check for overdue tasks every morning</button>
+            <button onclick="setExample(this)" class="example-chip px-md py-xs rounded-full text-xs transition-all" style="background:var(--bg2);border:1px solid var(--border);color:var(--text2)">Summarise my inbox every day at 7am</button>
+            <button onclick="setExample(this)" class="example-chip px-md py-xs rounded-full text-xs transition-all" style="background:var(--bg2);border:1px solid var(--border);color:var(--text2)">Generate a monthly report on the 1st</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </main>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-lg right-lg z-50 px-lg py-sm rounded-xl text-sm font-semibold shadow-xl" style="background:var(--bg2);border:1px solid var(--border);color:var(--text)"></div>
 
 <script>
 (function() {
   if (!localStorage.getItem('aria_auth')) { window.location.replace('/login.html'); return; }
 
-  // Theme
+  // ── Theme ──────────────────────────────────────────────────────────────────
   function applyTheme(t) {
     document.documentElement.classList.toggle('dark', t === 'dark');
     document.documentElement.classList.toggle('light', t === 'light');
@@ -280,6 +276,7 @@
     document.querySelectorAll('#theme-icon,#theme-icon-header').forEach(function(el) { el.textContent = icon; });
     var hdr = document.querySelector('header');
     if (hdr) hdr.style.background = t === 'light' ? 'rgba(244,246,251,0.95)' : 'rgba(11,19,38,0.85)';
+    document.querySelectorAll('.cat-btn').forEach(function(b) { styleCatBtn(b, b.classList.contains('active')); });
   }
   window.toggleTheme = function() {
     var isLight = document.documentElement.classList.contains('light');
@@ -289,7 +286,7 @@
   };
   applyTheme(localStorage.getItem('aria_theme') || 'dark');
 
-  // Sidebar
+  // ── Sidebar ────────────────────────────────────────────────────────────────
   var _sb = document.getElementById('sidebar');
   var _bd = document.getElementById('mob-backdrop');
   window.openSidebar = function() { _sb.style.display = 'flex'; _bd.style.display = 'block'; };
@@ -297,49 +294,268 @@
   document.addEventListener('click', function(e) {
     if (_sb.style.display === 'flex' && !_sb.contains(e.target)) closeSidebar();
   }, true);
-
-  // Logout
   window.doLogout = function() { localStorage.removeItem('aria_auth'); window.location.replace('/login.html'); };
 
-  const ICON_MAP = {
-    core:'hub', scheduler:'schedule', memory:'memory', tasks:'task_alt',
-    projects:'folder', reminders:'alarm', ideas:'lightbulb', workspace:'corporate_fare',
-    gmail:'mail', telegram:'send', search:'travel_explore', n8n:'account_tree',
-    documents:'description', reports:'analytics', openai:'hub'
-  };
-  const COLOR_MAP = {
-    core:'text-indigo-400', scheduler:'text-purple-400', memory:'text-green-400',
-    tasks:'text-blue-400', projects:'text-blue-400', reminders:'text-yellow-400',
-    ideas:'text-yellow-400', workspace:'text-orange-400', gmail:'text-red-400',
-    telegram:'text-blue-400', search:'text-cyan-400', n8n:'text-purple-400',
-    documents:'text-slate-400', reports:'text-indigo-400', openai:'text-green-400'
-  };
+  // ── Toast ──────────────────────────────────────────────────────────────────
+  var _toastTimer;
+  function showToast(msg, isError) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.borderColor = isError ? 'rgba(255,100,100,0.3)' : 'var(--border)';
+    t.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(function() { t.classList.remove('show'); }, 3000);
+  }
 
-  fetch('/api/aria/status')
-    .then(r => r.json())
-    .then(data => {
-      document.getElementById('core-model').textContent = `${data.brain} / ${data.model.split('-').slice(-2).join('-')}`;
-
-      // Update telegram dot
-      const tgConn = data.connectors.find(c => c.key === 'telegram');
-      if (tgConn?.active) document.getElementById('tg-dot').className = 'w-1.5 h-1.5 rounded-full bg-green-500 flow-dot ml-1';
-
-      // Render connector grid (skip core/scheduler which are in header)
-      const grid = document.getElementById('connectors-grid');
-      const connectors = data.connectors.filter(c => !['core','scheduler'].includes(c.key));
-      grid.innerHTML = connectors.map(c => `
-        <div class="flow-node ${c.active ? 'active' : 'inactive'} p-sm flex flex-col items-center text-center gap-1.5">
-          <span class="material-symbols-outlined ${COLOR_MAP[c.key] || 'text-slate-400'}" style="font-size:20px">${ICON_MAP[c.key] || 'extension'}</span>
-          <div class="text-xs font-medium" style="color:var(--text)">${c.name}</div>
-          <div class="flex items-center gap-1">
-            <div class="w-1.5 h-1.5 rounded-full ${c.active ? 'bg-green-500' : 'bg-slate-500'} ${c.active ? 'flow-dot' : ''}"></div>
-            <span class="text-[10px]" style="color:${c.active ? '#86efac' : 'var(--text3)'}">${c.active ? 'Active' : 'Inactive'}</span>
-          </div>
-        </div>`).join('');
-    })
-    .catch(() => {
-      document.getElementById('core-model').textContent = 'Offline';
+  // ── Tabs ───────────────────────────────────────────────────────────────────
+  window.switchTab = function(tab, btn) {
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelectorAll('.tab-btn').forEach(function(b) {
+      b.classList.remove('active');
+      b.style.color = 'var(--text3)';
     });
+    document.getElementById('tab-' + tab).classList.add('active');
+    btn.classList.add('active');
+    btn.style.color = 'var(--text2)';
+    if (tab === 'active') renderActiveList();
+  };
+
+  // ── Category filter ────────────────────────────────────────────────────────
+  var currentCat = 'all';
+  function styleCatBtn(btn, active) {
+    btn.style.background = active ? 'var(--accent)' : 'var(--bg2)';
+    btn.style.color = active ? '#fff' : 'var(--text2)';
+    btn.style.border = active ? '1px solid var(--accent)' : '1px solid var(--border)';
+  }
+  document.querySelectorAll('.cat-btn').forEach(function(b) {
+    styleCatBtn(b, b.dataset.cat === 'all');
+  });
+  window.filterCategory = function(cat, btn) {
+    currentCat = cat;
+    document.querySelectorAll('.cat-btn').forEach(function(b) { styleCatBtn(b, b.dataset.cat === cat); });
+    renderTemplates();
+  };
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  var templates = [];
+  var activeWorkflows = [];
+  var activeTemplateIds = new Set();
+  var userId = 'user-1';
+
+  // ── Fetch data ─────────────────────────────────────────────────────────────
+  function loadData() {
+    fetch('/api/aria/workflows?userId=' + userId)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        templates = data.templates || [];
+        activeWorkflows = data.active || [];
+        activeTemplateIds = new Set(data.activeTemplateIds || []);
+        renderTemplates();
+        updateActiveBadge();
+      })
+      .catch(function() {
+        document.getElementById('templates-grid').innerHTML =
+          '<div class="col-span-3 text-center py-xl text-sm" style="color:var(--text3)">Failed to load workflows. Is the server running?</div>';
+      });
+  }
+  loadData();
+
+  function updateActiveBadge() {
+    var count = activeWorkflows.length;
+    var badge = document.getElementById('active-count-badge');
+    var tabBadge = document.getElementById('tab-active-badge');
+    var countText = document.getElementById('active-count-text');
+    countText.textContent = count + ' active';
+    if (count > 0) {
+      badge.classList.remove('hidden');
+      badge.classList.add('flex');
+      tabBadge.classList.remove('hidden');
+      tabBadge.textContent = count;
+    } else {
+      badge.classList.add('hidden');
+      badge.classList.remove('flex');
+      tabBadge.classList.add('hidden');
+    }
+  }
+
+  // ── Render templates ───────────────────────────────────────────────────────
+  var CAT_COLORS = {
+    daily: 'text-indigo-400', weekly: 'text-blue-400', alerts: 'text-yellow-400',
+    email: 'text-red-400', reports: 'text-purple-400'
+  };
+
+  function renderTemplates() {
+    var filtered = currentCat === 'all' ? templates : templates.filter(function(t) { return t.category === currentCat; });
+    if (!filtered.length) {
+      document.getElementById('templates-grid').innerHTML =
+        '<div class="col-span-3 text-center py-xl text-sm" style="color:var(--text3)">No templates in this category.</div>';
+      return;
+    }
+    document.getElementById('templates-grid').innerHTML = filtered.map(function(tpl) {
+      var isActive = activeTemplateIds.has(tpl.id);
+      var catColor = CAT_COLORS[tpl.category] || 'text-slate-400';
+      return '<div class="tpl-card p-lg flex flex-col gap-sm' + (isActive ? ' activated' : '') + '" data-id="' + tpl.id + '">' +
+        '<div class="flex items-start gap-md">' +
+          '<div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:var(--bg3)">' +
+            '<span class="material-symbols-outlined ' + catColor + '" style="font-size:20px">' + tpl.icon + '</span>' +
+          '</div>' +
+          '<div class="flex-1 min-w-0">' +
+            '<div class="font-semibold text-sm mb-xs" style="color:var(--text)">' + esc(tpl.name) + '</div>' +
+            '<div class="text-xs leading-relaxed" style="color:var(--text3)">' + esc(tpl.description) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="flex items-center justify-between mt-xs pt-sm" style="border-top:1px solid var(--border)">' +
+          '<code class="text-[10px] font-mono px-sm py-xs rounded" style="background:var(--bg3);color:var(--text3)">' + esc(tpl.cronExpr) + '</code>' +
+          (isActive
+            ? '<span class="flex items-center gap-1 text-xs font-semibold" style="color:#86efac"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Active</span>'
+            : '<button onclick="activateTemplate(\'' + tpl.id + '\')" class="px-md py-xs rounded-lg text-xs font-semibold transition-all" style="background:var(--accent);color:#fff">Activate</button>'
+          ) +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  // ── Render active list ─────────────────────────────────────────────────────
+  function renderActiveList() {
+    var el = document.getElementById('active-list');
+    if (!activeWorkflows.length) {
+      el.innerHTML =
+        '<div class="rounded-xl border p-2xl text-center" style="border-color:var(--border);border-style:dashed">' +
+          '<span class="material-symbols-outlined text-4xl mb-md block" style="color:var(--text3)">device_hub</span>' +
+          '<p class="text-sm font-semibold mb-xs" style="color:var(--text2)">No active workflows</p>' +
+          '<p class="text-xs" style="color:var(--text3)">Activate a template or create a custom workflow.</p>' +
+          '<button onclick="switchTab(\'templates\', document.querySelector(\'.tab-btn\'))" class="mt-md px-lg py-sm rounded-lg text-sm font-semibold" style="background:var(--accent);color:#fff">Browse Templates</button>' +
+        '</div>';
+      return;
+    }
+    el.innerHTML = '<div class="space-y-md">' + activeWorkflows.map(function(w) {
+      var fromTpl = w.fromTemplate ? '<span class="text-[10px] px-sm py-xs rounded-full" style="background:var(--bg3);color:var(--text3)">from template</span>' : '';
+      return '<div class="rounded-xl border p-lg flex items-center gap-md" style="background:var(--bg2);border-color:var(--border)" data-wid="' + w.id + '">' +
+        '<div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:var(--bg3)">' +
+          '<span class="material-symbols-outlined text-indigo-400" style="font-size:20px">' + (w.icon || 'auto_awesome') + '</span>' +
+        '</div>' +
+        '<div class="flex-1 min-w-0">' +
+          '<div class="flex items-center gap-sm mb-xs">' +
+            '<span class="font-semibold text-sm" style="color:var(--text)">' + esc(w.name) + '</span>' +
+            fromTpl +
+          '</div>' +
+          '<div class="text-xs mb-xs" style="color:var(--text3)">' + esc(w.description) + '</div>' +
+          '<code class="text-[10px] font-mono px-sm py-xs rounded" style="background:var(--bg3);color:var(--text3)">' + esc(w.cronExpr) + '</code>' +
+        '</div>' +
+        '<div class="flex items-center gap-sm">' +
+          '<span class="flex items-center gap-1 text-xs font-semibold" style="color:#86efac">' +
+            '<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Running' +
+          '</span>' +
+          '<button onclick="deleteWorkflow(\'' + w.id + '\')" class="w-8 h-8 flex items-center justify-center rounded-lg transition-all hover:bg-red-500/20 text-red-400">' +
+            '<span class="material-symbols-outlined" style="font-size:18px">delete</span>' +
+          '</button>' +
+        '</div>' +
+      '</div>';
+    }).join('') + '</div>';
+  }
+
+  // ── Activate template ──────────────────────────────────────────────────────
+  window.activateTemplate = function(templateId) {
+    var card = document.querySelector('[data-id="' + templateId + '"]');
+    var btn = card ? card.querySelector('button') : null;
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>'; }
+
+    fetch('/api/aria/workflows', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ templateId: templateId, userId: userId }),
+    })
+      .then(function(r) {
+        if (r.status === 409) { showToast('Already active', false); return null; }
+        return r.json();
+      })
+      .then(function(data) {
+        if (!data) return;
+        if (data.error) { showToast(data.error, true); return; }
+        activeWorkflows.push(data.workflow);
+        activeTemplateIds.add(templateId);
+        updateActiveBadge();
+        renderTemplates();
+        showToast('✓ Workflow activated', false);
+      })
+      .catch(function() { showToast('Failed to activate', true); });
+  };
+
+  // ── Delete workflow ────────────────────────────────────────────────────────
+  window.deleteWorkflow = function(id) {
+    if (!confirm('Remove this workflow?')) return;
+    fetch('/api/aria/workflows/' + id, { method: 'DELETE' })
+      .then(function(r) { return r.json(); })
+      .then(function() {
+        var removed = activeWorkflows.find(function(w) { return w.id === id; });
+        activeWorkflows = activeWorkflows.filter(function(w) { return w.id !== id; });
+        if (removed && removed.fromTemplate) activeTemplateIds.delete(removed.fromTemplate);
+        updateActiveBadge();
+        renderActiveList();
+        renderTemplates();
+        showToast('Workflow removed', false);
+      })
+      .catch(function() { showToast('Failed to remove', true); });
+  };
+
+  // ── Create custom ──────────────────────────────────────────────────────────
+  window.createCustomWorkflow = function() {
+    var prompt = document.getElementById('custom-prompt').value.trim();
+    if (!prompt) { showToast('Please describe your workflow first', true); return; }
+
+    var name = document.getElementById('adv-name').value.trim() || undefined;
+    var cronExpr = document.getElementById('adv-cron').value.trim() || undefined;
+
+    var btn = document.getElementById('create-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Creating…';
+
+    fetch('/api/aria/workflows', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompt, name: name, cronExpr: cronExpr, userId: userId }),
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">add</span> Create Workflow';
+        if (data.error) { showToast(data.error, true); return; }
+        activeWorkflows.push(data.workflow);
+        updateActiveBadge();
+        renderTemplates();
+        document.getElementById('custom-prompt').value = '';
+        document.getElementById('adv-name').value = '';
+        document.getElementById('adv-cron').value = '';
+        showToast('✓ Workflow "' + data.workflow.name + '" created', false);
+        switchTab('active', document.querySelectorAll('.tab-btn')[1]);
+      })
+      .catch(function() {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">add</span> Create Workflow';
+        showToast('Failed to create workflow', true);
+      });
+  };
+
+  // ── Advanced toggle ────────────────────────────────────────────────────────
+  window.toggleAdvanced = function() {
+    var fields = document.getElementById('adv-fields');
+    var chev = document.getElementById('adv-chevron');
+    var hidden = fields.classList.toggle('hidden');
+    chev.textContent = hidden ? 'expand_more' : 'expand_less';
+  };
+
+  // ── Example chips ──────────────────────────────────────────────────────────
+  window.setExample = function(btn) {
+    document.getElementById('custom-prompt').value = btn.textContent.trim();
+    document.getElementById('custom-prompt').focus();
+    switchTab('create', document.querySelectorAll('.tab-btn')[2]);
+  };
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
 })();
 </script>
 </body>

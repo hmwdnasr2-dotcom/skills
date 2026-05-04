@@ -60,6 +60,7 @@
   .mob-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 49; }
   /* Page-specific */
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+  @keyframes spin { to { transform: rotate(360deg); } }
   .status-pulse { animation: pulse 2s cubic-bezier(.4,0,.6,1) infinite; }
   .agent-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; transition: all .2s; }
   .agent-card:hover { border-color: rgba(128,131,255,0.3); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
@@ -172,10 +173,45 @@
     </div>
 
     <!-- Agent grid -->
-    <div id="agents-grid" class="grid grid-cols-1 md:grid-cols-2 gap-md">
+    <div id="agents-grid" class="grid grid-cols-1 md:grid-cols-2 gap-md mb-xl">
       <div class="col-span-2 text-center py-12" style="color:var(--text3)">
         <span class="material-symbols-outlined" style="font-size:40px">hourglass_empty</span>
         <p class="mt-sm text-sm">Loading agents…</p>
+      </div>
+    </div>
+
+    <!-- Quick workflow creator -->
+    <div class="mb-lg">
+      <div class="flex items-center justify-between mb-md">
+        <div>
+          <h2 class="text-base font-bold font-h2" style="color:var(--text)">Quick Workflow</h2>
+          <p class="text-xs" style="color:var(--text3)">Create a scheduled automation in plain language.</p>
+        </div>
+        <a href="/workflows.html" class="flex items-center gap-1 text-xs font-semibold transition-all" style="color:var(--accent2)">
+          <span>Manage all workflows</span>
+          <span class="material-symbols-outlined" style="font-size:14px">arrow_forward</span>
+        </a>
+      </div>
+      <div class="rounded-xl border p-lg" style="background:var(--bg2);border-color:var(--border)">
+        <div class="flex gap-md">
+          <input id="qw-prompt" type="text" placeholder='E.g. "Send me overdue tasks every morning at 8am"'
+            class="flex-1 rounded-lg px-md py-sm text-sm outline-none transition-all"
+            style="background:var(--bg3);border:1px solid var(--border);color:var(--text)"
+            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
+            onkeydown="if(event.key==='Enter')createQuickWorkflow()"/>
+          <button id="qw-btn" onclick="createQuickWorkflow()" class="px-lg py-sm rounded-lg text-sm font-semibold flex items-center gap-2 flex-shrink-0" style="background:var(--accent);color:#fff">
+            <span class="material-symbols-outlined" style="font-size:16px">add</span>
+            Create
+          </button>
+        </div>
+        <div id="qw-result" class="hidden mt-md p-md rounded-lg text-sm" style="background:var(--bg3);color:var(--text2)"></div>
+        <div class="flex flex-wrap gap-sm mt-md" id="qw-chips">
+          <span class="text-xs font-medium" style="color:var(--text3)">Quick picks:</span>
+          <button onclick="qwSetPrompt('Morning briefing at 7am')" class="px-md py-xs rounded-full text-xs transition-all" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)">Morning briefing</button>
+          <button onclick="qwSetPrompt('Daily focus: top 3 tasks at 9am weekdays')" class="px-md py-xs rounded-full text-xs transition-all" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)">Daily focus</button>
+          <button onclick="qwSetPrompt('Weekly review every Sunday at 9am')" class="px-md py-xs rounded-full text-xs transition-all" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)">Weekly review</button>
+          <button onclick="qwSetPrompt('Email digest every morning at 8am')" class="px-md py-xs rounded-full text-xs transition-all" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)">Email digest</button>
+        </div>
       </div>
     </div>
   </div>
@@ -375,6 +411,54 @@
 
   window.closeModal = function() {
     document.getElementById('setup-modal').classList.add('hidden');
+  };
+
+  // ── Quick Workflow ──────────────────────────────────────────────────────────
+  window.qwSetPrompt = function(text) {
+    document.getElementById('qw-prompt').value = text;
+    document.getElementById('qw-prompt').focus();
+  };
+
+  window.createQuickWorkflow = function() {
+    var prompt = document.getElementById('qw-prompt').value.trim();
+    if (!prompt) return;
+    var btn = document.getElementById('qw-btn');
+    var result = document.getElementById('qw-result');
+    btn.disabled = true;
+    btn.innerHTML = '<span style="width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block"></span>';
+
+    fetch('/api/aria/workflows', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompt, userId: 'user-1' }),
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">add</span> Create';
+        if (data.error) {
+          result.className = 'mt-md p-md rounded-lg text-sm';
+          result.style.background = 'rgba(255,100,100,0.08)';
+          result.style.color = '#fca5a5';
+          result.textContent = data.error;
+          result.classList.remove('hidden');
+          return;
+        }
+        var w = data.workflow;
+        result.className = 'mt-md p-md rounded-lg text-sm';
+        result.style.background = 'rgba(34,197,94,0.08)';
+        result.style.color = '#86efac';
+        result.innerHTML = '✓ <b style="color:var(--text)">' + w.name + '</b> created — runs <code style="background:var(--bg3);padding:1px 4px;border-radius:4px;color:var(--text3)">' + w.cronExpr + '</code>';
+        result.classList.remove('hidden');
+        document.getElementById('qw-prompt').value = '';
+        setTimeout(function() { result.classList.add('hidden'); }, 5000);
+      })
+      .catch(function() {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">add</span> Create';
+        result.textContent = 'Failed — is the server running?';
+        result.classList.remove('hidden');
+      });
   };
 
   loadAgents();

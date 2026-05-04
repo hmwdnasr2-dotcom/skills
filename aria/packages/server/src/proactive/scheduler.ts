@@ -4,6 +4,47 @@ import { connectedUserIds, pushToCommandLog } from './push.js';
 import { sendTelegram, telegramEnabled } from '../services/telegram.js';
 import { getDueReminders, markReminderSent } from '../connectors/reminders.js';
 import { sendReport } from '../services/reportScheduler.js';
+import type { WorkflowRecord } from '../routes/workflows.js';
+
+// ── Dynamic workflow registry ─────────────────────────────────────────────────
+
+const activeCronJobs = new Map<string, cron.ScheduledTask>();
+
+export function registerDynamicWorkflow(workflow: WorkflowRecord): void {
+  if (!cron.validate(workflow.cronExpr)) {
+    console.warn(`[scheduler] Invalid cron for workflow "${workflow.name}": ${workflow.cronExpr}`);
+    return;
+  }
+  const job = cron.schedule(workflow.cronExpr, async () => {
+    try {
+      const result = await claw.run('chat', {
+        userId: workflow.userId,
+        messages: [{ role: 'user', content: workflow.prompt }],
+      });
+      await pushToCommandLog(workflow.userId, result);
+      if (telegramEnabled()) await sendTelegram(`🔄 *${workflow.name}*\n\n${result}`);
+    } catch (err) {
+      console.error(`[scheduler] Workflow "${workflow.name}" failed:`, (err as Error).message);
+    }
+  });
+  activeCronJobs.set(workflow.id, job);
+  console.log(`[scheduler] Workflow registered: "${workflow.name}" (${workflow.cronExpr})`);
+}
+
+export function unregisterDynamicWorkflow(workflowId: string): void {
+  const job = activeCronJobs.get(workflowId);
+  if (job) { job.stop(); activeCronJobs.delete(workflowId); }
+}
+
+export async function loadPersistedWorkflows(): Promise<void> {
+  try {
+    const { loadWorkflows } = await import('../routes/workflows.js');
+    for (const w of loadWorkflows()) {
+      if (w.enabled) registerDynamicWorkflow(w);
+    }
+  } catch { /* no workflows file yet */ }
+}
+
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -115,4 +156,7 @@ export function startScheduler() {
   });
 
   console.log('[scheduler] Report crons registered (daily 20:00, weekly Sun 09:00, monthly/quarterly/yearly 1st)');
+
+  // Load user-created workflows from persistent store
+  loadPersistedWorkflows().catch(err => console.error('[scheduler] Failed to load workflows:', err));
 }
