@@ -39,8 +39,24 @@ export interface WorkflowRecord {
 }
 
 export function loadWorkflows(): WorkflowRecord[] {
-  try { return JSON.parse(readFileSync(STORE, 'utf8')); }
-  catch { return []; }
+  try {
+    const raw = JSON.parse(readFileSync(STORE, 'utf8')) as Record<string, unknown>[];
+    // Migrate old template-based format (cronExpr/prompt at top level) to new format
+    return raw.map((w) => {
+      if (w['trigger']) return w as unknown as WorkflowRecord;
+      return {
+        id:          w['id'],
+        name:        w['name'] ?? 'Migrated workflow',
+        description: w['description'] ?? '',
+        icon:        w['icon'] ?? 'schedule',
+        trigger:     { type: 'schedule', cronExpr: w['cronExpr'] as string ?? '0 9 * * *' },
+        actions:     [{ type: 'aria_prompt', prompt: w['prompt'] as string ?? '' }],
+        userId:      w['userId'] ?? 'user-1',
+        enabled:     w['enabled'] ?? true,
+        createdAt:   w['createdAt'] ?? new Date().toISOString(),
+      } as WorkflowRecord;
+    });
+  } catch { return []; }
 }
 
 export function saveWorkflows(list: WorkflowRecord[]): void {

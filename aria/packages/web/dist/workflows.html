@@ -394,12 +394,23 @@
 
   function loadWorkflows() {
     fetch('/api/aria/workflows?userId=' + userId)
-      .then(function(r) { return r.json(); })
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
       .then(function(d) {
-        workflows = d.workflows || [];
+        // Filter out any corrupt/old-format entries missing a trigger field
+        workflows = (d.workflows || []).filter(function(w) { return w && w.trigger && w.trigger.type; });
         renderList();
       })
-      .catch(function() { document.getElementById('wf-list').innerHTML = '<p class="text-sm text-center py-8" style="color:var(--text3)">Failed to load — is the server running?</p>'; });
+      .catch(function(err) {
+        document.getElementById('wf-list').innerHTML =
+          '<div class="rounded-xl border p-6 text-center" style="border-color:rgba(255,100,100,0.2);background:rgba(255,100,100,0.05)">' +
+          '<span class="material-symbols-outlined text-red-400 text-3xl block mb-2">error</span>' +
+          '<p class="text-sm font-semibold mb-1" style="color:var(--text2)">Could not load workflows</p>' +
+          '<p class="text-xs" style="color:var(--text3)">' + (err && err.message ? err.message : 'Server unreachable') + ' — make sure the server is running and <code style="background:var(--bg3);padding:1px 4px;border-radius:3px">npm run build</code> has been run after the last update.</p>' +
+          '</div>';
+      });
   }
   loadWorkflows();
 

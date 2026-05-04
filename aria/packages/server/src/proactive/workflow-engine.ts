@@ -2,7 +2,8 @@ import { claw } from '../core/index.js';
 import { sendTelegram, telegramEnabled } from '../services/telegram.js';
 import { pushToCommandLog } from './push.js';
 import type { WorkflowRecord, WorkflowAction } from '../routes/workflows.js';
-import { patchWorkflow } from '../routes/workflows.js';
+// NOTE: patchWorkflow is imported dynamically below to break the circular dep:
+//   scheduler → workflow-engine → routes/workflows → scheduler
 
 interface TriggerContext {
   from?:    string;
@@ -52,11 +53,15 @@ export async function executeWorkflow(wf: WorkflowRecord, ctx: TriggerContext = 
       errors.push((err as Error).message);
     }
   }
-  patchWorkflow(wf.id, {
-    lastRunAt:     new Date().toISOString(),
-    lastRunStatus: errors.length ? 'error' : 'ok',
-    lastRunResult: errors.length ? errors.join('; ') : 'OK',
-  });
+  try {
+    const { patchWorkflow } = await import('../routes/workflows.js');
+    patchWorkflow(wf.id, {
+      lastRunAt:     new Date().toISOString(),
+      lastRunStatus: errors.length ? 'error' : 'ok',
+      lastRunResult: errors.length ? errors.join('; ') : 'OK',
+    });
+  } catch { /* best-effort — don't let a patch failure mask real errors */ }
+
   if (errors.length) {
     console.error(`[workflow] "${wf.name}" finished with errors:`, errors);
   } else {
