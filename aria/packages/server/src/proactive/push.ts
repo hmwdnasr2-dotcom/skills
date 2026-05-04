@@ -19,10 +19,17 @@ export function registerSseClient(userId: string, res: Response) {
   });
 }
 
-export async function pushToCommandLog(userId: string, content: string) {
+export async function pushToCommandLog(userId: string, content: string, type: 'message' | 'notification' = 'message') {
   const res = clients.get(userId);
   if (res) {
-    res.write(`data: ${JSON.stringify({ content })}\n\n`);
+    res.write(`data: ${JSON.stringify({ content, type })}\n\n`);
+  }
+}
+
+// Push a notification to all connected users (for system-level events)
+export async function broadcastNotification(content: string): Promise<void> {
+  for (const [, res] of clients) {
+    res.write(`data: ${JSON.stringify({ content, type: 'notification' })}\n\n`);
   }
 }
 

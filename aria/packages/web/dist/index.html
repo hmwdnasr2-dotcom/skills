@@ -444,6 +444,17 @@
             <div class="prose-dark text-sm" id="${msgId}-body">${isLoading ? '<span class="cursor-blink">▌</span>' : renderMd(content)}</div>
           </div>
         </div>`;
+    } else if (role === 'notification') {
+      wrap.innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 border" style="background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3)">
+            <span class="material-symbols-outlined text-green-400" style="font-size:16px">notifications</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-green-400 mb-1">ARIA · Automated</div>
+            <div class="prose-dark text-sm" id="${msgId}-body">${renderMd(content)}</div>
+          </div>
+        </div>`;
     } else if (role === 'error') {
       wrap.innerHTML = `
         <div class="flex items-start gap-3">
@@ -717,8 +728,8 @@
     es.onopen = () => setOnline(true);
     es.onmessage = e => {
       try {
-        const { content } = JSON.parse(e.data);
-        if (content) addMessage('aria', content);
+        const { content, type } = JSON.parse(e.data);
+        if (content) addMessage(type === 'notification' ? 'notification' : 'aria', content);
       } catch (_) {}
     };
     es.onerror = () => { es.close(); setOnline(false); setTimeout(connectSSE, 6000); };

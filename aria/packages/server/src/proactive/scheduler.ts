@@ -192,33 +192,39 @@ export function startScheduler() {
     return;
   }
 
+  async function runReport(period: string) {
+    const uid    = reportUserId();
+    const report = await sendReport(uid, period as Parameters<typeof sendReport>[1]);
+    await pushToCommandLog(uid, `📊 **${period.charAt(0).toUpperCase() + period.slice(1)} Report**\n\n${report}`, 'notification');
+  }
+
   // Daily report — 20:00 every day
   cron.schedule('0 20 * * *', async () => {
-    try { await sendReport(reportUserId(), 'daily'); }
+    try { await runReport('daily'); }
     catch (err) { console.error('[scheduler] Daily report failed:', (err as Error).message); }
   });
 
   // Weekly report — Sunday 09:00
   cron.schedule('0 9 * * 0', async () => {
-    try { await sendReport(reportUserId(), 'weekly'); }
+    try { await runReport('weekly'); }
     catch (err) { console.error('[scheduler] Weekly report failed:', (err as Error).message); }
   });
 
   // Monthly report — 1st of month 09:00
   cron.schedule('0 9 1 * *', async () => {
-    try { await sendReport(reportUserId(), 'monthly'); }
+    try { await runReport('monthly'); }
     catch (err) { console.error('[scheduler] Monthly report failed:', (err as Error).message); }
   });
 
   // Quarterly report — 1st of Jan, Apr, Jul, Oct at 09:00
   cron.schedule('0 9 1 1,4,7,10 *', async () => {
-    try { await sendReport(reportUserId(), 'quarterly'); }
+    try { await runReport('quarterly'); }
     catch (err) { console.error('[scheduler] Quarterly report failed:', (err as Error).message); }
   });
 
   // Yearly report — 1st Jan 10:00
   cron.schedule('0 10 1 1 *', async () => {
-    try { await sendReport(reportUserId(), 'yearly'); }
+    try { await runReport('yearly'); }
     catch (err) { console.error('[scheduler] Yearly report failed:', (err as Error).message); }
   });
 
