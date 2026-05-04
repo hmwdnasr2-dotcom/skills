@@ -319,3 +319,9 @@ claw.pipeline('nudge-check', async (ctx) => {
   const reply = await ctx.brain.chat(ctx.messages, { maxTokens: 256 });
   return reply.content;
 });
+
+// Lightweight pipeline for structured JSON tasks — no ARIA system prompt injection
+claw.pipeline('json', async (ctx) => {
+  const reply = await ctx.brain.chat(ctx.messages);
+  return reply.content ?? '';
+});

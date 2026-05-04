@@ -36,8 +36,11 @@ async function executeAction(action: WorkflowAction, wf: WorkflowRecord, ctx: Tr
         userId:   wf.userId,
         messages: [{ role: 'user', content: prompt }],
       });
-      await pushToCommandLog(wf.userId, result);
+      // Push result to browser chat (SSE) so it appears as an ARIA message
+      const preview = result.slice(0, 120) + (result.length > 120 ? '…' : '');
+      await pushToCommandLog(wf.userId, `**Workflow: ${wf.name}**\n\n${result}`);
       if (telegramEnabled()) await sendTelegram(`🤖 *${wf.name}*\n\n${result}`);
+      console.log(`[workflow] "${wf.name}" aria_prompt result: ${preview}`);
       break;
     }
   }

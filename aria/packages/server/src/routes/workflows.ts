@@ -153,7 +153,7 @@ workflowsRouter.post('/parse', async (req, res) => {
   const { description, userId = 'user-1' } = req.body as { description?: string; userId?: string };
   if (!description?.trim()) { res.status(400).json({ error: 'description required' }); return; }
 
-  const systemPrompt = `You parse workflow descriptions into structured JSON. Reply ONLY with valid JSON, no markdown.
+  const systemPrompt = `You convert workflow descriptions into structured JSON. Reply ONLY with raw valid JSON — no markdown, no explanation, no code fences.
 
 Output format:
 {
@@ -161,35 +161,38 @@ Output format:
   "humanDescription": "one plain-English sentence describing when this fires and what it does",
   "trigger": {
     "type": "schedule" | "email_received" | "manual",
-    "cronExpr": "0 9 * * *",          // only for schedule
+    "cronExpr": "cron expression",     // only for schedule triggers
     "fromFilter": "sender@co.com",     // only for email_received, optional
     "subjectFilter": "keyword"         // only for email_received, optional
   },
   "actions": [
-    { "type": "telegram_notify", "template": "optional message with {from} {subject}" },
-    { "type": "aria_prompt",     "prompt":   "optional instructions for ARIA" }
+    { "type": "aria_prompt", "prompt": "instructions for ARIA including any email addresses or destinations" }
   ]
 }
 
 Rules:
-- At least one action required.
-- For "check/read/summarise email" intents → use trigger.type="manual" with aria_prompt action that calls gmail_list then summarises.
-- For "when I get an email" / "on email" intents → use trigger.type="email_received".
-- For time-based intents (daily, every morning, Monday) → use trigger.type="schedule" with correct cron.
-- telegram_notify is for simple push messages. aria_prompt is for AI-generated responses.
-- If both are appropriate, include both actions.`;
+- Always use aria_prompt as the action — it is the most capable action type.
+- For time-based intents (daily, every morning, at X:XXam, Monday) → trigger.type="schedule" with correct cron expression.
+- For "when I get an email" intents → trigger.type="email_received".
+- For manual/on-demand intents → trigger.type="manual".
+- If the user wants results sent to their email address: include the exact email in the aria_prompt field, e.g. "...then send the results to user@example.com using gmail_send".
+- If the user mentions Telegram/notify: append "and send me a Telegram notification" to the prompt.
+- Extract the email address from the description if present and put it in the prompt.
+- Write the aria_prompt as a clear imperative instruction to ARIA. Include all relevant context (what to fetch, what to send, where to send it).`;
 
   try {
-    const result = await claw.run('chat', {
+    const result = await claw.run('json', {
       userId,
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: description },
+        { role: 'user',   content: description },
       ],
     });
-    const json = JSON.parse(result.replace(/```json?\n?/g, '').replace(/```/g, '').trim());
+    const cleaned = result.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+    const json = JSON.parse(cleaned);
     res.json({ ok: true, parsed: json });
   } catch (err) {
+    console.error('[workflows/parse] error:', (err as Error).message);
     res.status(422).json({ error: 'Could not parse — try rephrasing', detail: (err as Error).message });
   }
 });
