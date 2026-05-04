@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<meta name="theme-color" content="#0b1326"/>
+<title>Tasks | ARIA</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+  tailwind.config = { darkMode:"class", theme:{ extend:{
+    colors:{ "background":"#0b1326","surface-container":"#171f33","surface-container-high":"#222a3d","on-surface":"#dae2fd","on-surface-variant":"#c7c4d7","outline":"#908fa0","outline-variant":"#464554","primary":"#c0c1ff","primary-container":"#8083ff" },
+    fontFamily:{ "h1":["Manrope","sans-serif"],"h2":["Manrope","sans-serif"],"h3":["Manrope","sans-serif"],"body-md":["Inter","sans-serif"] }
+  }}}
+</script>
+<style>
+  :root{--bg:#0b1326;--bg2:#171f33;--bg3:#222a3d;--border:rgba(144,143,160,0.15);--border-strong:rgba(192,193,255,0.2);--text:#dae2fd;--text2:#c7c4d7;--text3:#908fa0;--accent:#8083ff;--accent2:#c0c1ff;--sidebar-bg:rgba(10,15,30,0.92);}
+  html.light{--bg:#f4f6fb;--bg2:#ffffff;--bg3:#e8ecf5;--border:rgba(0,0,0,0.08);--border-strong:rgba(99,102,241,0.3);--text:#1a1d2e;--text2:#3d4166;--text3:#7b7fa8;--accent:#4f52d9;--accent2:#6366f1;--sidebar-bg:rgba(248,249,255,0.97);}
+  html.light body{background:var(--bg);color:var(--text);}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;vertical-align:middle;}
+  ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-thumb{background:#2d3449;border-radius:2px;}
+  html.light ::-webkit-scrollbar-thumb{background:#c5cae9;}
+  .mob-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:49;}
+  .task-row{border-bottom:1px solid var(--border);transition:background .12s;}
+  .task-row:hover{background:rgba(128,131,255,0.04);}
+  .task-row:last-child{border-bottom:none;}
+  .proj-pill{border-radius:999px;font-size:10px;font-weight:600;padding:2px 8px;white-space:nowrap;}
+  .badge{border-radius:999px;font-size:10px;font-weight:700;padding:2px 6px;text-transform:uppercase;letter-spacing:.04em;}
+  .priority-urgent{background:rgba(239,68,68,.15);color:#fca5a5;}
+  .priority-high{background:rgba(249,115,22,.15);color:#fdba74;}
+  .priority-medium{background:rgba(234,179,8,.12);color:#fde68a;}
+  .priority-low{background:rgba(34,197,94,.12);color:#86efac;}
+  .status-todo{background:rgba(100,116,139,.15);color:#94a3b8;}
+  .status-in_progress{background:rgba(99,102,241,.15);color:var(--accent2);}
+  .status-completed{background:rgba(34,197,94,.15);color:#86efac;}
+  .status-cancelled{background:rgba(100,116,139,.1);color:#64748b;}
+  html.light .priority-urgent{background:rgba(239,68,68,.1);color:#dc2626;}
+  html.light .priority-high{background:rgba(249,115,22,.1);color:#ea580c;}
+  html.light .priority-medium{background:rgba(234,179,8,.1);color:#ca8a04;}
+  html.light .priority-low{background:rgba(34,197,94,.1);color:#16a34a;}
+  html.light .status-todo{background:rgba(100,116,139,.1);color:#64748b;}
+  html.light .status-in_progress{background:rgba(99,102,241,.1);color:var(--accent);}
+  html.light .status-completed{background:rgba(34,197,94,.1);color:#16a34a;}
+  .spin{width:14px;height:14px;border:2px solid rgba(192,193,255,0.3);border-top-color:var(--accent2);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #modal{display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);}
+  #modal.open{display:flex;}
+  #toast{opacity:0;transform:translateY(8px);pointer-events:none;transition:all .3s;}
+  #toast.show{opacity:1;transform:translateY(0);pointer-events:auto;}
+  .proj-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .15s;}
+  .proj-card:hover{border-color:var(--border-strong);}
+  .proj-card.active{border-color:var(--accent);background:rgba(128,131,255,0.07);}
+  .check-btn{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;}
+  .check-btn:hover{border-color:var(--accent);}
+  .check-btn.done{background:var(--accent);border-color:var(--accent);}
+</style>
+</head>
+<body class="font-body-md antialiased" style="background:var(--bg);color:var(--text);overflow:hidden;height:100svh">
+
+<div id="mob-backdrop" class="mob-backdrop"></div>
+
+<!-- Sidebar -->
+<aside id="sidebar" class="fixed left-0 top-0 h-full z-50 w-64 border-r flex flex-col shadow-2xl" style="display:none;background:var(--sidebar-bg);border-color:var(--border);backdrop-filter:blur(20px)">
+  <div class="p-6 flex items-center gap-3">
+    <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center">
+      <span class="material-symbols-outlined text-white" style="font-size:18px">hub</span>
+    </div>
+    <div class="flex-1">
+      <div class="font-bold text-sm" style="color:var(--text)">Agent Orchestrator</div>
+      <div class="text-[10px] uppercase tracking-widest font-bold text-indigo-400">ARIA</div>
+    </div>
+    <button onclick="closeSidebar()" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/10" style="color:var(--text3)">
+      <span class="material-symbols-outlined" style="font-size:18px">close</span>
+    </button>
+  </div>
+  <nav class="flex-1 px-2 mt-1 overflow-y-auto space-y-0.5">
+    <a href="/" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:20px">chat</span>Chat</a>
+    <a href="/agents.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:20px">account_tree</span>Agents</a>
+    <a href="/workflows.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:20px">device_hub</span>Workflows</a>
+    <a href="/tasks.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium" style="background:rgba(99,102,241,0.1);color:var(--accent2)"><span class="material-symbols-outlined" style="font-size:20px">task_alt</span>Tasks</a>
+    <a href="/knowledge.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:20px">auto_stories</span>Knowledge Base</a>
+    <a href="/dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:20px">monitoring</span>Performance</a>
+    <a href="/settings.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium" style="color:var(--text3)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'"><span class="material-symbols-outlined" style="font-size:20px">settings</span>Settings</a>
+  </nav>
+  <div class="p-4 border-t flex items-center justify-between" style="border-color:var(--border)">
+    <span class="text-xs font-medium" style="color:var(--text3)">ARIA</span>
+    <div class="flex gap-2">
+      <button onclick="toggleTheme()" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-indigo-500/20" style="color:var(--text3)"><span id="theme-icon" class="material-symbols-outlined" style="font-size:16px">light_mode</span></button>
+      <button onclick="doLogout()" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-500/20 text-red-400"><span class="material-symbols-outlined" style="font-size:16px">logout</span></button>
+    </div>
+  </div>
+</aside>
+
+<!-- Layout: sidebar left + main right -->
+<div class="flex h-full overflow-hidden">
+
+  <!-- Left panel — Projects -->
+  <div class="hidden md:flex flex-col w-64 border-r flex-shrink-0 overflow-y-auto" style="background:var(--bg2);border-color:var(--border)">
+    <div class="px-4 pt-5 pb-3 flex items-center justify-between">
+      <span class="text-xs font-bold uppercase tracking-wider" style="color:var(--text3)">Projects</span>
+      <button onclick="openProjectModal()" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-indigo-500/20" style="color:var(--accent2)" title="New project">
+        <span class="material-symbols-outlined" style="font-size:18px">add</span>
+      </button>
+    </div>
+
+    <!-- All tasks entry -->
+    <div class="px-3 pb-2">
+      <div id="proj-all" class="proj-card active p-3 flex items-center gap-3" onclick="selectProject(null)">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background:rgba(128,131,255,0.15)">
+          <span class="material-symbols-outlined text-indigo-400" style="font-size:16px">inbox</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-semibold" style="color:var(--text)">All Tasks</div>
+          <div id="all-count" class="text-xs" style="color:var(--text3)">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="proj-list" class="px-3 space-y-2 pb-4">
+      <div class="text-center py-4"><div class="spin mx-auto"></div></div>
+    </div>
+  </div>
+
+  <!-- Main area -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="flex items-center justify-between px-4 h-12 border-b flex-shrink-0" style="background:rgba(11,19,38,0.9);border-color:var(--border);backdrop-filter:blur(12px)">
+      <div class="flex items-center gap-3">
+        <button onclick="openSidebar()" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-indigo-500/20 md:hidden" style="color:var(--text2)">
+          <span class="material-symbols-outlined" style="font-size:22px">menu</span>
+        </button>
+        <span id="page-title" class="text-sm font-semibold" style="color:var(--text2)">All Tasks</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <!-- Filters -->
+        <select id="filter-status" onchange="loadTasks()" class="text-xs rounded-lg px-2 py-1.5 outline-none border" style="background:var(--bg3);border-color:var(--border);color:var(--text2)">
+          <option value="all">All status</option>
+          <option value="todo" selected>To do</option>
+          <option value="in_progress">In progress</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <select id="filter-priority" onchange="loadTasks()" class="text-xs rounded-lg px-2 py-1.5 outline-none border hidden sm:block" style="background:var(--bg3);border-color:var(--border);color:var(--text2)">
+          <option value="">All priority</option>
+          <option value="urgent">Urgent</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <button onclick="openTaskModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold" style="background:var(--accent);color:#fff">
+          <span class="material-symbols-outlined" style="font-size:15px">add</span>Add Task
+        </button>
+        <button onclick="toggleTheme()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-indigo-500/20" style="color:var(--text3)">
+          <span id="theme-icon-header" class="material-symbols-outlined" style="font-size:18px">light_mode</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Stats bar -->
+    <div id="stats-bar" class="flex items-center gap-4 px-5 py-2.5 border-b flex-shrink-0 overflow-x-auto" style="border-color:var(--border)">
+      <div class="flex items-center gap-1.5 flex-shrink-0">
+        <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+        <span id="stat-todo" class="text-xs font-medium" style="color:var(--text3)">— to do</span>
+      </div>
+      <div class="flex items-center gap-1.5 flex-shrink-0">
+        <span class="w-2 h-2 rounded-full" style="background:var(--accent)"></span>
+        <span id="stat-inprog" class="text-xs font-medium" style="color:var(--text3)">— in progress</span>
+      </div>
+      <div class="flex items-center gap-1.5 flex-shrink-0">
+        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+        <span id="stat-done" class="text-xs font-medium" style="color:var(--text3)">— done</span>
+      </div>
+      <div class="flex items-center gap-1.5 flex-shrink-0">
+        <span class="w-2 h-2 rounded-full bg-red-400"></span>
+        <span id="stat-overdue" class="text-xs font-medium" style="color:var(--text3)">— overdue</span>
+      </div>
+      <!-- Progress bar -->
+      <div class="flex-1 min-w-24">
+        <div class="h-1.5 rounded-full overflow-hidden" style="background:var(--bg3)">
+          <div id="progress-bar" class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-indigo-500 to-green-500" style="width:0%"></div>
+        </div>
+      </div>
+      <span id="progress-pct" class="text-xs font-bold flex-shrink-0" style="color:var(--accent2)">0%</span>
+    </div>
+
+    <!-- Task list -->
+    <div class="flex-1 overflow-y-auto">
+      <div id="task-container">
+        <div class="flex flex-col items-center justify-center py-24 gap-3" style="color:var(--text3)">
+          <div class="spin"></div>
+          <span class="text-sm">Loading tasks…</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Modal ──────────────────────────────────────────────────────────────────── -->
+<div id="modal" class="items-center justify-center p-4">
+  <div class="w-full max-w-md rounded-2xl border" style="background:var(--bg2);border-color:var(--border)">
+    <div class="px-6 py-4 border-b flex items-center justify-between" style="border-color:var(--border)">
+      <h2 id="modal-title" class="font-bold" style="color:var(--text)">New Task</h2>
+      <button onclick="closeModal()" style="color:var(--text3)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10">
+        <span class="material-symbols-outlined" style="font-size:20px">close</span>
+      </button>
+    </div>
+    <div class="p-5 space-y-4" id="modal-body"></div>
+    <div class="px-5 pb-5 flex gap-3 justify-end">
+      <button onclick="closeModal()" class="px-4 py-2 rounded-xl text-sm font-semibold" style="background:var(--bg3);color:var(--text2)">Cancel</button>
+      <button id="modal-save" class="px-5 py-2 rounded-xl text-sm font-semibold" style="background:var(--accent);color:#fff">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-semibold shadow-xl" style="background:var(--bg2);border:1px solid var(--border);color:var(--text)"></div>
+
+<script>
+(function() {
+'use strict';
+if (!localStorage.getItem('aria_auth')) { window.location.replace('/login.html'); return; }
+
+const UID = localStorage.getItem('aria_uid') || 'user-1';
+const API = '/api/aria/tasks';
+
+// ── State ──────────────────────────────────────────────────────────────────────
+var allTasks     = [];
+var allProjects  = [];
+var activeProject = null; // null = all tasks
+
+// ── Theme ──────────────────────────────────────────────────────────────────────
+function applyTheme(t) {
+  document.documentElement.classList.toggle('dark',  t === 'dark');
+  document.documentElement.classList.toggle('light', t === 'light');
+  var icon = t === 'dark' ? 'light_mode' : 'dark_mode';
+  document.querySelectorAll('#theme-icon,#theme-icon-header').forEach(function(e) { e.textContent = icon; });
+  var hdr = document.querySelector('header');
+  if (hdr) hdr.style.background = t === 'light' ? 'rgba(244,246,251,0.97)' : 'rgba(11,19,38,0.9)';
+}
+window.toggleTheme = function() {
+  var next = document.documentElement.classList.contains('light') ? 'dark' : 'light';
+  localStorage.setItem('aria_theme', next); applyTheme(next);
+};
+applyTheme(localStorage.getItem('aria_theme') || 'dark');
+
+// ── Sidebar ────────────────────────────────────────────────────────────────────
+var _sb = document.getElementById('sidebar'), _bd = document.getElementById('mob-backdrop');
+window.openSidebar  = function() { _sb.style.display = 'flex'; _bd.style.display = 'block'; };
+window.closeSidebar = function() { _sb.style.display = 'none';  _bd.style.display = 'none'; };
+document.addEventListener('click', function(e) { if (_sb.style.display==='flex' && !_sb.contains(e.target)) closeSidebar(); }, true);
+window.doLogout = function() { localStorage.removeItem('aria_auth'); window.location.replace('/login.html'); };
+
+// ── Toast ──────────────────────────────────────────────────────────────────────
+var _tt;
+function toast(msg, err) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = err ? 'rgba(255,80,80,0.4)' : 'var(--border)';
+  t.classList.add('show');
+  clearTimeout(_tt); _tt = setTimeout(function() { t.classList.remove('show'); }, 3500);
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+}
+function isOverdue(task) {
+  if (!task.due_date || task.status === 'completed' || task.status === 'cancelled') return false;
+  return new Date(task.due_date) < new Date(new Date().toDateString());
+}
+var PRIORITY_ORDER = { urgent:0, high:1, medium:2, low:3 };
+var PROJ_COLORS = ['#6366f1','#06b6d4','#22c55e','#f97316','#a855f7','#f43f5e','#eab308','#14b8a6'];
+function projColor(idx) { return PROJ_COLORS[idx % PROJ_COLORS.length]; }
+
+// ── Load data ──────────────────────────────────────────────────────────────────
+function loadAll() {
+  Promise.all([
+    fetch(API + '/tasks?userId=' + UID + '&status=all').then(function(r) { return r.json(); }),
+    fetch(API + '/projects?userId=' + UID + '&status=all').then(function(r) { return r.json(); }),
+  ]).then(function(results) {
+    allTasks    = results[0].tasks    || [];
+    allProjects = results[1].projects || [];
+    renderProjects();
+    renderTasks();
+  }).catch(function(err) {
+    document.getElementById('task-container').innerHTML =
+      '<div class="flex flex-col items-center justify-center py-24 gap-2"><span class="material-symbols-outlined text-4xl text-red-400">error</span><p class="text-sm font-semibold" style="color:var(--text2)">Could not load tasks</p><p class="text-xs" style="color:var(--text3)">Is the server running?</p></div>';
+  });
+}
+
+// ── Project panel ──────────────────────────────────────────────────────────────
+function renderProjects() {
+  var list = document.getElementById('proj-list');
+  var allCount = allTasks.filter(function(t) { return t.status !== 'completed' && t.status !== 'cancelled'; }).length;
+  document.getElementById('all-count').textContent = allCount + ' open';
+
+  if (!allProjects.length) {
+    list.innerHTML = '<p class="text-xs text-center py-4" style="color:var(--text3)">No projects yet</p>';
+    return;
+  }
+
+  list.innerHTML = allProjects.map(function(p, idx) {
+    var pTasks   = allTasks.filter(function(t) { return t.project_id === p.id; });
+    var done     = pTasks.filter(function(t) { return t.status === 'completed'; }).length;
+    var total    = pTasks.length;
+    var pct      = total ? Math.round(done / total * 100) : 0;
+    var overdue  = pTasks.filter(function(t) { return isOverdue(t); }).length;
+    var color    = projColor(idx);
+    var isActive = activeProject === p.id;
+    return '<div class="proj-card p-3 ' + (isActive ? 'active' : '') + '" onclick="selectProject(\'' + esc(p.id) + '\')" id="proj-' + esc(p.id) + '">' +
+      '<div class="flex items-center gap-2 mb-2">' +
+        '<div class="w-3 h-3 rounded-sm flex-shrink-0" style="background:' + color + '"></div>' +
+        '<span class="text-sm font-semibold flex-1 truncate" style="color:var(--text)">' + esc(p.name) + '</span>' +
+        (overdue ? '<span class="text-[10px] text-red-400 font-bold">' + overdue + ' late</span>' : '') +
+      '</div>' +
+      '<div class="flex items-center gap-2">' +
+        '<div class="flex-1 h-1 rounded-full overflow-hidden" style="background:var(--bg3)">' +
+          '<div class="h-full rounded-full transition-all" style="width:' + pct + '%;background:' + color + '"></div>' +
+        '</div>' +
+        '<span class="text-[10px] font-bold" style="color:var(--text3)">' + pct + '%</span>' +
+      '</div>' +
+      '<div class="text-[10px] mt-1" style="color:var(--text3)">' + done + '/' + total + ' done</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ── Project selection ──────────────────────────────────────────────────────────
+window.selectProject = function(projectId) {
+  activeProject = projectId;
+  document.querySelectorAll('.proj-card').forEach(function(c) { c.classList.remove('active'); });
+  var target = projectId ? document.getElementById('proj-' + projectId) : document.getElementById('proj-all');
+  if (target) target.classList.add('active');
+  var proj = projectId ? allProjects.find(function(p) { return p.id === projectId; }) : null;
+  document.getElementById('page-title').textContent = proj ? proj.name : 'All Tasks';
+  renderTasks();
+};
+
+// ── Render task list ───────────────────────────────────────────────────────────
+function renderTasks() {
+  var statusFilter   = document.getElementById('filter-status').value;
+  var priorityFilter = document.getElementById('filter-priority').value;
+
+  var tasks = allTasks.filter(function(t) {
+    if (activeProject && t.project_id !== activeProject) return false;
+    if (statusFilter && statusFilter !== 'all' && t.status !== statusFilter) return false;
+    if (priorityFilter && t.priority !== priorityFilter) return false;
+    return true;
+  });
+
+  // Stats
+  var todo    = allTasks.filter(function(t) { return t.status === 'todo' && (!activeProject || t.project_id === activeProject); }).length;
+  var inprog  = allTasks.filter(function(t) { return t.status === 'in_progress' && (!activeProject || t.project_id === activeProject); }).length;
+  var done    = allTasks.filter(function(t) { return t.status === 'completed' && (!activeProject || t.project_id === activeProject); }).length;
+  var overdue = tasks.filter(isOverdue).length;
+  var total   = todo + inprog + done;
+  var pct     = total ? Math.round(done / total * 100) : 0;
+
+  document.getElementById('stat-todo').textContent   = todo + ' to do';
+  document.getElementById('stat-inprog').textContent = inprog + ' in progress';
+  document.getElementById('stat-done').textContent   = done + ' done';
+  document.getElementById('stat-overdue').textContent = overdue + ' overdue';
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-pct').textContent = pct + '%';
+
+  var container = document.getElementById('task-container');
+
+  if (!tasks.length) {
+    container.innerHTML = '<div class="flex flex-col items-center justify-center py-20 gap-3" style="color:var(--text3)">' +
+      '<span class="material-symbols-outlined text-5xl">task_alt</span>' +
+      '<p class="text-sm font-semibold" style="color:var(--text2)">No tasks here</p>' +
+      '<p class="text-xs" style="color:var(--text3)">Add a task or ask ARIA to create one</p>' +
+      '<button onclick="openTaskModal()" class="mt-2 px-4 py-2 rounded-xl text-xs font-semibold" style="background:var(--accent);color:#fff">Add Task</button>' +
+    '</div>';
+    return;
+  }
+
+  // Group by priority
+  var groups = { urgent:[], high:[], medium:[], low:[] };
+  tasks.forEach(function(t) { (groups[t.priority] || groups.medium).push(t); });
+
+  var html = '';
+  var priorities = ['urgent','high','medium','low'];
+  priorities.forEach(function(pri) {
+    if (!groups[pri].length) return;
+    var label = pri.charAt(0).toUpperCase() + pri.slice(1);
+    var colors = { urgent:'text-red-400', high:'text-orange-400', medium:'text-yellow-400', low:'text-green-400' };
+    html += '<div class="px-5 pt-4 pb-1 flex items-center gap-2">' +
+      '<span class="text-[10px] font-bold uppercase tracking-wider ' + colors[pri] + '">' + label + '</span>' +
+      '<div class="flex-1 h-px" style="background:var(--border)"></div>' +
+      '<span class="text-[10px]" style="color:var(--text3)">' + groups[pri].length + '</span>' +
+    '</div>';
+    html += groups[pri].map(function(task) { return renderTaskRow(task); }).join('');
+  });
+
+  container.innerHTML = html;
+}
+
+function renderTaskRow(task) {
+  var isDone    = task.status === 'completed';
+  var isCancelled = task.status === 'cancelled';
+  var overdue   = isOverdue(task);
+  var proj      = task.aria_projects;
+  var projName  = proj ? proj.name : null;
+  var projIdx   = projName ? allProjects.findIndex(function(p) { return p.id === task.project_id; }) : -1;
+  var dueLabel  = task.due_date ? fmtDate(task.due_date) : '';
+
+  return '<div class="task-row px-5 py-3 flex items-center gap-3" data-id="' + esc(task.id) + '">' +
+    // Check button
+    '<button class="check-btn ' + (isDone ? 'done' : '') + '" onclick="toggleComplete(event,\'' + esc(task.id) + '\',' + isDone + ')" title="' + (isDone ? 'Mark incomplete' : 'Mark complete') + '">' +
+      (isDone ? '<span class="material-symbols-outlined text-white" style="font-size:12px">check</span>' : '') +
+    '</button>' +
+    // Content
+    '<div class="flex-1 min-w-0">' +
+      '<div class="flex items-center gap-2 flex-wrap">' +
+        '<span class="text-sm font-medium ' + (isDone || isCancelled ? 'line-through opacity-50' : '') + '" style="color:var(--text)">' + esc(task.title) + '</span>' +
+        (projName ? '<span class="proj-pill" style="background:' + projColor(projIdx) + '22;color:' + projColor(projIdx) + '">' + esc(projName) + '</span>' : '') +
+      '</div>' +
+      '<div class="flex items-center gap-2 mt-0.5 flex-wrap">' +
+        '<span class="badge ' + 'status-' + task.status + '">' + task.status.replace('_',' ') + '</span>' +
+        (dueLabel ? '<span class="text-[11px] ' + (overdue ? 'text-red-400 font-semibold' : '') + '" style="' + (overdue ? '' : 'color:var(--text3)') + '">' + (overdue ? '⚠ ' : '') + dueLabel + '</span>' : '') +
+      '</div>' +
+    '</div>' +
+    // Actions
+    '<div class="flex items-center gap-1 flex-shrink-0">' +
+      '<select class="text-[11px] rounded-lg px-1.5 py-1 outline-none border" style="background:var(--bg3);border-color:var(--border);color:var(--text3)" onchange="changeStatus(event,\'' + esc(task.id) + '\')" onclick="event.stopPropagation()">' +
+        ['todo','in_progress','completed','cancelled'].map(function(s) {
+          return '<option value="' + s + '" ' + (task.status === s ? 'selected' : '') + '>' + s.replace('_',' ') + '</option>';
+        }).join('') +
+      '</select>' +
+      '<button onclick="editTask(event,\'' + esc(task.id) + '\')" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/10" style="color:var(--text3)" title="Edit">' +
+        '<span class="material-symbols-outlined" style="font-size:16px">edit</span>' +
+      '</button>' +
+      '<button onclick="deleteTask(event,\'' + esc(task.id) + '\')" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-500/20 text-red-400" title="Delete">' +
+        '<span class="material-symbols-outlined" style="font-size:16px">delete</span>' +
+      '</button>' +
+    '</div>' +
+  '</div>';
+}
+
+window.loadTasks = function() { renderTasks(); };
+
+// ── Task actions ───────────────────────────────────────────────────────────────
+window.toggleComplete = function(e, id, isDone) {
+  e.stopPropagation();
+  var newStatus = isDone ? 'todo' : 'completed';
+  patchTask(id, { status: newStatus });
+};
+
+window.changeStatus = function(e, id) {
+  e.stopPropagation();
+  patchTask(id, { status: e.target.value });
+};
+
+window.deleteTask = function(e, id) {
+  e.stopPropagation();
+  if (!confirm('Delete this task?')) return;
+  fetch(API + '/tasks/' + id, { method: 'DELETE' })
+    .then(function() {
+      allTasks = allTasks.filter(function(t) { return t.id !== id; });
+      renderProjects(); renderTasks();
+      toast('Task deleted');
+    })
+    .catch(function() { toast('Failed', true); });
+};
+
+function patchTask(id, patch) {
+  fetch(API + '/tasks/' + id, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error) { toast(d.error, true); return; }
+      var idx = allTasks.findIndex(function(t) { return t.id === id; });
+      if (idx >= 0) allTasks[idx] = Object.assign(allTasks[idx], d.task);
+      renderProjects(); renderTasks();
+      toast('✓ Saved');
+    })
+    .catch(function() { toast('Failed', true); });
+}
+
+// ── Edit task modal ────────────────────────────────────────────────────────────
+window.editTask = function(e, id) {
+  e.stopPropagation();
+  var task = allTasks.find(function(t) { return t.id === id; });
+  if (!task) return;
+
+  showModal('Edit Task', taskForm(task), function() {
+    var patch = {
+      title:       document.getElementById('f-title').value.trim(),
+      description: document.getElementById('f-desc').value.trim() || null,
+      priority:    document.getElementById('f-priority').value,
+      due_date:    document.getElementById('f-due').value || null,
+      project_id:  document.getElementById('f-project').value || null,
+    };
+    if (!patch.title) { toast('Title required', true); return; }
+    patchTask(id, patch);
+    closeModal();
+  });
+};
+
+// ── Add task modal ─────────────────────────────────────────────────────────────
+window.openTaskModal = function() {
+  showModal('New Task', taskForm(null), function() {
+    var title = document.getElementById('f-title').value.trim();
+    if (!title) { toast('Title required', true); return; }
+    var body = {
+      userId:     UID,
+      title,
+      description: document.getElementById('f-desc').value.trim() || undefined,
+      priority:    document.getElementById('f-priority').value,
+      due_date:    document.getElementById('f-due').value || undefined,
+      project_id:  document.getElementById('f-project').value || undefined,
+    };
+    fetch(API + '/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.error) { toast(d.error, true); return; }
+        allTasks.unshift(d.task);
+        renderProjects(); renderTasks();
+        closeModal();
+        toast('✓ Task added');
+      })
+      .catch(function() { toast('Failed', true); });
+  });
+};
+
+function taskForm(task) {
+  var projOptions = '<option value="">No project</option>' + allProjects.map(function(p) {
+    return '<option value="' + esc(p.id) + '" ' + (task && task.project_id === p.id ? 'selected' : '') + '>' + esc(p.name) + '</option>';
+  }).join('');
+
+  return '<div class="space-y-3">' +
+    field('Title', 'text', 'f-title', task ? task.title : '', 'e.g. Review Q2 report', true) +
+    field('Description', 'text', 'f-desc', task ? task.description || '' : '', 'Optional notes') +
+    '<div class="grid grid-cols-2 gap-3">' +
+      '<div>' +
+        '<label class="text-[11px] font-semibold uppercase tracking-wider block mb-1" style="color:var(--text3)">Priority</label>' +
+        '<select id="f-priority" class="w-full rounded-xl px-3 py-2.5 text-sm outline-none border" style="background:var(--bg3);border-color:var(--border);color:var(--text)">' +
+          ['urgent','high','medium','low'].map(function(p) {
+            return '<option value="' + p + '" ' + (task && task.priority === p ? 'selected' : p === 'medium' ? 'selected' : '') + '>' + p.charAt(0).toUpperCase()+p.slice(1) + '</option>';
+          }).join('') +
+        '</select>' +
+      '</div>' +
+      '<div>' +
+        '<label class="text-[11px] font-semibold uppercase tracking-wider block mb-1" style="color:var(--text3)">Due date</label>' +
+        '<input type="date" id="f-due" value="' + (task && task.due_date ? task.due_date.slice(0,10) : '') + '" class="w-full rounded-xl px-3 py-2.5 text-sm outline-none border" style="background:var(--bg3);border-color:var(--border);color:var(--text)"/>' +
+      '</div>' +
+    '</div>' +
+    '<div>' +
+      '<label class="text-[11px] font-semibold uppercase tracking-wider block mb-1" style="color:var(--text3)">Project</label>' +
+      '<select id="f-project" class="w-full rounded-xl px-3 py-2.5 text-sm outline-none border" style="background:var(--bg3);border-color:var(--border);color:var(--text)">' + projOptions + '</select>' +
+    '</div>' +
+  '</div>';
+}
+
+function field(label, type, id, val, ph, req) {
+  return '<div>' +
+    '<label class="text-[11px] font-semibold uppercase tracking-wider block mb-1" style="color:var(--text3)">' + label + '</label>' +
+    '<input type="' + type + '" id="' + id + '" value="' + esc(val) + '" placeholder="' + esc(ph||'') + '"' + (req ? ' required' : '') +
+      ' class="w-full rounded-xl px-3 py-2.5 text-sm outline-none border" style="background:var(--bg3);border-color:var(--border);color:var(--text)"' +
+      ' onfocus="this.style.borderColor=\'var(--accent)\'" onblur="this.style.borderColor=\'var(--border)\'"/>' +
+  '</div>';
+}
+
+// ── New Project modal ──────────────────────────────────────────────────────────
+window.openProjectModal = function() {
+  showModal('New Project', projectForm(null), function() {
+    var name = document.getElementById('fp-name').value.trim();
+    if (!name) { toast('Name required', true); return; }
+    fetch(API + '/projects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: UID,
+        name,
+        goal:     document.getElementById('fp-goal').value.trim() || undefined,
+        priority: document.getElementById('fp-priority').value,
+        end_date: document.getElementById('fp-due').value || undefined,
+      }),
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.error) { toast(d.error, true); return; }
+        allProjects.push(d.project);
+        renderProjects();
+        closeModal();
+        toast('✓ Project created');
+      })
+      .catch(function() { toast('Failed', true); });
+  });
+};
+
+function projectForm(proj) {
+  return '<div class="space-y-3">' +
+    field('Project name', 'text', 'fp-name', proj ? proj.name : '', 'e.g. Website Redesign', true) +
+    field('Goal', 'text', 'fp-goal', proj ? proj.goal || '' : '', 'What does success look like?') +
+    '<div class="grid grid-cols-2 gap-3">' +
+      '<div>' +
+        '<label class="text-[11px] font-semibold uppercase tracking-wider block mb-1" style="color:var(--text3)">Priority</label>' +
+        '<select id="fp-priority" class="w-full rounded-xl px-3 py-2.5 text-sm outline-none border" style="background:var(--bg3);border-color:var(--border);color:var(--text)">' +
+          ['urgent','high','medium','low'].map(function(p) { return '<option value="' + p + '" ' + (p==='medium'?'selected':'') + '>' + p.charAt(0).toUpperCase()+p.slice(1) + '</option>'; }).join('') +
+        '</select>' +
+      '</div>' +
+      '<div>' +
+        '<label class="text-[11px] font-semibold uppercase tracking-wider block mb-1" style="color:var(--text3)">Deadline</label>' +
+        '<input type="date" id="fp-due" value="" class="w-full rounded-xl px-3 py-2.5 text-sm outline-none border" style="background:var(--bg3);border-color:var(--border);color:var(--text)"/>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+// ── Modal helper ───────────────────────────────────────────────────────────────
+var _saveCallback = null;
+function showModal(title, bodyHtml, onSave) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = bodyHtml;
+  _saveCallback = onSave;
+  document.getElementById('modal').classList.add('open');
+  var first = document.getElementById('modal-body').querySelector('input');
+  if (first) setTimeout(function() { first.focus(); }, 50);
+}
+window.closeModal = function() { document.getElementById('modal').classList.remove('open'); _saveCallback = null; };
+document.getElementById('modal-save').addEventListener('click', function() { if (_saveCallback) _saveCallback(); });
+document.getElementById('modal-body').addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey && _saveCallback) { e.preventDefault(); _saveCallback(); } });
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+loadAll();
+})();
+</script>
+</body>
+</html>

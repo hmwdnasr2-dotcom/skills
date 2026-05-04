@@ -23,6 +23,7 @@ import { eventsRouter } from './routes/events.js';
 import { memoryRouter } from './routes/memory.js';
 import { uploadRouter } from './routes/upload.js';
 import { downloadRouter } from './routes/download.js';
+import { taskManagerRouter } from './routes/task-manager.js';
 import { startTelegramPolling, telegramEnabled } from './services/telegram.js';
 
 const app = express();
@@ -112,6 +113,7 @@ app.use('/api/aria/download', downloadRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/aria/workflows', workflowsRouter);
 app.use('/api/aria/agents', agentsRouter);
+app.use('/api/aria/tasks', taskManagerRouter);
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
