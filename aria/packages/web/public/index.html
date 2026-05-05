@@ -143,6 +143,10 @@
       <span class="material-symbols-outlined" style="font-size:20px">auto_stories</span>
       <span>Knowledge Base</span>
     </a>
+    <a href="/tasks.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all duration-200 text-sm font-medium" style="color:var(--text3)" onmouseover="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text');this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text3');this.style.background='transparent'">
+      <span class="material-symbols-outlined" style="font-size:20px">task_alt</span>
+      <span>Tasks</span>
+    </a>
     <a href="/dashboard.html" class="flex items-center space-x-md px-md py-sm rounded-lg transition-all duration-200 text-sm font-medium" style="color:var(--text3)" onmouseover="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text');this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--bg3')" onmouseout="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text3');this.style.background='transparent'">
       <span class="material-symbols-outlined" style="font-size:20px">monitoring</span>
       <span>Performance</span>
@@ -602,13 +606,18 @@
     $fileChips.innerHTML = '';
     $filePreview.classList.add('hidden');
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
+
     try {
       const res = await fetch(`${API}/api/aria/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: UID, message: text || 'Analyze the attached file(s)', fileIds: fileIds.length ? fileIds : undefined, autoSave: true })
+        body: JSON.stringify({ userId: UID, message: text || 'Analyze the attached file(s)', fileIds: fileIds.length ? fileIds : undefined, autoSave: true }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
       const data = await res.json();
 
       if (!res.ok || data.error) {
@@ -633,7 +642,11 @@
         }
       }
     } catch (err) {
-      updateMessage(pendingId, `Cannot reach server: ${err.message}`, true);
+      clearTimeout(timeoutId);
+      const isTimeout = err.name === 'AbortError';
+      updateMessage(pendingId, isTimeout
+        ? 'Request timed out (>90s). The server may be overloaded — try again.'
+        : `Cannot reach server: ${err.message}`, true);
     } finally {
       busy = false;
       $inp.disabled = false;
